@@ -1,0 +1,76 @@
+model:
+  _target_: pinnstorch.models.PINNModule
+  _partial_: true
+  loss_fn: mse
+  jit_compile: false
+  amp: false
+  lazy: false
+  cudagraph_compile: false
+  inline: false
+  optimizer:
+    _target_: torch.optim.Adam
+    _partial_: true
+    lr: 0.0001
+    weight_decay: 0.0001
+    capturable: false
+  scaler:
+    _target_: torch.cuda.amp.GradScaler
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    _partial_: true
+    T_max: 50000
+    eta_min: 1.0e-08
+model/params/total: 12737
+model/params/trainable: 12737
+model/params/non_trainable: 0
+data:
+  _target_: pinnstorch.data.PINNDataModule
+trainer:
+  _target_: lightning.pytorch.trainer.Trainer
+  default_root_dir: ${paths.output_dir}
+  min_epochs: 1
+  max_epochs: ${Epochs}
+  accelerator: gpu
+  devices:
+  - 0
+  enable_progress_bar: true
+  check_val_every_n_epoch: 500
+  inference_mode: false
+  log_every_n_steps: 1
+  deterministic: false
+callbacks:
+  model_checkpoint:
+    _target_: lightning.pytorch.callbacks.ModelCheckpoint
+    dirpath: ${paths.output_dir}/checkpoints
+    filename: epoch_{epoch:03d}_{val/loss}
+    monitor: val/loss
+    verbose: null
+    save_last: true
+    save_top_k: 1
+    mode: min
+    auto_insert_metric_name: false
+    save_weights_only: false
+    every_n_train_steps: null
+    train_time_interval: null
+    every_n_epochs: null
+    save_on_train_epoch_end: null
+  model_summary:
+    _target_: lightning.pytorch.callbacks.RichModelSummary
+    max_depth: -1
+  rich_progress_bar:
+    _target_: lightning.pytorch.callbacks.RichProgressBar
+  early_stopping:
+    _target_: lightning.pytorch.callbacks.EarlyStopping
+    monitor: val/loss
+    patience: 10000
+    mode: min
+    min_delta: 0.01
+extras:
+  ignore_warnings: false
+  enforce_tags: true
+  print_config: true
+task_name: heat_test
+tags:
+- dev
+ckpt_path: null
+seed: 1234

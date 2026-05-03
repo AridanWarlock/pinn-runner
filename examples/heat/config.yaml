@@ -1,0 +1,92 @@
+task_name: heat_test
+
+defaults:
+  - train
+  - _self_
+
+N_initial: 50
+N_boundary: 50
+N_sample: 20_000
+Epochs: 10_000
+
+mesh:
+  _target_: pinnstorch.data.PointCloud
+  root_dir: ${paths.data_dir}
+  read_data_fn: ???
+
+train_datasets:
+  - mesh_sampler:
+      _target_: pinnstorch.data.MeshSampler
+      _partial_: true
+      num_sample: ${N_sample}
+      collection_points:
+        - f_T
+  - initial_condition:
+      _target_: pinnstorch.data.InitialCondition
+      _partial_: true
+      num_sample: ${N_initial}
+      solution:
+        - T
+  # - dirichlet_boundary_condition:
+  #     _target_: pinnstorch.data.DirichletBoundaryCondition
+  #     _partial_: true
+  #     num_sample: ${N_boundary}
+  #     solution:
+  #       - T
+
+  - left_boundary_condition:
+      _target_: pinnstorch.data.BoundaryCondition1D
+      _partial_: true
+      num_sample: ${N_boundary}
+      boundary_fun:
+        _target_: examples.heat.boundary_left_dc
+      bc_key: left_bc
+      location: left
+
+val_dataset:
+  - mesh_sampler:
+      _target_: pinnstorch.data.MeshSampler
+      _partial_: true
+      solution:
+        - T
+
+pred_dataset:
+  - mesh_sampler:
+      _target_: pinnstorch.data.MeshSampler
+      _partial_: true
+      solution:
+        - T
+
+net:
+  _target_: pinnstorch.models.FCN
+  layers: [2, 32, 32, 32, 32, 32, 1]
+  output_names:
+    - T
+
+trainer:
+  accelerator: gpu
+  max_epochs: ${Epochs}
+  devices:
+      - 0
+  deterministic: false
+  check_val_every_n_epoch: ${Epochs}
+
+model:
+  loss_fn: mse
+
+plotting:
+  _target_: pinnstorch.utils.plot_heat
+  _partial_: true
+
+train: true
+val: true
+test: false
+optimized_metric:
+  error:
+    - T
+
+seed: 1234
+
+hydra:
+  searchpath:
+    - pkg://pinnstorch/conf

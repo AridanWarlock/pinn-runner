@@ -66,12 +66,12 @@ def task_wrapper(task_func: Callable) -> Callable:
     """
 
     def wrap(
-        cfg: DictConfig, read_data_fn: Callable, pde_fn: Callable, output_fn: Callable
+        cfg: DictConfig, read_data_fn: Callable, pde_fn: Callable, output_fn: Callable, boundary_functions: Dict = None
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         # execute the task
         try:
             metric_dict, object_dict = task_func(
-                cfg=cfg, read_data_fn=read_data_fn, pde_fn=pde_fn, output_fn=output_fn
+                cfg=cfg, read_data_fn=read_data_fn, pde_fn=pde_fn, output_fn=output_fn, boundary_functions=boundary_functions
             )
 
         # things to do if exception occurs
@@ -200,9 +200,10 @@ def set_mode(cfg):
     
     if cfg.model.cudagraph_compile and cfg.trainer.accelerator != "cpu":
         log.info("Model will be compiled.")
-        log.info("Setting optimizer capturable attribute to True.")
-        cfg.model.optimizer.capturable = True
-        log.info("Disabling automatic optimization.")
+        if cfg.model._target_ == "torch.optim.Adam ":
+            log.info("Setting optimizer capturable attribute to True.")
+            cfg.model.optimizer.capturable = True
+            log.info("Disabling automatic optimization.")
         if cfg.trainer.devices is not None and isinstance(cfg.trainer.devices, list):
             if len(cfg.trainer.devices) > 1:
                 log.info(
@@ -212,8 +213,9 @@ def set_mode(cfg):
         
     elif not cfg.model.cudagraph_compile and cfg.trainer.accelerator != "cpu": 
         log.info("Model will not be compiled.")
-        log.info("Setting optimizer capturable attribute to False.")
-        cfg.model.optimizer.capturable = False
+        if cfg.model._target_ == "torch.optim.Adam ":
+            log.info("Setting optimizer capturable attribute to False.")
+            cfg.model.optimizer.capturable = False
         log.info("Enabling automatic optimization.")
         if cfg.model.amp:
             with open_dict(cfg):

@@ -609,6 +609,113 @@ def plot_burgers_continuous_forward(mesh, preds, train_datasets, val_dataset, fi
     savefig(file_name + "/fig")
 
 
+def plot_heat(mesh, preds, train_datasets, val_dataset, file_name):
+    """Plot heat equation results."""
+    
+    # Извлекаем предсказания
+    T_pred = preds["T"]
+    Exact_T = mesh.solution["T"]  # точное решение из MAT-файла
+    T_pred_grid = T_pred.reshape(Exact_T.shape)  # приводим к форме Nx x Nt
+    
+    # ============ Верхний ряд: 2D тепловая карта ============
+    fig = plt.figure(figsize=(12, 5))
+    
+    # Создаём сетку для верхнего ряда
+    gs0 = gridspec.GridSpec(1, 1)
+    gs0.update(top=0.9, bottom=0.55, left=0.1, right=0.9)
+    ax_top = plt.subplot(gs0[:, :])
+    
+    # Тепловая карта решения
+    im = ax_top.imshow(
+        T_pred_grid,
+        interpolation="nearest",
+        cmap="hot",  # для температуры лучше "hot" или "jet"
+        extent=[mesh.lb[1], mesh.ub[1], mesh.lb[0], mesh.ub[0]],
+        origin="lower",
+        aspect="auto",
+    )
+    
+    # Цветовая шкала
+    divider = make_axes_locatable(ax_top)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cbar = fig.colorbar(im, cax=cax)
+    cbar.set_label('Температура T(x,t)', rotation=270, labelpad=15)
+    
+    # Добавляем точки данных обучения (если есть)
+    if len(train_datasets) >= 1:
+        for dataset in train_datasets:
+            try:
+                x_train, t_train, _ = dataset[:]
+                ax_top.plot(
+                    t_train.numpy(),
+                    x_train.numpy(),
+                    "kx",
+                    markersize=4,
+                    alpha=0.5,
+                    label="Training points"
+                )
+            except:
+                pass
+    
+    # Вертикальные линии для моментов срезов
+    t_slice_indices = [len(mesh.time_domain)//4, 
+                       len(mesh.time_domain)//2, 
+                       3*len(mesh.time_domain)//4]
+    
+    t_array = np.array(mesh.time_domain).flatten()
+
+    for idx in t_slice_indices:
+        t_val = float(t_array[idx])
+        ax_top.axvline(x=t_val, color='white', linestyle='--', linewidth=1, alpha=0.7)
+    
+    ax_top.set_xlabel("Время t")
+    ax_top.set_ylabel("Пространство x")
+    ax_top.set_title("Температура T(x,t)", fontsize=12)
+    
+    # ============ Нижний ряд: срезы по времени ============
+    gs1 = gridspec.GridSpec(1, 3)
+    gs1.update(top=0.45, bottom=0.05, left=0.1, right=0.9, wspace=0.4)
+    
+    slice_times = [
+        mesh.time_domain[len(mesh.time_domain)//4],   # 25% времени
+        mesh.time_domain[len(mesh.time_domain)//2],   # 50% времени
+        mesh.time_domain[3*len(mesh.time_domain)//4]  # 75% времени
+    ]
+    
+    slice_indices = [
+        len(mesh.time_domain)//4,
+        len(mesh.time_domain)//2,
+        3*len(mesh.time_domain)//4
+    ]
+
+    
+    
+    for i, t_idx in enumerate(slice_indices):
+        ax = plt.subplot(gs1[0, i])
+        
+        # Извлекаем пространственную координату
+        x_coords = mesh.spatial_domain_mesh[:, t_idx, 0] if len(mesh.spatial_domain_mesh.shape) > 2 else mesh.spatial_domain_mesh[:, 0]
+        
+        # Точное решение
+        ax.plot(x_coords, Exact_T[:, t_idx], "b-", linewidth=2, label="Точное")
+        
+        # Предсказанное решение
+        ax.plot(x_coords, T_pred_grid[:, t_idx], "r--", linewidth=2, label="Предсказанное")
+        
+        ax.set_xlabel("x")
+        ax.set_ylabel("T")
+        t_val = float(t_array[t_idx])
+        ax.set_title(f"t = {t_val:.3f}", fontsize=10)
+        ax.grid(True, alpha=0.3)
+        
+        # Настройка осей
+        ax.set_xlim([mesh.lb[0], mesh.ub[0]])
+        
+        if i == 1:  # легенда только на среднем графике
+            ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=2, frameon=False)
+    
+    savefig(filename=file_name + "/fig")
+
 def plot_burgers_continuous_inverse(mesh, preds, train_datasets, val_dataset, file_name):
     """Plot burgers continuous inverse PDE."""
 

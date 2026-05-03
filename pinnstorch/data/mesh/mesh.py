@@ -163,7 +163,7 @@ class PointCloud(MeshBase):
     """For using this class you should define a mesh of spatial domain, time domain, and
     solutions."""
 
-    def __init__(self, root_dir: str, read_data_fn: Callable, ub: List = None, lb: List = None):
+    def __init__(self, read_data_fn: Callable, ub: List = None, lb: List = None):
         """Generate a point cloud mesh and load data from files.
 
         :param root_dir: Root directory for data.
@@ -172,7 +172,7 @@ class PointCloud(MeshBase):
         :param lb: Lower bounds for domain.
         """
 
-        data = read_data_fn(root_dir)
+        data = read_data_fn()
         self.spatial_domain, self.time_domain, self.solution = (
             data.spatial,
             data.time,

@@ -115,6 +115,100 @@ class DirichletBoundaryCondition(SamplerBase):
 
         return loss, outputs
 
+class BoundaryCondition1D(SamplerBase):
+    """Universal 1D boundary condition with declarative interface.
+    
+    User MUST provide:
+    - boundary_fun: function(outputs, x, t) -> outputs that adds ONE constraint key
+    - location: 'left', 'right', or 'both'
+    - bc_key: string - the key that boundary_fun adds to outputs
+    
+    The constraint value will be minimized via MSE loss (should tend to zero).
+    
+    Example:
+        # Dirichlet: T = 100
+        def bc_left(outputs, x, t):
+            outputs['bc'] = outputs['T'] - 100
+            return outputs
+        
+        bc = BoundaryCondition1D(
+            mesh=mesh,
+            boundary_fun=bc_left,
+            location='left',
+        )
+    """
+
+    def __init__(
+        self,
+        mesh,
+        bc_name,
+        boundary_fun,
+        location,
+        num_sample: int = None,
+        idx_t: int = None,
+        discrete: bool = False,
+    ):
+        super().__init__()
+
+        if boundary_fun is None:
+            raise ValueError("boundary_fun is REQUIRED")
+        
+        if location not in ['left', 'right', 'both']:
+            raise ValueError(f"location must be 'left', 'right', or 'both', got '{location}'")
+        
+        self.boundary_fun = boundary_fun
+        self.location = location
+        self.discrete = discrete
+        self.idx_t = idx_t
+        self.bc_name = bc_name
+
+        if location == 'left':
+            spatial_bound, time_bound, _ = mesh.on_lower_boundary([])
+        elif location == 'right':
+            spatial_bound, time_bound, _ = mesh.on_upper_boundary([])
+        elif location == 'both':
+            spatial_upper, time_upper, _ = mesh.on_upper_boundary([])
+            spatial_lower, time_lower, _ = mesh.on_lower_boundary([])
+            spatial_bound = np.vstack([spatial_upper, spatial_lower])
+            time_bound = np.vstack([time_upper, time_lower])
+
+        (
+            self.spatial_domain_sampled,
+            self.time_domain_sampled,
+        ) = self.sample_mesh(num_sample, (spatial_bound, time_bound))
+
+        self.spatial_domain_sampled = list(
+            torch.split(self.spatial_domain_sampled, 1, dim=1)
+        )
+
+    def sample_mesh(self, num_sample, flatten_mesh):
+        spatial, time = flatten_mesh
+        
+        if self.discrete:
+            spatial = spatial[self.idx_t:self.idx_t + 1, :]
+            time = time[self.idx_t:self.idx_t + 1, :]
+
+        if num_sample is None:
+            return self.convert_to_tensor((spatial, time))
+        else:
+            n_points = spatial.shape[0]
+            num_sample = min(num_sample, n_points)
+            idx = np.random.choice(n_points, num_sample, replace=False)
+            return self.convert_to_tensor((spatial[idx, :], time[idx, :]))
+
+    def _loss_fn(self, inputs, loss):
+        x, t, _ = inputs
+
+        if self.discrete:
+            t = None
+
+        outputs = self.functions["forward"](x, t)
+        outputs = self.boundary_fun(outputs, x, t)
+
+        # loss = self.functions["loss_fn"](loss, outputs, keys=[self.bc_name])
+        loss += torch.mean(outputs[self.bc_name]**2)
+
+        return loss, outputs
 
 class PeriodicBoundaryCondition(SamplerBase):
     """Initialize Periodic boundary condition."""

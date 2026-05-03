@@ -18,6 +18,7 @@ from pinnstorch.utils.plotting import (
     plot_kdv,
     plot_navier_stokes,
     plot_schrodinger,
+    plot_heat,
 )
 from pinnstorch.utils.pylogger import get_pylogger
 from pinnstorch.utils.rich_utils import enforce_tags, print_config_tree

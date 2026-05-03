@@ -6,6 +6,7 @@ from .mesh.mesh import Mesh, PointCloud
 from .pinn_datamodule import PINNDataModule
 from .sampler.boundary_condition import (
     DirichletBoundaryCondition,
+    BoundaryCondition1D,
     PeriodicBoundaryCondition,
 )
 from .sampler.initial_condition import InitialCondition

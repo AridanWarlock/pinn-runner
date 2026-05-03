@@ -23,10 +23,12 @@ from pinnstorch.data import (
     Rectangle,
     RectangularPrism,
     TimeDomain,
+    BoundaryCondition1D,
 )
 
 from torch.profiler import profile, record_function, ProfilerActivity
 
+torch.set_float32_matmul_precision('high')
 
 log = utils.get_pylogger(__name__)
 
@@ -34,7 +36,7 @@ OmegaConf.register_new_resolver("eval", eval)
 
 @utils.task_wrapper
 def train(
-    cfg: DictConfig, read_data_fn: Callable, pde_fn: Callable, output_fn: Callable = None
+    cfg: DictConfig, read_data_fn: Callable, pde_fn: Callable, output_fn: Callable = None, boundary_functions: Dict = None,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Trains the model. Can additionally evaluate on a testset, using best weights obtained during
     training.
@@ -73,10 +75,34 @@ def train(
         raise "Mesh should be defined in config file."
 
     train_datasets = []
-    for i, (dataset_dic) in enumerate(cfg.train_datasets):
+    for i, dataset_dic in enumerate(cfg.train_datasets):
         for key, dataset in dataset_dic.items():
-            log.info(f"Instantiating training dataset number {i+1}: <{dataset._target_}>")
-            train_datasets.append(hydra.utils.instantiate(dataset)(mesh=mesh))
+            target = OmegaConf.select(dataset, '_target_') or ''
+            
+            if 'BoundaryCondition1D' in target:
+                ds_dict = OmegaConf.to_container(dataset, resolve=True)
+                bc_func_name = ds_dict.get('bc_func_name')
+                location = ds_dict.get('location')
+                
+                if not bc_func_name or bc_func_name not in (boundary_functions or {}):
+                    raise ValueError(
+                        f"Boundary function '{bc_func_name}' not found in boundary_functions"
+                    )
+                
+                log.info(f"Instantiating training dataset number {i+1}: BC {bc_func_name} on {location}")
+                train_datasets.append(
+                    BoundaryCondition1D(
+                        mesh=mesh,
+                        bc_name=bc_func_name,
+                        boundary_fun=boundary_functions[bc_func_name],
+                        location=location,
+                        num_sample=ds_dict.get('num_sample')
+                    )
+                )
+            else:
+                log.info(f"Instantiating training dataset number {i+1}: <{dataset._target_}>")
+                train_datasets.append(hydra.utils.instantiate(dataset)(mesh=mesh))
+
 
     val_dataset = None
     if cfg.get("val_dataset"):
@@ -165,14 +191,14 @@ def train(
 
     if cfg.get("test"):
         log.info("Starting testing!")
-        ckpt_path = None  # trainer.checkpoint_callback.best_model_path
+        ckpt_path = trainer.checkpoint_callback.best_model_path
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
 
     test_metrics = trainer.callback_metrics
 
     if cfg.get("pred_dataset"):
         preds_list = trainer.predict(
-            model=model, datamodule=datamodule, ckpt_path=cfg.get("ckpt_path")
+            model=model, datamodule=datamodule, ckpt_path=trainer.checkpoint_callback.best_model_path
         )
         preds_dict = utils.fix_predictions(preds_list)
         if cfg.get("save_pred"):
