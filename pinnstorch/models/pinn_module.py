@@ -44,7 +44,7 @@ class PINNModule(LightningModule):
         optimizer: torch.optim.Optimizer = torch.optim.Adam,
         scheduler: torch.optim.lr_scheduler = None,
         scaler: torch.cuda.amp.GradScaler = None,
-        loss_fn: str = "sse",
+        loss_fn: str = "mse",
         extra_variables: Dict[str, Any] = None,
         output_fn = None,
         runge_kutta=None,

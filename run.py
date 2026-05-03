@@ -13,9 +13,11 @@ import importlib.util
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any
+import argparse
+
 
 import hydra
-from omegaconf import OmegaConf
+from enum import Enum
 
 import pinnstorch
 from pinnstorch import utils
@@ -23,26 +25,34 @@ from pinnstorch import utils
 INPUT_DIR = Path("/task_data")
 OUTPUT_DIR = Path("/task_output")
 
-REQUIRED_FILES = [
-    INPUT_DIR / "functions.py",
-    INPUT_DIR / "config.yaml",
-    INPUT_DIR / "data.mat",
-]
+class Mode(Enum):
+    TRAIN = "train"
+    RETRAIN = "retrain"
+    PREDICT = "predict"
 
+FUNC_FILE = INPUT_DIR / "functions.py"
+CONF_FILE = INPUT_DIR / "config.yaml"
+DATA_FILE = INPUT_DIR / "data.mat"
+CHECKPOINT_FILE = INPUT_DIR / "checkpoint.ckpt"
+
+REQUIRED_FILES = {
+    Mode.TRAIN: [FUNC_FILE, CONF_FILE, DATA_FILE],
+    Mode.RETRAIN: [FUNC_FILE, CONF_FILE, DATA_FILE, CHECKPOINT_FILE],
+    Mode.PREDICT: [FUNC_FILE, CONF_FILE, CHECKPOINT_FILE],
+}
 
 def setup(log):
     """Setup output directory structure."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUTPUT_DIR / "checkpoints").mkdir(exist_ok=True)
-    (OUTPUT_DIR / "plots").mkdir(exist_ok=True)
     log.info("Input:  %s", INPUT_DIR)
     log.info("Output: %s", OUTPUT_DIR)
 
 
-def validate_input(log) -> bool:
+def validate_input(mode, log) -> bool:
     """Check required input files."""
     log.info("Validating input files...")
-    for file_path in REQUIRED_FILES:
+    for file_path in REQUIRED_FILES[mode]:
         if not file_path.exists():
             log.error("Missing: %s", file_path)
             return False
@@ -103,20 +113,39 @@ def save_error_report(error: Exception):
         f.write(traceback.format_exc())
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--mode', type=str, help='Режим работы (train, retrain, predict)')
+parser.add_argument('--checkpoint', type=str, default=None, help='Имя файла с весами ранее обученной модели')
+args = parser.parse_args()
+
 def run():
     log = utils.get_pylogger(__name__)
     
-    try:
+    try:        
         log.info("=" * 60)
         log.info("PINN Universal Runner")
         log.info("=" * 60)
         
+        mode = Mode(args.mode)
+        
+        match mode:
+            case Mode.TRAIN:
+                pass
+            case Mode.RETRAIN:
+                if args.checkpoint is None:
+                    raise ValueError(f"Отсутствует checkpoint для режима retrain")
+            case Mode.PREDICT:
+                if args.checkpoint is None:
+                    raise ValueError(f"Отсутствует checkpoint для режима predict")        
+            case _:
+                raise ValueError(f"Недопустимый режим {args.mode}")
+        
         setup(log)
         
-        if not validate_input(log):
+        if not validate_input(mode, log):
             return 1
         
-        user_functions = load_user_functions(INPUT_DIR / "functions.py", log)
+        user_functions = load_user_functions(FUNC_FILE, log)
 
         with hydra.initialize_config_dir(
             config_dir=str(INPUT_DIR),
@@ -127,18 +156,18 @@ def run():
         cfg.paths = cfg.get('paths', {})
         cfg.paths.output_dir = str(OUTPUT_DIR)
         
-        data_file = cfg.get('data_file', 'data.mat')
-        
         read_data_fn = create_read_data_wrapper(
-            user_functions['read_data_fn'], data_file, log
+            user_functions['read_data_fn'], 'data.mat', log
         )
         
         metric_dict, _ = pinnstorch.train(
             cfg=cfg,
-            read_data_fn=read_data_fn,
             pde_fn=user_functions['pde_fn'],
+            mode=args.mode,
+            read_data_fn=read_data_fn,
             output_fn=user_functions.get('output_fn'),
             boundary_functions=user_functions.get('boundary_functions'),
+            checkpoint=CHECKPOINT_FILE,
         )
         
         log.info("=" * 60)
@@ -157,6 +186,9 @@ def run():
         log.error("Error: %s", str(e))
         log.error(traceback.format_exc())
         log.error("=" * 60)
+        
+        print(f"Running error: {str(e)}", file=sys.stderr)
+        
         save_error_report(e)
         return 1
 

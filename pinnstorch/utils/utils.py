@@ -66,12 +66,26 @@ def task_wrapper(task_func: Callable) -> Callable:
     """
 
     def wrap(
-        cfg: DictConfig, read_data_fn: Callable, pde_fn: Callable, output_fn: Callable, boundary_functions: Dict = None
+        cfg: DictConfig, 
+        pde_fn: Callable, 
+        mode: str = 'train',
+        read_data_fn: Callable = None, 
+        output_fn: Callable = None, 
+        plot_func: Callable = None,
+        boundary_functions: Dict = None,     
+        checkpoint: str = None,
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         # execute the task
         try:
             metric_dict, object_dict = task_func(
-                cfg=cfg, read_data_fn=read_data_fn, pde_fn=pde_fn, output_fn=output_fn, boundary_functions=boundary_functions
+                cfg=cfg, 
+                read_data_fn=read_data_fn, 
+                pde_fn=pde_fn, 
+                mode=mode,
+                output_fn=output_fn, 
+                plot_func=plot_func,
+                boundary_functions=boundary_functions, 
+                checkpoint=checkpoint,
             )
 
         # things to do if exception occurs

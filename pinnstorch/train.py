@@ -1,13 +1,18 @@
+import logging
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import os
 import time
 import hydra
 import lightning as L
+from pinnstorch.data.pinn_datamodule import PINNDataModule
+from pinnstorch.data.sampler.mesh_sampler import MeshSampler
 import rootutils
 import pickle 
 import torch
 import numpy as np
+import scipy
 
 from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
@@ -30,13 +35,45 @@ from torch.profiler import profile, record_function, ProfilerActivity
 
 torch.set_float32_matmul_precision('high')
 
-log = utils.get_pylogger(__name__)
+log = utils.get_pylogger(__name__, output_path=Path("/task_output/log.log"))
 
 OmegaConf.register_new_resolver("eval", eval)
 
+def save_predictions_to_mat(preds_dict, mesh, file_path):
+    """Save predictions to .mat file with x, t, and all solution variables."""
+    
+    # Координаты
+    if hasattr(mesh, 'spatial_domain_mesh'):
+        x = np.array(mesh.spatial_domain_mesh[:, 0, 0]).reshape(-1, 1)
+    else:
+        x = np.linspace(float(mesh.lb[0]), float(mesh.ub[0]), 100).reshape(-1, 1)
+    
+    t = np.array(mesh.time_domain).flatten().reshape(-1, 1)
+    
+    nx, nt = len(x), len(t)
+    
+    # Собираем словарь
+    mat_dict = {"x": x, "t": t}
+    
+    for key, value in preds_dict.items():
+        mat_dict[key] = np.array(value).reshape(nx, nt)
+    
+    scipy.io.savemat(file_path, mat_dict)
+    
+    print(f"Saved: {file_path}")
+    for k, v in mat_dict.items():
+        print(f"  {k}: {v.shape}")
+
 @utils.task_wrapper
 def train(
-    cfg: DictConfig, read_data_fn: Callable, pde_fn: Callable, output_fn: Callable = None, boundary_functions: Dict = None,
+    cfg: DictConfig, 
+    pde_fn: Callable, 
+    mode: str = 'train',
+    read_data_fn: Callable = None, 
+    output_fn: Callable = None, 
+    boundary_functions: Dict = None,
+    plot_func: Callable = None,
+    checkpoint: str = None,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Trains the model. Can additionally evaluate on a testset, using best weights obtained during
     training.
@@ -47,6 +84,9 @@ def train(
     :param cfg: A DictConfig configuration composed by Hydra.
     :return: A tuple with metrics and dict with all instantiated objects.
     """
+
+    log.setLevel(logging.INFO)
+    log.info("start train")
 
     cfg = utils.set_mode(cfg)
 
@@ -69,7 +109,7 @@ def train(
         mesh: Mesh = hydra.utils.instantiate(
             cfg.mesh, time_domain=td, spatial_domain=sd, read_data_fn=read_data_fn
         )
-    elif cfg.mesh._target_ == "pinnstorch.data.PointCloud":
+    elif cfg.mesh._target_ == "pinnstorch.data.PointCloud":        
         mesh: PointCloud = hydra.utils.instantiate(cfg.mesh, read_data_fn=read_data_fn)
     else:
         raise "Mesh should be defined in config file."
@@ -174,10 +214,41 @@ def train(
         log.info("Logging hyperparameters!")
         utils.log_hyperparameters(object_dict)
 
-    if cfg.get("train"):
+    start_time = time.time()
+    if mode == 'train':
         log.info("Starting training!")
-        start_time = time.time()
         trainer.fit(model=model, datamodule=datamodule)
+        log.info(f"Elapsed time: {time.time() - start_time}")
+    elif mode == 'retrain':
+        log.info("Starting retraining!")
+        
+        ckpt = torch.load(checkpoint, map_location="cuda" if torch.cuda.is_available() else "cpu")
+        model.load_state_dict(ckpt['state_dict'], strict=False)
+        log.info("Checkpoint loaded, continuing training with new PDE")
+        
+        trainer.fit(model=model, datamodule=datamodule)
+        
+        log.info(f"Elapsed time: {time.time() - start_time}")
+    elif mode == 'predict':
+        log.info("Starting predicting!")
+        
+        ckpt = torch.load(checkpoint, map_location="cuda" if torch.cuda.is_available() else "cpu")
+        model.load_state_dict(ckpt['state_dict'], strict=False)
+        model.eval()
+        
+        # Подменяем pde_fn
+        model.functions['pde_fn'] = pde_fn
+        
+        datamodule.setup()
+        
+        model.function_mapping = datamodule.function_mapping
+        model.trainer = type('obj', (object,), {'datamodule': datamodule})()
+        
+        # Получаем предсказания
+        preds_list = trainer.predict(model=model, datamodule=datamodule)
+        preds_dict = utils.fix_predictions(preds_list)
+        
+        save_predictions_to_mat(preds_dict, mesh, f'{cfg.paths.output_dir}/predictions.mat')
         log.info(f"Elapsed time: {time.time() - start_time}")
 
     log.info(f"Median time for each batch: {np.median(model.times)}")
@@ -189,14 +260,14 @@ def train(
         model.amp = False
         trainer.validate(model=model, datamodule=datamodule)
 
-    if cfg.get("test"):
+    if cfg.get("test") and mode != 'predict':
         log.info("Starting testing!")
         ckpt_path = trainer.checkpoint_callback.best_model_path
         trainer.test(model=model, datamodule=datamodule, ckpt_path=ckpt_path)
 
     test_metrics = trainer.callback_metrics
 
-    if cfg.get("pred_dataset"):
+    if cfg.get("pred_dataset") and mode != 'predict':
         preds_list = trainer.predict(
             model=model, datamodule=datamodule, ckpt_path=trainer.checkpoint_callback.best_model_path
         )
@@ -217,6 +288,9 @@ def train(
             val_dataset=val_dataset,
             file_name=cfg.paths.output_dir,
         )()
+    elif plot_func:
+        log.info("Plotting the results")
+        plot_func(mesh, preds_dict, train_datasets, val_dataset, cfg.paths.output_dir)
 
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
