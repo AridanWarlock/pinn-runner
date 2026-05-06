@@ -68,7 +68,7 @@ def task_wrapper(task_func: Callable) -> Callable:
     def wrap(
         cfg: DictConfig, 
         pde_fn: Callable, 
-        mode: str = 'train',
+        mode: str,
         read_data_fn: Callable = None, 
         output_fn: Callable = None, 
         plot_func: Callable = None,

@@ -196,11 +196,9 @@ def run():
             case Mode.TRAIN:
                 pass
             case Mode.RETRAIN:
-                if args.checkpoint is None:
-                    raise ValueError(f"Отсутствует checkpoint для режима retrain")
+                pass
             case Mode.PREDICT:
-                if args.checkpoint is None:
-                    raise ValueError(f"Отсутствует checkpoint для режима predict")        
+                pass
             case _:
                 raise ValueError(f"Недопустимый режим {args.mode}")
         
@@ -225,29 +223,29 @@ def run():
             train_cfg = compose(config_name="train") 
         
         OmegaConf.set_struct(train_cfg, False)
-        print("train_cfg")
-        print(OmegaConf.to_yaml(train_cfg))
+        # print("train_cfg")
+        # print(OmegaConf.to_yaml(train_cfg))
         
         cfg = OmegaConf.merge(train_cfg, cfg)
         
-        print("cfg after merge")
-        print(OmegaConf.to_yaml(cfg))
+        # print("cfg after merge")
+        # print(OmegaConf.to_yaml(cfg))
         
         read_data_fn = create_read_data_wrapper(
             user_functions['read_data_fn'], 'data.mat', log
         )
         
         cfg = setup_config(cfg)
-        
-        print("cfg after setup")
-        print(OmegaConf.to_yaml(cfg))
+        log.info(f"running mode: {mode.name}({mode.value})")
+        # print("cfg after setup")
+        # print(OmegaConf.to_yaml(cfg))
         
         plot_func = create_plot_func_wrapper(user_functions.get('plot_fn'))
         
         metric_dict, _ = pinnstorch.train(
             cfg=cfg,
             pde_fn=user_functions['pde_fn'],
-            mode=args.mode,
+            mode=mode.value,
             read_data_fn=read_data_fn,
             output_fn=user_functions.get('output_fn'),
             boundary_functions=user_functions.get('boundary_functions'),

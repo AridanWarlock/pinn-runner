@@ -68,7 +68,7 @@ def save_predictions_to_mat(preds_dict, mesh, file_path):
 def train(
     cfg: DictConfig, 
     pde_fn: Callable, 
-    mode: str = 'train',
+    mode: str,
     read_data_fn: Callable = None, 
     output_fn: Callable = None, 
     boundary_functions: Dict = None,
@@ -87,6 +87,7 @@ def train(
 
     log.setLevel(logging.INFO)
     log.info("start train")
+    log.info(f"running mode: {mode}")
 
     # cfg = utils.set_mode(cfg)
 
