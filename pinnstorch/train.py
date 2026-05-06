@@ -88,7 +88,7 @@ def train(
     log.setLevel(logging.INFO)
     log.info("start train")
 
-    cfg = utils.set_mode(cfg)
+    # cfg = utils.set_mode(cfg)
 
     # set seed for random number generators in pytorch, numpy and python.random
     if cfg.get("seed"):
@@ -172,7 +172,7 @@ def train(
         val_dataset=val_dataset,
         test_dataset=test_dataset,
         pred_dataset=pred_dataset,
-        batch_size=cfg.get("batch_size"),
+        batch_size=cfg.get("batch_size", None),
     )
 
     if cfg.net._target_ == "pinnstorch.models.FCN":

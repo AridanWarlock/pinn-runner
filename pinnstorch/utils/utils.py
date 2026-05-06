@@ -209,9 +209,6 @@ def set_mode(cfg):
         cfg.trainer.accelerator = "cpu"
         cfg.trainer.devices = 1
 
-    if cfg.model.lazy:
-        log.info("Using LazyTensor as backend.")
-    
     if cfg.model.cudagraph_compile and cfg.trainer.accelerator != "cpu":
         log.info("Model will be compiled.")
         if cfg.model._target_ == "torch.optim.Adam ":

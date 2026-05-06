@@ -15,8 +15,12 @@ from datetime import datetime
 from typing import Dict, Any
 import argparse
 
-
+import os
+import time
 import hydra
+from hydra import initialize_config_dir, compose
+from omegaconf import OmegaConf
+from omegaconf import DictConfig
 from enum import Enum
 
 import pinnstorch
@@ -76,7 +80,7 @@ def load_user_functions(functions_path: Path, log) -> Dict[str, Any]:
         functions[func_name] = getattr(user_module, func_name)
         log.info("  Loaded: %s", func_name)
     
-    for func_name in ['output_fn', 'initial_fun', 'boundary_functions']:
+    for func_name in ['output_fn', 'initial_fun', 'boundary_functions', 'plot_fn']:
         if hasattr(user_module, func_name):
             functions[func_name] = getattr(user_module, func_name)
             log.info("  Loaded: %s", func_name)
@@ -102,6 +106,16 @@ def create_read_data_wrapper(user_read_data_fn, data_file_name: str, log):
     
     return wrapped_read_data_fn
 
+def create_plot_func_wrapper(user_plot_fn):
+    if user_plot_fn == None:
+        return None
+    
+    def wrapped_plot_func(mesh, preds, train_datasets, val_dataset, filename):
+        preds_np = {k: v.detach().cpu().numpy() for k, v in preds.items()}
+        user_plot_fn(mesh, preds_np, train_datasets, val_dataset)
+        pinnstorch.utils.savefig(filename + "/fig", False)
+    
+    return wrapped_plot_func
 
 def save_error_report(error: Exception):
     """Save error details."""
@@ -112,7 +126,57 @@ def save_error_report(error: Exception):
         f.write("Error: %s\n\n" % str(error))
         f.write(traceback.format_exc())
 
+def setup_config(
+    cfg: DictConfig
+) -> DictConfig: 
+    OmegaConf.set_struct(cfg, False)
+    
+    cfg.mesh = {}
+    cfg.mesh._target_ = "pinnstorch.data.PointCloud"
+    
+    for item in cfg.train_datasets:
+        for key in item:
+            item[key]["_partial_"] = True
+        
+    for group in ["val_dataset", "pred_dataset"]:
+        if group in cfg:
+            for item in cfg[group]:
+                for key in item:
+                    item[key]["_partial_"] = True
+    
+    cfg.model._target_ = "pinnstorch.models.PINNModule"    
+    cfg.model._partial_ = True
+            
+    cfg.model.optimizer._partial_ = True
+    if cfg.model.scheduler:
+        cfg.model.scheduler._partial_ = True
+    
+    if cfg.model.optimizer._target_ == "torch.optim.Adam":
+        cfg.model.optimizer.capturable = False
+    
+    cfg.trainer._target_ = "lightning.pytorch.Trainer"
+    cfg.trainer.accelerator = "gpu" 
+    cfg.devices = [0]
+    
+    cfg.model.loss_fn = "mse"
+    
+    cfg.data = {}
+    cfg.data._target_ = "pinnstorch.data.PINNDataModule"
 
+    if cfg.net._target_ == "pinnstorch.models.FCN":
+        cfg.net._partial_ = True
+    
+    cfg.train = True
+    cfg.val = True
+    cfg.test = False
+    
+    cfg.seed = int(time.time())
+    
+    cfg.paths = cfg.get('paths', {})
+    cfg.paths.output_dir = str(OUTPUT_DIR)
+    
+    return cfg
+    
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', type=str, help='Режим работы (train, retrain, predict)')
 parser.add_argument('--checkpoint', type=str, default=None, help='Имя файла с весами ранее обученной модели')
@@ -147,18 +211,38 @@ def run():
         
         user_functions = load_user_functions(FUNC_FILE, log)
 
-        with hydra.initialize_config_dir(
+        with initialize_config_dir(
             config_dir=str(INPUT_DIR),
             version_base="1.3"
         ):
             cfg = hydra.compose(config_name="config.yaml")
-       
-        cfg.paths = cfg.get('paths', {})
-        cfg.paths.output_dir = str(OUTPUT_DIR)
+        
+        package_path = os.path.dirname((pinnstorch.__file__))
+        train_conf_path = os.path.join(package_path, "conf")
+        
+        with initialize_config_dir(version_base="1.3", config_dir=train_conf_path):
+            # 3. Собираем конфиг. Сюда подтянутся все файлы из секции defaults
+            train_cfg = compose(config_name="train") 
+        
+        OmegaConf.set_struct(train_cfg, False)
+        print("train_cfg")
+        print(OmegaConf.to_yaml(train_cfg))
+        
+        cfg = OmegaConf.merge(train_cfg, cfg)
+        
+        print("cfg after merge")
+        print(OmegaConf.to_yaml(cfg))
         
         read_data_fn = create_read_data_wrapper(
             user_functions['read_data_fn'], 'data.mat', log
         )
+        
+        cfg = setup_config(cfg)
+        
+        print("cfg after setup")
+        print(OmegaConf.to_yaml(cfg))
+        
+        plot_func = create_plot_func_wrapper(user_functions.get('plot_fn'))
         
         metric_dict, _ = pinnstorch.train(
             cfg=cfg,
@@ -167,6 +251,7 @@ def run():
             read_data_fn=read_data_fn,
             output_fn=user_functions.get('output_fn'),
             boundary_functions=user_functions.get('boundary_functions'),
+            plot_func=plot_func,
             checkpoint=CHECKPOINT_FILE,
         )
         

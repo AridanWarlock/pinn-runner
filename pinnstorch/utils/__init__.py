@@ -10,6 +10,8 @@ from pinnstorch.utils.module_fn import (
     fix_predictions
 )
 from pinnstorch.utils.plotting import (
+    savefig,
+    
     plot_ac,
     plot_burgers_continuous_forward,
     plot_burgers_continuous_inverse,
