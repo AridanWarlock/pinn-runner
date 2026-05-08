@@ -2,10 +2,10 @@
 
 defaults:
   - _self_
-  - data: mnist # choose datamodule with `test_dataloader()` for evaluation
-  - model: mnist
-  - logger: default
-  - trainer: default
+  - data: default # choose datamodule with `test_dataloader()` for evaluation
+  - model: default
+  - logger: csv
+  - trainer: cpu
   - paths: default
   - extras: default
   - hydra: default
