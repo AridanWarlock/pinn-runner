@@ -27,3 +27,6 @@ pytest          # tests
 pyDOE
 scipy
 matplotlib
+
+packaging~=26.2
+omegaconf~=2.3.0
