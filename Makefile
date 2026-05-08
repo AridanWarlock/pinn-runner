@@ -11,7 +11,7 @@ run-dev:
 		-v $(PWD):/app \
 		-v $(PWD)/dev/task_data:/task_data \
 		-v $(PWD)/dev/task_output:/task_output \
-		pinnstorch:dev bash
+		pinn-runner-image bash
 
 run-prod:
 	docker run -d pinn-runner
