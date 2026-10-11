@@ -81,8 +81,8 @@ class MeshSampler(SamplerBase):
             else:    
                 outputs = self.functions["pde_fn"](outputs, *x, t)
 
-        loss = self.functions["loss_fn"](loss, outputs, keys=self.collection_points_names) + \
-               self.functions["loss_fn"](loss, outputs, u, keys=self.solution_names)
+        loss = self.functions["loss_fn"](loss, outputs, keys=self.collection_points_names)
+        loss = self.functions["loss_fn"](loss, outputs, u, keys=self.solution_names)
 
         return loss, outputs
     

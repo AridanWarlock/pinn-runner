@@ -21,3 +21,20 @@ FCN outputs and derivatives in these dimensions, and ten Adam steps with PDE and
 initial-condition losses on CPU. This short optimization checks finite gradients,
 weight updates, and loss reduction. These tests do not
 verify model convergence or the complete training pipeline.
+
+## Lightning integration checks
+
+Install the additional dependencies in the same Python 3.10 environment:
+
+```sh
+.venv/bin/python -m pip install -r requirements-test-integration.txt
+.venv/bin/python -m pytest --noconftest -o addopts= tests/runner tests/numerics tests/integration
+.venv/bin/ruff check tests/integration
+```
+
+These tests import the actual package and use its PointCloud, samplers, FCN,
+PINNModule, and PINNDataModule with a real Lightning Trainer. They check loss
+accumulation in both condition orders, three CPU training steps, validation, and
+prediction. Test data are generated locally; no datasets are downloaded.
+CUDA, compilation, and mixed precision are disabled. The container entry point
+and YAML composition are not exercised by this suite yet.
