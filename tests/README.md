@@ -13,8 +13,11 @@ python3.10 -m venv .venv
 `-o addopts=` disables project-wide doctest collection for this isolated suite.
 These checks use CPU tensors and do not require CUDA or Lightning.
 
-The numerical tests load the actual derivative helper directly because importing
+The numerical tests load the actual derivative helper and FCN directly because importing
 `pinnstorch` also imports the training stack. They verify analytic derivatives,
 backpropagation through second derivatives, multiple output components, and the
-heat equation residual in one, two, and three spatial dimensions. They do not
+heat equation residual in one, two, and three spatial dimensions. They also check
+FCN outputs and derivatives in these dimensions, and ten Adam steps with PDE and
+initial-condition losses on CPU. This short optimization checks finite gradients,
+weight updates, and loss reduction. These tests do not
 verify model convergence or the complete training pipeline.
