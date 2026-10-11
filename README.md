@@ -16,6 +16,12 @@
 
 ## Description
 
+The container runner (`run.py`) takes `config.yaml` and `functions.py`. It generates
+its coordinate grid from the config and trains using the PDE, explicit initial
+conditions, and configured boundary conditions. Reference `data.mat` files are
+not used by this runner. See [the task input contract](docs/task-inputs.md) and
+[CPU test instructions](tests/README.md).
+
 Our package introduces Physics-Informed Neural Networks (PINNs) implemented using PyTorch. The standout feature is the incorporation of CUDA Graphs and JIT Compilers (TorchScript) for compiling models, resulting in significant performance gains up to 9x compared to the original TensorFlow v1 implementation.
 
 <div align="center">

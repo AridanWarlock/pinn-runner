@@ -39,7 +39,7 @@ prediction. Test data are generated locally; no datasets are downloaded.
 CUDA, compilation, and mixed precision are disabled.
 
 The file-based tests also launch `run.py` as a separate process, compose its YAML
-configuration, load `functions.py` and `data.mat`, and inspect predictions,
+configuration, load `functions.py`, generate coordinates, and inspect predictions,
 checkpoints, and metrics. A failing task must return exit code 1 and write an
 error report. This checks the runner without building its Docker image.
 
@@ -61,7 +61,11 @@ For prediction, supply the same input files plus a checkpoint:
 
 A relative checkpoint path is resolved inside the input directory; absolute
 paths are also accepted. The default filename is `checkpoint.ckpt`.
-The current prediction pipeline requires `data.mat` for its mesh and reference
-values. It writes `predictions.mat` with `x`, `t`, and solution arrays. Integration
+The runner requires `pde_fn`, `initial_conditions`, and a `domain` configuration;
+see [the input contract](../docs/task-inputs.md). Training and prediction work
+without `data.mat`. Prediction writes `predictions.mat` with `x`, `t`, and solution arrays. Integration
 tests compare this output with predictions from the training checkpoint and
-verify rejection of missing data and incomplete model weights.
+verify rejection of missing initial conditions and incomplete model weights.
+They also check that inference does not call PDE or initial-condition functions,
+including when output transforms need spatial derivatives. Validation without
+reference values reports PDE residual, not error against an exact solution.
