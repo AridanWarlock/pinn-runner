@@ -21,7 +21,7 @@ class MeshBase:
         """
         mesh = np.hstack(
             (
-                self.spatial_domain_mesh.reshape(-1, self.spatial_dim),
+                self.spatial_domain_mesh.reshape(-1, self.spatial_domain_mesh.shape[-1]),
                 self.time_domain_mesh.reshape(-1, 1),
             )
         )
@@ -87,9 +87,10 @@ class MeshBase:
         :return: Collection of points in the spatial domain.
         """
         if use_lhs:
-            f = self.lb + (self.ub - self.lb) * lhs(self.spatial_dim + 1, N_f)
-            spatial_domain = f[:, 0 : self.spatial_dim]
-            time_domain = f[:, self.spatial_dim : self.spatial_dim + 1]
+            f = self.lb + (self.ub - self.lb) * lhs(self.spatial_domain_mesh.shape[-1] + 1, N_f)
+            input_dim = self.spatial_domain_mesh.shape[-1]
+            spatial_domain = f[:, :input_dim]
+            time_domain = f[:, input_dim : input_dim + 1]
         else:
             spatial_domain, time_domain, _ = self.flatten_mesh(None)
         return spatial_domain, time_domain
@@ -195,14 +196,14 @@ class PointCloud(MeshBase):
             if values.shape != (spatial_num_points, time_num_points):
                 raise ValueError(f"Solution '{name}' does not match the coordinate grid")
 
-        self.spatial_dim = len(self.spatial_domain)
+        self.spatial_dim = data.spatial_dimension or len(self.spatial_domain)
+        self.parameter_names = data.parameter_names
+        self.input_dim = len(self.spatial_domain)
         self.time_dim = 1
         self.solution_dim = len(self.solution.keys())
 
         # Generate Mesh for both spatial and time domain
-        self.spatial_domain_mesh = np.zeros(
-            (spatial_num_points, time_num_points, self.spatial_dim)
-        )
+        self.spatial_domain_mesh = np.zeros((spatial_num_points, time_num_points, self.input_dim))
 
         for i, interval in enumerate(self.spatial_domain):
             self.spatial_domain_mesh[:, :, i] = np.tile(interval, (1, time_num_points))

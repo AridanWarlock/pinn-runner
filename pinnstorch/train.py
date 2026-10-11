@@ -45,6 +45,10 @@ def save_predictions_to_mat(preds_dict, mesh, file_path):
     mat_dict = {
         name: spatial[:, i : i + 1] for i, name in enumerate(("x", "y", "z")[: mesh.spatial_dim])
     }
+    for i, name in enumerate(getattr(mesh, "parameter_names", ())):
+        if name in preds_dict:
+            raise ValueError(f"Output name '{name}' conflicts with a parameter")
+        mat_dict[name] = spatial[:, mesh.spatial_dim + i : mesh.spatial_dim + i + 1]
     mat_dict["t"] = t
     for key, value in preds_dict.items():
         if isinstance(value, torch.Tensor):
@@ -201,9 +205,22 @@ def train(
 
     log.info(f"Instantiating model <{cfg.model._target_}>")
 
-    model: LightningModule = hydra.utils.instantiate(cfg.model)(
-        net=net, pde_fn=pde_fn, output_fn=output_fn
+    input_names = (
+        *("x", "y", "z")[: mesh.spatial_dim],
+        *getattr(mesh, "parameter_names", ()),
+        "t",
     )
+    model: LightningModule = hydra.utils.instantiate(cfg.model)(
+        net=net, pde_fn=pde_fn, output_fn=output_fn, input_names=input_names
+    )
+
+    def validate_checkpoint_inputs(ckpt: dict[str, Any]) -> None:
+        saved_names = ckpt.get("hyper_parameters", {}).get("input_names")
+        if saved_names or getattr(mesh, "parameter_names", ()):
+            if tuple(saved_names or ()) != input_names:
+                raise ValueError(
+                    f"Checkpoint input names {saved_names} do not match task inputs {input_names}"
+                )
 
     log.info("Instantiating callbacks...")
     callbacks: List[Callback] = utils.instantiate_callbacks(cfg.get("callbacks"))
@@ -237,7 +254,8 @@ def train(
         log.info("Starting retraining!")
 
         ckpt = torch.load(checkpoint, map_location="cuda" if torch.cuda.is_available() else "cpu")
-        model.load_state_dict(ckpt["state_dict"], strict=False)
+        validate_checkpoint_inputs(ckpt)
+        model.load_state_dict(ckpt["state_dict"], strict=True)
         log.info("Checkpoint loaded, continuing training with new PDE")
 
         trainer.fit(model=model, datamodule=datamodule)
@@ -247,6 +265,7 @@ def train(
         log.info("Starting predicting!")
 
         ckpt = torch.load(checkpoint, map_location="cpu")
+        validate_checkpoint_inputs(ckpt)
         model.load_state_dict(ckpt["state_dict"], strict=True)
         model.eval()
 

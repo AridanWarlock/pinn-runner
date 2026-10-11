@@ -162,9 +162,9 @@ class BoundaryCondition1D(SamplerBase):
     ):
         super().__init__()
 
-        if mesh.spatial_dim != 1:
+        if mesh.spatial_dim != 1 or getattr(mesh, "parameter_names", ()):
             raise ValueError(
-                "BoundaryCondition1D requires one spatial axis; use BoundaryCondition"
+                "BoundaryCondition1D requires one spatial axis without parameters; use BoundaryCondition"
             )
         if boundary_fun is None:
             raise ValueError("boundary_fun is REQUIRED")

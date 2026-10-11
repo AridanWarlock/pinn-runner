@@ -246,7 +246,7 @@ def run(
     checkpoint_path = (input_dir / (checkpoint or Path("checkpoint.ckpt"))).resolve()
     import hydra
     from hydra import compose, initialize_config_dir
-    from omegaconf import OmegaConf
+    from omegaconf import DictConfig, OmegaConf
 
     import pinnstorch
     from pinnstorch import utils
@@ -286,6 +286,29 @@ def run(
             pinnstorch.data.create_interval_data,
             **cast("dict[str, Any]", OmegaConf.to_container(cfg.domain, resolve=True)),
         )
+        from pinnstorch.parameter_functions import bind_parameters
+
+        spatial_dimension = 1 + int("y_interval" in cfg.domain) + int("z_interval" in cfg.domain)
+        parameters = cfg.domain.get("parameters")
+        if parameters is not None and not isinstance(parameters, DictConfig):
+            raise ValueError("domain.parameters must be a mapping of named intervals")
+        parameters = parameters or {}
+        if set(parameters).intersection(cfg.net.output_names):
+            raise ValueError("Parameter names must differ from model output names")
+        if (
+            cfg.net._target_ == "pinnstorch.models.FCN"
+            and cfg.net.layers[0] != spatial_dimension + len(parameters) + 1
+        ):
+            raise ValueError("FCN input layer must match spatial dimensions + parameters + time")
+        if parameters and (
+            cfg.model.get("extra_variables")
+            or cfg.model.get("jit_compile")
+            or cfg.net.get("discrete")
+        ):
+            raise ValueError(
+                "Parameterized tasks require continuous mode without inverse variables or JIT"
+            )
+        user_functions = bind_parameters(user_functions, spatial_dimension, tuple(parameters))
         log.info(f"running mode: {mode.name}({mode.value})")
 
         plot_func = create_plot_func_wrapper(user_functions.get("plot_fn"))

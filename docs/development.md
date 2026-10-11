@@ -22,9 +22,9 @@ Install pre-commit separately, activate `.venv`, then run `pre-commit install`.
 
 ## Type checking scope
 
-The exact eight files checked with strict mypy are listed in `pyproject.toml`.
+The exact nine files checked with strict mypy are listed in `pyproject.toml`.
 These cover the entry point, shared contracts, coordinate and time data, loader,
-networks, numerical helpers, and logging. Other modules are being migrated
+networks, numerical helpers, parameter callback adapters, and logging. Other modules are being migrated
 gradually. Missing third-party stubs are allowed; this is not a claim that the
 whole Lightning/CUDA stack is statically checked.
 

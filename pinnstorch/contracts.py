@@ -22,12 +22,12 @@ FloatArray: TypeAlias = NDArray[np.float32 | np.float64]
 ArrayOutputs: TypeAlias = dict[str, FloatArray]
 TensorOutputs: TypeAlias = dict[str, torch.Tensor]
 SpatialTensors: TypeAlias = list[torch.Tensor]
-# Samplers return one tensor column per coordinate, one time column, and targets.
+# Samplers return physical/parameter feature columns, one time column, and targets.
 SamplerBatch: TypeAlias = tuple[SpatialTensors, torch.Tensor, TensorOutputs]
 SampleIndex: TypeAlias = int | slice | torch.Tensor
 LossAccumulator: TypeAlias = torch.Tensor | float
 Bounds: TypeAlias = Sequence[float] | FloatArray
-InitialConditions: TypeAlias = Callable[[FloatArray], ArrayOutputs]
+InitialConditions: TypeAlias = Callable[..., ArrayOutputs]
 ReadData: TypeAlias = Callable[[], "PointCloudData"]
 # PDE/output functions have different numbers of coordinates in 1D/2D/3D.
 FieldFunction: TypeAlias = Callable[..., TensorOutputs]

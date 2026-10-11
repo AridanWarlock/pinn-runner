@@ -92,3 +92,69 @@ last spatial axis changes fastest; time changes fastest in network batches.
 Coordinates are paired rows, not independent axis vectors.
 
 A runnable CPU example is in [examples/heat2d](../examples/heat2d).
+
+## Varying model parameters
+
+A parameterized forward problem represents a family of solutions with one
+network. Coefficients are supplied inputs; they are not unknown trainable
+variables. For example:
+
+```yaml
+domain:
+  x_interval: [0, 1]
+  x_points: 8
+  t_interval: [0, 0.5]
+  t_points: 3
+  parameters:
+    conductivity:
+      interval: [0.1, 0.5]
+      points: 3
+net:
+  _target_: pinnstorch.models.FCN
+  layers: [3, 16, 16, 1]  # x, conductivity, t
+  output_names: [T]
+```
+
+Multiple parameters are supported. Their order follows the YAML mapping.
+Intervals must be finite/increasing and counts >= 2. Names must be ASCII Python
+identifiers without a leading underscore, distinct from x/y/z/t and output
+names. Each parameter multiplies the Cartesian grid size. LHS PDE samples
+include continuous parameter values inside the bounds, not just grid nodes.
+Initial and boundary datasets cover the configured parameter grid.
+
+Parameterized callbacks require a keyword argument `parameters`: a dictionary
+of named `(N, 1)` tensors (NumPy arrays for initial conditions). PDE and output
+callbacks receive only physical coordinates as positional arguments:
+
+```python
+def pde_fn(outputs, x, t, *, parameters):
+    dx, dt = gradient(outputs["T"], [x, t])
+    outputs["residual"] = dt - parameters["conductivity"] * gradient(dx, x)[0]
+    return outputs
+```
+
+The initial signature is `initial_conditions(spatial, *, parameters)`, and
+boundary callbacks use `boundary(outputs, spatial, t, *, parameters)`.
+`spatial` retains only physical coordinates. Tasks without parameters retain
+their existing signatures. Use the new face-based BoundaryCondition even for
+parameterized 1D tasks; BoundaryCondition1D is not suitable for these grids.
+
+Network input order is physical coordinates, parameters, time. The first FCN
+layer must equal spatial dimension + parameter count + 1. Checkpoints record
+input names and reject different names/order on prediction or retraining.
+The saved normalization bounds are reused with the checkpoint. Prediction can
+use a different grid inside the training range; successful execution does not
+establish interpolation accuracy. Each parameter is assumed constant across
+space and time within one problem instance; spatially varying coefficient
+fields need a separate definition of their PDE derivatives.
+
+MAT output includes one column per parameter, aligned with x/y/z rows. Field
+arrays remain `(number_of_spatial_parameter_combinations, number_of_times)`.
+Parameters vary fastest after the spatial coordinates in C-order flattening.
+The `PointCloudData.spatial` storage includes both physical and parameter
+columns internally; `spatial_dimension` and `parameter_names` separate their
+roles. User callback adapters expose them separately.
+
+This initial parameterized path uses continuous time without JIT compilation
+or inverse extra_variables. A runnable typed example is in
+[examples/heat_parameterized](../examples/heat_parameterized).

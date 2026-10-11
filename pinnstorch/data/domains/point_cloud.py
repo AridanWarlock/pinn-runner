@@ -1,10 +1,16 @@
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from typing import TypedDict
 
 import numpy as np
 from numpy.typing import NDArray
 
 from pinnstorch.contracts import FloatArray
+
+
+class ParameterSpec(TypedDict):
+    interval: Sequence[float]
+    points: int
 
 
 @dataclass
@@ -18,6 +24,8 @@ class PointCloudData:
     spatial: list[FloatArray]
     time: FloatArray | list[FloatArray]
     solution: dict[str, FloatArray]
+    spatial_dimension: int | None = None
+    parameter_names: tuple[str, ...] = ()
 
 
 def create_interval_data(
@@ -29,8 +37,9 @@ def create_interval_data(
     y_points: int | None = None,
     z_interval: Sequence[float] | None = None,
     z_points: int | None = None,
+    parameters: Mapping[str, ParameterSpec] | None = None,
 ) -> PointCloudData:
-    """Generate a Cartesian 1D/2D/3D spatial grid crossed with time.
+    """Generate a Cartesian space/parameter grid crossed with time.
 
     Spatial columns share point ordering (indexing="ij", C-order flattening).
     """
@@ -42,6 +51,21 @@ def create_interval_data(
             if name == "z" and y_interval is None:
                 raise ValueError("z requires a y axis")
             axes.append((name, bounds, count))
+    spatial_dimension = len(axes)
+    for name, spec in (parameters or {}).items():
+        if (
+            not isinstance(name, str)
+            or not name.isidentifier()
+            or name.startswith("_")
+            or not name.isascii()
+            or name in ("x", "y", "z", "t")
+        ):
+            raise ValueError(
+                "Parameter names must be ASCII identifiers without a leading underscore, distinct from x/y/z/t"
+            )
+        if not isinstance(spec, Mapping) or set(spec) != {"interval", "points"}:
+            raise ValueError(f"Parameter '{name}' requires interval and points")
+        axes.append((name, spec["interval"], spec["points"]))
     for name, bounds in [(f"{name}_interval", bounds) for name, bounds, _ in axes] + [
         ("t_interval", t_interval)
     ]:
@@ -57,4 +81,10 @@ def create_interval_data(
     )
     spatial = [grid.reshape(-1, 1) for grid in grids]
     time: NDArray[np.float64] = np.linspace(t_interval[0], t_interval[1], t_points).reshape(-1, 1)
-    return PointCloudData(spatial=spatial, time=time, solution={})
+    return PointCloudData(
+        spatial=spatial,
+        time=time,
+        solution={},
+        spatial_dimension=spatial_dimension,
+        parameter_names=tuple(parameters or {}),
+    )

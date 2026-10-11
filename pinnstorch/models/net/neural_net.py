@@ -81,30 +81,11 @@ class FCN(nn.Module):
         :return: A tensor of solutions.
         """
 
-        # Discrete Mode
-        if self.discrete:
-            if len(spatial) == 2:
-                x, y = spatial
-                z = torch.cat((x, y), 1)
-            elif len(spatial) == 3:
-                x, y, z = spatial
-                z = torch.cat((x, y, z), 1)
-            else:
-                z = spatial[0]
-            z = 2.0 * (z - self.lb[:-1]) / (self.ub[:-1] - self.lb[:-1]) - 1.0
-
-        # Continuous Mode
-        else:
-            if len(spatial) == 1:
-                x = spatial[0]
-                z = torch.cat((x, time), 1)
-            elif len(spatial) == 2:
-                x, y = spatial
-                z = torch.cat((x, y, time), 1)
-            else:
-                x, y, z = spatial
-                z = torch.cat((x, y, z, time), 1)
-            z = 2.0 * (z - self.lb) / (self.ub - self.lb) - 1.0
+        columns = spatial if self.discrete else [*spatial, time]
+        z = torch.cat(columns, dim=1)
+        lower = self.lb[:-1] if self.discrete else self.lb
+        upper = self.ub[:-1] if self.discrete else self.ub
+        z = 2.0 * (z - lower) / (upper - lower) - 1.0
 
         z = cast(torch.Tensor, self.model(z))
 
@@ -188,15 +169,7 @@ class NetHFM(nn.Module):
         :param time: Input tensor representing time.
         :return: A dictionary with output names as keys and corresponding output tensors as values.
         """
-        if len(spatial) == 1:
-            x = spatial[0]
-            H = torch.cat((x, time), 1)
-        elif len(spatial) == 2:
-            x, y = spatial
-            H = torch.cat((x, y, time), 1)
-        else:
-            x, y, z = spatial
-            H = torch.cat((x, y, z, time), 1)
+        H = torch.cat([*spatial, time], dim=1)
 
         H = (H - self.X_mean) / self.X_std
 

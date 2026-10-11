@@ -12,6 +12,8 @@ TARGETS = [
     "tests/runner",
     "tests/numerics",
     "tests/integration",
+    "examples/heat2d",
+    "examples/heat_parameterized",
 ]
 
 

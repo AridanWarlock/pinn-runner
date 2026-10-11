@@ -59,6 +59,7 @@ class PINNModule(LightningModule):
         amp: bool = True,
         lazy: bool = False,
         inline: bool = False,
+        input_names: tuple[str, ...] = (),
     ) -> None:
         """
         Initialize the PINNModule.
