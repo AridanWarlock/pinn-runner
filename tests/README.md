@@ -5,12 +5,12 @@ Use Python 3.10 and an isolated environment:
 ```sh
 python3.10 -m venv .venv
 .venv/bin/python -m pip install -r requirements-test-cpu.txt
-.venv/bin/python -m pytest --noconftest -o addopts= tests/runner tests/numerics
+.venv/bin/python -m pytest tests/runner tests/numerics
 .venv/bin/ruff check run.py pinnstorch/utils/pylogger.py tests/runner tests/numerics
 ```
 
-`--noconftest` bypasses the legacy training fixtures in `tests/conftest.py`.
-`-o addopts=` disables project-wide doctest collection for this isolated suite.
+Legacy upstream tests and their fixtures are preserved in `tests/legacy`; they
+are excluded from default collection because they need separate API migration.
 These checks use CPU tensors and do not require CUDA or Lightning.
 
 The numerical tests load the actual derivative helper and FCN directly because importing
@@ -28,7 +28,7 @@ Install the additional dependencies in the same Python 3.10 environment:
 
 ```sh
 .venv/bin/python -m pip install -r requirements-test-integration.txt
-.venv/bin/python -m pytest --noconftest -o addopts= tests/runner tests/numerics tests/integration
+.venv/bin/python -m pytest
 .venv/bin/ruff check tests/integration
 ```
 
@@ -69,3 +69,7 @@ verify rejection of missing initial conditions and incomplete model weights.
 They also check that inference does not call PDE or initial-condition functions,
 including when output transforms need spatial derivatives. Validation without
 reference values reports PDE residual, not error against an exact solution.
+
+For all maintained checks (lint, formatting, types, and tests), install the
+integration dependencies and run `python scripts/check.py`. See
+[development instructions](../docs/development.md).
