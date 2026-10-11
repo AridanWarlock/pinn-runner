@@ -11,7 +11,9 @@ class TimeDomain:
         :param t_points: The number of time points to discretize the interval.
         """
         self.time_interval = t_interval
-        self.time = np.linspace(self.time_interval[0], self.time_interval[1], num=t_points)
+        self.time = np.linspace(
+            self.time_interval[0], self.time_interval[1], num=t_points
+        )
 
     def generate_mesh(self, spatial_points):
         """Generate a mesh of time based on number of spatial points.

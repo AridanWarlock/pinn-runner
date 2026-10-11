@@ -26,16 +26,19 @@ if TYPE_CHECKING:
 INPUT_DIR = Path("/task_data")
 OUTPUT_DIR = Path("/task_output")
 
+
 class Mode(Enum):
     TRAIN = "train"
     RETRAIN = "retrain"
     PREDICT = "predict"
+
 
 REQUIRED_FILES = {
     Mode.TRAIN: ["functions.py", "config.yaml"],
     Mode.RETRAIN: ["functions.py", "config.yaml", "checkpoint.ckpt"],
     Mode.PREDICT: ["functions.py", "config.yaml", "checkpoint.ckpt"],
 }
+
 
 def setup(log: logging.Logger, output_dir: Path = OUTPUT_DIR) -> None:
     """Setup output directory structure."""
@@ -66,26 +69,26 @@ def validate_input(
 def load_user_functions(functions_path: Path, log: logging.Logger) -> Dict[str, Any]:
     """Load user functions from Python file."""
     log.info("Loading functions: %s", functions_path)
-    
+
     spec = importlib.util.spec_from_file_location("user_functions", functions_path)
     user_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(user_module)
-    
+
     functions = {}
-    
-    for func_name in ['pde_fn', 'initial_conditions']:
+
+    for func_name in ["pde_fn", "initial_conditions"]:
         if not callable(getattr(user_module, func_name, None)):
             raise ValueError("Required function '%s' not found" % func_name)
         functions[func_name] = getattr(user_module, func_name)
         log.info("  Loaded: %s", func_name)
-    
-    for func_name in ['output_fn', 'boundary_functions', 'plot_fn']:
+
+    for func_name in ["output_fn", "boundary_functions", "plot_fn"]:
         if hasattr(user_module, func_name):
             functions[func_name] = getattr(user_module, func_name)
             log.info("  Loaded: %s", func_name)
         else:
             log.info("  Not found: %s", func_name)
-    
+
     return functions
 
 
@@ -94,79 +97,83 @@ def create_plot_func_wrapper(user_plot_fn):
 
     if user_plot_fn is None:
         return None
-    
+
     def wrapped_plot_func(mesh, preds, train_datasets, val_dataset, filename):
         preds_np = {k: v.detach().cpu().numpy() for k, v in preds.items()}
         user_plot_fn(mesh, preds_np, train_datasets, val_dataset)
         pinnstorch.utils.savefig(filename + "/fig", False)
-    
+
     return wrapped_plot_func
+
 
 def save_error_report(error: Exception, output_dir: Path = OUTPUT_DIR) -> None:
     """Save error details."""
     error_path = output_dir / "error.log"
-    with open(error_path, 'w') as f:
+    with open(error_path, "w") as f:
         f.write("PINN Experiment Failed\n")
         f.write("=" * 60 + "\n\n")
         f.write("Error: %s\n\n" % str(error))
         f.write(traceback.format_exc())
 
-def setup_config(
-    cfg: DictConfig, output_dir: Path = OUTPUT_DIR
-) -> DictConfig: 
+
+def setup_config(cfg: DictConfig, output_dir: Path = OUTPUT_DIR) -> DictConfig:
     from omegaconf import OmegaConf
 
     OmegaConf.set_struct(cfg, False)
-    
+
     if not cfg.get("domain"):
-        raise ValueError("config.yaml must define domain (x_interval, t_interval, x_points, t_points)")
+        raise ValueError(
+            "config.yaml must define domain (x_interval, t_interval, x_points, t_points)"
+        )
     if not any(
         item.get("_target_") == "pinnstorch.data.InitialCondition"
-        for group in cfg.train_datasets for item in group.values()
+        for group in cfg.train_datasets
+        for item in group.values()
     ):
         raise ValueError("train_datasets must include InitialCondition")
     cfg.mesh = {}
     cfg.mesh._target_ = "pinnstorch.data.PointCloud"
-    
+
     for item in cfg.train_datasets:
         for key in item:
             item[key]["_partial_"] = True
-        
+
     for group in ["val_dataset", "pred_dataset"]:
         if group in cfg:
             for item in cfg[group]:
                 for key in item:
                     item[key]["_partial_"] = True
-    
-    cfg.model._target_ = "pinnstorch.models.PINNModule"    
+
+    cfg.model._target_ = "pinnstorch.models.PINNModule"
     cfg.model._partial_ = True
-            
+
     cfg.model.optimizer._partial_ = True
-    if cfg.model.get('scheduler'):
+    if cfg.model.get("scheduler"):
         cfg.model.scheduler._partial_ = True
-    
+
     if cfg.model.optimizer._target_ == "torch.optim.Adam":
         cfg.model.optimizer.capturable = False
-    
+
     cfg.trainer._target_ = "lightning.pytorch.Trainer"
-    
+
     cfg.model.loss_fn = "mse"
-    
+
     cfg.data = {}
     cfg.data._target_ = "pinnstorch.data.PINNDataModule"
 
     if cfg.net._target_ == "pinnstorch.models.FCN":
         cfg.net._partial_ = True
-    
+
     cfg.train = True
     cfg.val = cfg.get("val_dataset") is not None
     cfg.test = False
-    
-    cfg.paths = cfg.get('paths', {})
+
+    cfg.paths = cfg.get("paths", {})
     cfg.paths.output_dir = str(output_dir)
-    
+
     return cfg
-    
+
+
 class RunnerArguments(argparse.Namespace):
     """Arguments accepted by the container entry point."""
 
@@ -191,8 +198,12 @@ def parse_args(argv: Sequence[str] | None = None) -> RunnerArguments:
         default=None,
         help="Имя файла с весами ранее обученной модели",
     )
-    parser.add_argument("--input-dir", type=Path, default=INPUT_DIR, help="Directory with task files")
-    parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR, help="Directory for results")
+    parser.add_argument(
+        "--input-dir", type=Path, default=INPUT_DIR, help="Directory with task files"
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=OUTPUT_DIR, help="Directory for results"
+    )
     return parser.parse_args(argv, namespace=RunnerArguments())
 
 
@@ -213,43 +224,40 @@ def run(
     from pinnstorch import utils
 
     log = utils.get_pylogger(__name__)
-    
-    try:        
+
+    try:
         log.info("=" * 60)
         log.info("PINN Universal Runner")
         log.info("=" * 60)
-        
+
         log.info("Input:  %s", input_dir)
         setup(log, output_dir)
         utils.get_pylogger("pinnstorch.train", output_path=output_dir / "log.log")
-        
+
         if not validate_input(mode, log, input_dir, checkpoint_path):
             return 1
-        
+
         user_functions = load_user_functions(input_dir / "functions.py", log)
 
-        with initialize_config_dir(
-            config_dir=str(input_dir),
-            version_base="1.3"
-        ):
+        with initialize_config_dir(config_dir=str(input_dir), version_base="1.3"):
             cfg = hydra.compose(config_name="config.yaml")
-        
+
         package_path = os.path.dirname((pinnstorch.__file__))
         train_conf_path = os.path.join(package_path, "conf")
-        
+
         with initialize_config_dir(version_base="1.3", config_dir=train_conf_path):
             # 3. Собираем конфиг. Сюда подтянутся все файлы из секции defaults
-            train_cfg = compose(config_name="train") 
-        
+            train_cfg = compose(config_name="train")
+
         OmegaConf.set_struct(train_cfg, False)
         # print("train_cfg")
         # print(OmegaConf.to_yaml(train_cfg))
-        
+
         cfg = OmegaConf.merge(train_cfg, cfg)
-        
+
         # print("cfg after merge")
         # print(OmegaConf.to_yaml(cfg))
-        
+
         cfg = setup_config(cfg, output_dir)
         read_data_fn = partial(
             pinnstorch.data.create_interval_data,
@@ -258,21 +266,21 @@ def run(
         log.info(f"running mode: {mode.name}({mode.value})")
         # print("cfg after setup")
         # print(OmegaConf.to_yaml(cfg))
-        
-        plot_func = create_plot_func_wrapper(user_functions.get('plot_fn'))
-        
+
+        plot_func = create_plot_func_wrapper(user_functions.get("plot_fn"))
+
         metric_dict, _ = pinnstorch.train(
             cfg=cfg,
-            pde_fn=user_functions['pde_fn'],
-            initial_conditions=user_functions['initial_conditions'],
+            pde_fn=user_functions["pde_fn"],
+            initial_conditions=user_functions["initial_conditions"],
             mode=mode.value,
             read_data_fn=read_data_fn,
-            output_fn=user_functions.get('output_fn'),
-            boundary_functions=user_functions.get('boundary_functions'),
+            output_fn=user_functions.get("output_fn"),
+            boundary_functions=user_functions.get("boundary_functions"),
             plot_func=plot_func,
             checkpoint=checkpoint_path,
         )
-        
+
         log.info("=" * 60)
         log.info("Training completed")
         for k, v in metric_dict.items():
@@ -280,18 +288,18 @@ def run(
                 log.info("  %s: %.6f", k, v)
         log.info("Results: %s", output_dir)
         log.info("=" * 60)
-        
+
         return 0
-        
+
     except Exception as e:
         log.error("=" * 60)
         log.error("Training failed")
         log.error("Error: %s", str(e))
         log.error(traceback.format_exc())
         log.error("=" * 60)
-        
+
         print(f"Running error: {str(e)}", file=sys.stderr)
-        
+
         save_error_report(e, output_dir)
         return 1
 
@@ -300,10 +308,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Validate CLI arguments before loading the training dependencies."""
     args = parse_args(argv)
     return run(
-        Mode(args.mode), input_dir=args.input_dir, output_dir=args.output_dir,
+        Mode(args.mode),
+        input_dir=args.input_dir,
+        output_dir=args.output_dir,
         checkpoint=args.checkpoint,
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

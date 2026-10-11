@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Tuple, Callable
+from typing import Any, Callable, Dict, Optional
 
 import torch
 from lightning import LightningDataModule
@@ -45,8 +45,9 @@ class PINNDataModule(LightningDataModule):
     Read the docs:
         https://lightning.ai/docs/pytorch/latest/data/datamodule.html
     """
+
     function_mapping: Dict[str, Callable]
-    
+
     def __init__(
         self,
         train_datasets,
@@ -76,16 +77,12 @@ class PINNDataModule(LightningDataModule):
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        #self.save_hyperparameters(logger=False)
+        # self.save_hyperparameters(logger=False)
 
         self.data_train = None
         self.data_val = self.val_dataset
-        self.data_test = (
-            self.test_dataset if self.test_dataset else self.val_dataset
-        )
-        self.data_pred = (
-            self.pred_dataset if self.pred_dataset else self.val_dataset
-        )
+        self.data_test = self.test_dataset if self.test_dataset else self.val_dataset
+        self.data_pred = self.pred_dataset if self.pred_dataset else self.val_dataset
 
         self.function_mapping = torch.jit.annotate(Dict[str, Callable], {})
 
@@ -109,7 +106,9 @@ class PINNDataModule(LightningDataModule):
                 self.data_train[str(train_dataset.loss_fn)] = PINNDataLoader(
                     train_dataset, batch_size=self.batch_size, ignore=True, shuffle=True
                 )
-                self.function_mapping[str(train_dataset.loss_fn)] = train_dataset.loss_fn
+                self.function_mapping[str(train_dataset.loss_fn)] = (
+                    train_dataset.loss_fn
+                )
 
     def set_mode_for_discrete_mesh(self):
         """This function will figuere out which training datasets are for discrete.
@@ -159,7 +158,9 @@ class PINNDataModule(LightningDataModule):
 
         :return: The test dataloader.
         """
-        self.loss_fn = self.test_dataset.loss_fn if self.test_dataset else self.val_dataset.loss_fn
+        self.loss_fn = (
+            self.test_dataset.loss_fn if self.test_dataset else self.val_dataset.loss_fn
+        )
         self.function_mapping[str(self.loss_fn)] = self.loss_fn
         self.solution_names = (
             self.test_dataset.solution_names
@@ -175,7 +176,9 @@ class PINNDataModule(LightningDataModule):
 
         :return: The test dataloader.
         """
-        self.loss_fn = self.pred_dataset.loss_fn if self.pred_dataset else self.val_dataset.loss_fn
+        self.loss_fn = (
+            self.pred_dataset.loss_fn if self.pred_dataset else self.val_dataset.loss_fn
+        )
         self.function_mapping[str(self.loss_fn)] = self.loss_fn
         self.solution_names = (
             self.pred_dataset.solution_names
@@ -208,7 +211,6 @@ class PINNDataModule(LightningDataModule):
         :param state_dict: The datamodule state returned by `self.state_dict()`.
         """
         pass
-        
 
 
 if __name__ == "__main__":

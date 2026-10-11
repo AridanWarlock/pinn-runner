@@ -122,7 +122,8 @@ class RectangularPrism:
 
         x = np.linspace(self.x_interval[0], self.x_interval[1], num=self.shape[0])
         y = np.linspace(self.y_interval[0], self.y_interval[1], num=self.shape[1])
-        z = np.linspace(self.z_interval[0], self.z_interval[1], num=self.shape[2])
+        z = np.linspace(self.z_interval[0], self.z_interval[1], num=self.shape[2])  # noqa: F841
+        # The legacy 3D grid implementation is incomplete; fixed in the 3D feature work.
 
         self.xx, self.yy = np.meshgrid(x, y)
         self.spatial_mesh = np.stack((self.xx.flatten(), self.yy.flatten()), 1)

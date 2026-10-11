@@ -1,14 +1,10 @@
-import os
 import logging
-from itertools import combinations, product
+import os
 
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import numpy as np
-import scipy.io
-
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import griddata
 
 log = logging.getLogger(__name__)
@@ -33,7 +29,7 @@ def figsize(scale, nplots=1):
 
 mpl.rcParams.update(mpl.rcParamsDefault)
 
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # noqa: E402 -- apply rc defaults before pyplot import
 
 
 def newfig(width, nplots=1):
@@ -55,11 +51,10 @@ def savefig(filename, crop=True):
     :param filename: Name of the output file (without extension).
     :param crop: Whether to apply tight cropping to the saved image (default is True).
     """
-    
+
     dir_name = os.path.dirname(filename)
     if dir_name and not os.path.exists(dir_name):
         os.makedirs(dir_name)
-    
 
     if crop:
         plt.savefig(f"{filename}.pdf", bbox_inches="tight", pad_inches=0)
@@ -169,13 +164,15 @@ def plot_kdv(mesh, preds, train_datasets, val_dataset, file_name):
     cax = divider.append_axes("right", size="5%", pad=0.05)
     fig.colorbar(h, cax=cax)
 
-    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[:, None]
+    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[
+        :, None
+    ]
     ax.plot(mesh.time_domain[idx_t0] * np.ones((2, 1)), line, "w-", linewidth=1)
     ax.plot(mesh.time_domain[idx_t1] * np.ones((2, 1)), line, "w-", linewidth=1)
 
     ax.set_xlabel("$t$")
     ax.set_ylabel("$x$")
-    leg = ax.legend(frameon=False, loc="best")
+    ax.legend(frameon=False, loc="best")
     ax.set_title("$u(t,x)$", fontsize=10)
 
     # Row 1: h(t,x) slices
@@ -238,13 +235,15 @@ def plot_ac(mesh, preds, train_datasets, val_dataset, file_name):
     cax = divider.append_axes("right", size="5%", pad=0.05)
     fig.colorbar(h, cax=cax)
 
-    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[:, None]
+    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[
+        :, None
+    ]
     ax.plot(mesh.time_domain[idx_t0] * np.ones((2, 1)), line, "w-", linewidth=1)
     ax.plot(mesh.time_domain[idx_t1] * np.ones((2, 1)), line, "w-", linewidth=1)
 
     ax.set_xlabel("$t$")
     ax.set_ylabel("$x$")
-    leg = ax.legend(frameon=False, loc="best")
+    ax.legend(frameon=False, loc="best")
     ax.set_title("$u(t,x)$", fontsize=10)
 
     # Row 1: h(t,x) slices
@@ -261,8 +260,12 @@ def plot_ac(mesh, preds, train_datasets, val_dataset, file_name):
     ax.legend(loc="upper center", bbox_to_anchor=(0.8, -0.3), ncol=2, frameon=False)
 
     ax = plt.subplot(gs1[0, 1])
-    ax.plot(mesh.spatial_domain[:], exact_u[:, idx_t1], "b-", linewidth=2, label="Exact")
-    ax.plot(mesh.spatial_domain[:], U1_pred[:, -1], "r--", linewidth=2, label="Prediction")
+    ax.plot(
+        mesh.spatial_domain[:], exact_u[:, idx_t1], "b-", linewidth=2, label="Exact"
+    )
+    ax.plot(
+        mesh.spatial_domain[:], U1_pred[:, -1], "r--", linewidth=2, label="Prediction"
+    )
     ax.set_xlabel("$x$")
     ax.set_ylabel("$u(t,x)$")
     ax.set_title("$t = %.2f$" % (mesh.time_domain[idx_t1]), fontsize=10)
@@ -309,13 +312,15 @@ def plot_burgers_discrete_forward(mesh, preds, train_datasets, val_dataset, file
     cax = divider.append_axes("right", size="5%", pad=0.05)
     fig.colorbar(h, cax=cax)
 
-    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[:, None]
+    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[
+        :, None
+    ]
     ax.plot(mesh.time_domain[idx_t0] * np.ones((2, 1)), line, "w-", linewidth=1)
     ax.plot(mesh.time_domain[idx_t1] * np.ones((2, 1)), line, "w-", linewidth=1)
 
     ax.set_xlabel("$t$")
     ax.set_ylabel("$x$")
-    leg = ax.legend(frameon=False, loc="best")
+    ax.legend(frameon=False, loc="best")
     ax.set_title("$u(t,x)$", fontsize=10)
 
     # Row 1: h(t,x) slices
@@ -332,8 +337,12 @@ def plot_burgers_discrete_forward(mesh, preds, train_datasets, val_dataset, file
     ax.legend(loc="upper center", bbox_to_anchor=(0.8, -0.3), ncol=2, frameon=False)
 
     ax = plt.subplot(gs1[0, 1])
-    ax.plot(mesh.spatial_domain[:], exact_u[:, idx_t1], "b-", linewidth=2, label="Exact")
-    ax.plot(mesh.spatial_domain[:], U1_pred[:, -1], "r--", linewidth=2, label="Prediction")
+    ax.plot(
+        mesh.spatial_domain[:], exact_u[:, idx_t1], "b-", linewidth=2, label="Exact"
+    )
+    ax.plot(
+        mesh.spatial_domain[:], U1_pred[:, -1], "r--", linewidth=2, label="Prediction"
+    )
     ax.set_xlabel("$x$")
     ax.set_ylabel("$u(t,x)$")
     ax.set_title("$t = %.2f$" % (mesh.time_domain[idx_t1]), fontsize=10)
@@ -383,7 +392,9 @@ def plot_burgers_discrete_inverse(mesh, preds, train_datasets, val_dataset, file
     cax = divider.append_axes("right", size="5%", pad=0.05)
     fig.colorbar(h, cax=cax)
 
-    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[:, None]
+    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[
+        :, None
+    ]
     ax.plot(mesh.time_domain[idx_t0] * np.ones((2, 1)), line, "w-", linewidth=1.0)
     ax.plot(mesh.time_domain[idx_t1] * np.ones((2, 1)), line, "w-", linewidth=1.0)
     ax.set_xlabel("$t$")
@@ -394,21 +405,35 @@ def plot_burgers_discrete_inverse(mesh, preds, train_datasets, val_dataset, file
     gs1.update(top=1 - 1 / 3 - 0.1, bottom=1 - 2 / 3, left=0.15, right=0.85, wspace=0.5)
 
     ax = plt.subplot(gs1[0, 0])
-    ax.plot(mesh.spatial_domain[:], exact_u[:, idx_t0][:, None], "b", linewidth=2, label="Exact")
+    ax.plot(
+        mesh.spatial_domain[:],
+        exact_u[:, idx_t0][:, None],
+        "b",
+        linewidth=2,
+        label="Exact",
+    )
     ax.plot(x0, u0, "rx", linewidth=2, label="Data")
     ax.set_xlabel("$x$")
     ax.set_ylabel("$u(t,x)$")
     ax.set_title(
-        "$t = %.2f$\n%d training data" % (mesh.time_domain[idx_t0], u0.shape[0]), fontsize=10
+        "$t = %.2f$\n%d training data" % (mesh.time_domain[idx_t0], u0.shape[0]),
+        fontsize=10,
     )
 
     ax = plt.subplot(gs1[0, 1])
-    ax.plot(mesh.spatial_domain[:], exact_u[:, idx_t1][:, None], "b", linewidth=2, label="Exact")
+    ax.plot(
+        mesh.spatial_domain[:],
+        exact_u[:, idx_t1][:, None],
+        "b",
+        linewidth=2,
+        label="Exact",
+    )
     ax.plot(x1, u1, "rx", linewidth=2, label="Data")
     ax.set_xlabel("$x$")
     ax.set_ylabel("$u(t,x)$")
     ax.set_title(
-        "$t = %.2f$\n%d training data" % (mesh.time_domain[idx_t1], u1.shape[0]), fontsize=10
+        "$t = %.2f$\n%d training data" % (mesh.time_domain[idx_t1], u1.shape[0]),
+        fontsize=10,
     )
     ax.legend(loc="upper center", bbox_to_anchor=(-0.3, -0.3), ncol=2, frameon=False)
 
@@ -463,7 +488,9 @@ def plot_schrodinger(mesh, preds, train_datasets, val_dataset, file_name):
         markersize=4,
         clip_on=False,
     )
-    line = np.linspace(mesh.spatial_domain_mesh[:].min(), mesh.spatial_domain_mesh[:].max(), 2)[:, None]
+    line = np.linspace(
+        mesh.spatial_domain_mesh[:].min(), mesh.spatial_domain_mesh[:].max(), 2
+    )[:, None]
 
     ax.plot(mesh.time_domain[75] * np.ones((2, 1)), line, "k--", linewidth=1)
     ax.plot(mesh.time_domain[100] * np.ones((2, 1)), line, "k--", linewidth=1)
@@ -471,7 +498,7 @@ def plot_schrodinger(mesh, preds, train_datasets, val_dataset, file_name):
 
     ax.set_xlabel("$t$")
     ax.set_ylabel("$x$")
-    leg = ax.legend(frameon=False, loc="best")
+    ax.legend(frameon=False, loc="best")
     ax.set_title("$|h(t,x)|$", fontsize=10)
 
     # Row 1: h(t,x) slices
@@ -479,8 +506,20 @@ def plot_schrodinger(mesh, preds, train_datasets, val_dataset, file_name):
     gs1.update(top=1 - 1 / 3, bottom=0, left=0.1, right=0.9, wspace=0.5)
 
     ax = plt.subplot(gs1[0, 0])
-    ax.plot(mesh.spatial_domain_mesh[:, 75, 0], Exact_h[:, 75], "b-", linewidth=2, label="Exact")
-    ax.plot(mesh.spatial_domain_mesh[:, 75, 0], H_pred[:, 75], "r--", linewidth=2, label="Prediction")
+    ax.plot(
+        mesh.spatial_domain_mesh[:, 75, 0],
+        Exact_h[:, 75],
+        "b-",
+        linewidth=2,
+        label="Exact",
+    )
+    ax.plot(
+        mesh.spatial_domain_mesh[:, 75, 0],
+        H_pred[:, 75],
+        "r--",
+        linewidth=2,
+        label="Prediction",
+    )
     ax.set_xlabel("$x$")
     ax.set_ylabel("$|h(t,x)|$")
     ax.set_title("$t = %.2f$" % (mesh.time_domain[75]), fontsize=10)
@@ -489,8 +528,20 @@ def plot_schrodinger(mesh, preds, train_datasets, val_dataset, file_name):
     ax.set_ylim([-0.1, 5.1])
 
     ax = plt.subplot(gs1[0, 1])
-    ax.plot(mesh.spatial_domain_mesh[:, 100, 0], Exact_h[:, 100], "b-", linewidth=2, label="Exact")
-    ax.plot(mesh.spatial_domain_mesh[:, 100, 0], H_pred[:, 100], "r--", linewidth=2, label="Prediction")
+    ax.plot(
+        mesh.spatial_domain_mesh[:, 100, 0],
+        Exact_h[:, 100],
+        "b-",
+        linewidth=2,
+        label="Exact",
+    )
+    ax.plot(
+        mesh.spatial_domain_mesh[:, 100, 0],
+        H_pred[:, 100],
+        "r--",
+        linewidth=2,
+        label="Prediction",
+    )
     ax.set_xlabel("$x$")
     ax.set_ylabel("$|h(t,x)|$")
     ax.axis("square")
@@ -500,8 +551,20 @@ def plot_schrodinger(mesh, preds, train_datasets, val_dataset, file_name):
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.8), ncol=5, frameon=False)
 
     ax = plt.subplot(gs1[0, 2])
-    ax.plot(mesh.spatial_domain_mesh[:, 125, 0], Exact_h[:, 125], "b-", linewidth=2, label="Exact")
-    ax.plot(mesh.spatial_domain_mesh[:, 125, 0], H_pred[:, 125], "r--", linewidth=2, label="Prediction")
+    ax.plot(
+        mesh.spatial_domain_mesh[:, 125, 0],
+        Exact_h[:, 125],
+        "b-",
+        linewidth=2,
+        label="Exact",
+    )
+    ax.plot(
+        mesh.spatial_domain_mesh[:, 125, 0],
+        H_pred[:, 125],
+        "r--",
+        linewidth=2,
+        label="Prediction",
+    )
     ax.set_xlabel("$x$")
     ax.set_ylabel("$|h(t,x)|$")
     ax.axis("square")
@@ -512,7 +575,9 @@ def plot_schrodinger(mesh, preds, train_datasets, val_dataset, file_name):
     savefig(file_name + "/fig")
 
 
-def plot_burgers_continuous_forward(mesh, preds, train_datasets, val_dataset, file_name):
+def plot_burgers_continuous_forward(
+    mesh, preds, train_datasets, val_dataset, file_name
+):
     """Plot burgers continuous forward PDE."""
 
     U_pred = preds["u"]
@@ -561,7 +626,9 @@ def plot_burgers_continuous_forward(mesh, preds, train_datasets, val_dataset, fi
         clip_on=False,
     )
 
-    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[:, None]
+    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[
+        :, None
+    ]
     ax.plot(mesh.time_domain[25] * np.ones((2, 1)), line, "w-", linewidth=1)
     ax.plot(mesh.time_domain[50] * np.ones((2, 1)), line, "w-", linewidth=1)
     ax.plot(mesh.time_domain[75] * np.ones((2, 1)), line, "w-", linewidth=1)
@@ -611,20 +678,20 @@ def plot_burgers_continuous_forward(mesh, preds, train_datasets, val_dataset, fi
 
 def plot_heat(mesh, preds, train_datasets, val_dataset, file_name):
     """Plot heat equation results."""
-    
+
     # Извлекаем предсказания
     T_pred = preds["T"]
     Exact_T = mesh.solution["T"]  # точное решение из MAT-файла
     T_pred_grid = T_pred.reshape(Exact_T.shape)  # приводим к форме Nx x Nt
-    
+
     # ============ Верхний ряд: 2D тепловая карта ============
     fig = plt.figure(figsize=(12, 5))
-    
+
     # Создаём сетку для верхнего ряда
     gs0 = gridspec.GridSpec(1, 1)
     gs0.update(top=0.9, bottom=0.55, left=0.1, right=0.9)
     ax_top = plt.subplot(gs0[:, :])
-    
+
     # Тепловая карта решения
     im = ax_top.imshow(
         T_pred_grid,
@@ -634,13 +701,13 @@ def plot_heat(mesh, preds, train_datasets, val_dataset, file_name):
         origin="lower",
         aspect="auto",
     )
-    
+
     # Цветовая шкала
     divider = make_axes_locatable(ax_top)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     cbar = fig.colorbar(im, cax=cax)
-    cbar.set_label('Температура T(x,t)', rotation=270, labelpad=15)
-    
+    cbar.set_label("Температура T(x,t)", rotation=270, labelpad=15)
+
     # Добавляем точки данных обучения (если есть)
     if len(train_datasets) >= 1:
         for dataset in train_datasets:
@@ -652,71 +719,76 @@ def plot_heat(mesh, preds, train_datasets, val_dataset, file_name):
                     "kx",
                     markersize=4,
                     alpha=0.5,
-                    label="Training points"
+                    label="Training points",
                 )
-            except:
+            except Exception:
                 pass
-    
+
     # Вертикальные линии для моментов срезов
-    t_slice_indices = [len(mesh.time_domain)//4, 
-                       len(mesh.time_domain)//2, 
-                       3*len(mesh.time_domain)//4]
-    
+    t_slice_indices = [
+        len(mesh.time_domain) // 4,
+        len(mesh.time_domain) // 2,
+        3 * len(mesh.time_domain) // 4,
+    ]
+
     t_array = np.array(mesh.time_domain).flatten()
 
     for idx in t_slice_indices:
         t_val = float(t_array[idx])
-        ax_top.axvline(x=t_val, color='white', linestyle='--', linewidth=1, alpha=0.7)
-    
+        ax_top.axvline(x=t_val, color="white", linestyle="--", linewidth=1, alpha=0.7)
+
     ax_top.set_xlabel("Время t")
     ax_top.set_ylabel("Пространство x")
     ax_top.set_title("Температура T(x,t)", fontsize=12)
-    
+
     # ============ Нижний ряд: срезы по времени ============
     gs1 = gridspec.GridSpec(1, 3)
     gs1.update(top=0.45, bottom=0.05, left=0.1, right=0.9, wspace=0.4)
-    
-    slice_times = [
-        mesh.time_domain[len(mesh.time_domain)//4],   # 25% времени
-        mesh.time_domain[len(mesh.time_domain)//2],   # 50% времени
-        mesh.time_domain[3*len(mesh.time_domain)//4]  # 75% времени
-    ]
-    
+
     slice_indices = [
-        len(mesh.time_domain)//4,
-        len(mesh.time_domain)//2,
-        3*len(mesh.time_domain)//4
+        len(mesh.time_domain) // 4,
+        len(mesh.time_domain) // 2,
+        3 * len(mesh.time_domain) // 4,
     ]
 
-    
-    
     for i, t_idx in enumerate(slice_indices):
         ax = plt.subplot(gs1[0, i])
-        
+
         # Извлекаем пространственную координату
-        x_coords = mesh.spatial_domain_mesh[:, t_idx, 0] if len(mesh.spatial_domain_mesh.shape) > 2 else mesh.spatial_domain_mesh[:, 0]
-        
+        x_coords = (
+            mesh.spatial_domain_mesh[:, t_idx, 0]
+            if len(mesh.spatial_domain_mesh.shape) > 2
+            else mesh.spatial_domain_mesh[:, 0]
+        )
+
         # Точное решение
         ax.plot(x_coords, Exact_T[:, t_idx], "b-", linewidth=2, label="Точное")
-        
+
         # Предсказанное решение
-        ax.plot(x_coords, T_pred_grid[:, t_idx], "r--", linewidth=2, label="Предсказанное")
-        
+        ax.plot(
+            x_coords, T_pred_grid[:, t_idx], "r--", linewidth=2, label="Предсказанное"
+        )
+
         ax.set_xlabel("x")
         ax.set_ylabel("T")
         t_val = float(t_array[t_idx])
         ax.set_title(f"t = {t_val:.3f}", fontsize=10)
         ax.grid(True, alpha=0.3)
-        
+
         # Настройка осей
         ax.set_xlim([mesh.lb[0], mesh.ub[0]])
-        
+
         if i == 1:  # легенда только на среднем графике
-            ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.2), ncol=2, frameon=False)
-    
+            ax.legend(
+                loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2, frameon=False
+            )
+
     savefig(filename=file_name + "/fig")
 
-def plot_burgers_continuous_inverse(mesh, preds, train_datasets, val_dataset, file_name):
+
+def plot_burgers_continuous_inverse(
+    mesh, preds, train_datasets, val_dataset, file_name
+):
     """Plot burgers continuous inverse PDE."""
 
     U_pred = preds["u"]
@@ -762,7 +834,9 @@ def plot_burgers_continuous_inverse(mesh, preds, train_datasets, val_dataset, fi
         clip_on=False,
     )
 
-    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[:, None]
+    line = np.linspace(mesh.spatial_domain[:].min(), mesh.spatial_domain[:].max(), 2)[
+        :, None
+    ]
     ax.plot(mesh.time_domain[25] * np.ones((2, 1)), line, "w-", linewidth=1)
     ax.plot(mesh.time_domain[50] * np.ones((2, 1)), line, "w-", linewidth=1)
     ax.plot(mesh.time_domain[75] * np.ones((2, 1)), line, "w-", linewidth=1)
@@ -778,7 +852,9 @@ def plot_burgers_continuous_inverse(mesh, preds, train_datasets, val_dataset, fi
 
     ax = plt.subplot(gs1[0, 0])
     ax.plot(mesh.spatial_domain[:], exact_u[:, 25], "b-", linewidth=2, label="Exact")
-    ax.plot(mesh.spatial_domain[:], U_pred[:, 25], "r--", linewidth=2, label="Prediction")
+    ax.plot(
+        mesh.spatial_domain[:], U_pred[:, 25], "r--", linewidth=2, label="Prediction"
+    )
     ax.set_xlabel("$x$")
     ax.set_ylabel("$u(t,x)$")
     ax.set_title("$t = 0.25$", fontsize=10)
@@ -788,7 +864,9 @@ def plot_burgers_continuous_inverse(mesh, preds, train_datasets, val_dataset, fi
 
     ax = plt.subplot(gs1[0, 1])
     ax.plot(mesh.spatial_domain[:], exact_u[:, 50], "b-", linewidth=2, label="Exact")
-    ax.plot(mesh.spatial_domain[:], U_pred[:, 50], "r--", linewidth=2, label="Prediction")
+    ax.plot(
+        mesh.spatial_domain[:], U_pred[:, 50], "r--", linewidth=2, label="Prediction"
+    )
     ax.set_xlabel("$x$")
     ax.set_ylabel("$u(t,x)$")
     ax.axis("square")
@@ -799,7 +877,9 @@ def plot_burgers_continuous_inverse(mesh, preds, train_datasets, val_dataset, fi
 
     ax = plt.subplot(gs1[0, 2])
     ax.plot(mesh.spatial_domain[:], exact_u[:, 75], "b-", linewidth=2, label="Exact")
-    ax.plot(mesh.spatial_domain[:], U_pred[:, 75], "r--", linewidth=2, label="Prediction")
+    ax.plot(
+        mesh.spatial_domain[:], U_pred[:, 75], "r--", linewidth=2, label="Prediction"
+    )
     ax.set_xlabel("$x$")
     ax.set_ylabel("$u(t,x)$")
     ax.axis("square")

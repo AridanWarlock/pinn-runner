@@ -61,7 +61,9 @@ class PINNDataLoader:
             self.current_index += self.dataset_size
             return batch
 
-        batch_indices = self.indices[self.current_index : self.current_index + self.batch_size]
+        batch_indices = self.indices[
+            self.current_index : self.current_index + self.batch_size
+        ]
         batch = self.dataset[batch_indices]
         self.current_index += self.batch_size
 

@@ -16,7 +16,8 @@ class InitialCondition(SamplerBase):
         mesh: MeshBase,
         num_sample: int | None = None,
         solution: list[str] | None = None,
-        initial_fun: Callable[[NDArray[np.float64]], dict[str, NDArray[np.float64]]] | None = None,
+        initial_fun: Callable[[NDArray[np.float64]], dict[str, NDArray[np.float64]]]
+        | None = None,
     ) -> None:
         """Initialize an InitialCondition object for sampling initial condition data.
 
@@ -29,8 +30,10 @@ class InitialCondition(SamplerBase):
 
         self.solution_names = solution
 
-        (self.spatial_domain, self.time_domain, self.solution) = mesh.on_initial_boundary(
-            [] if initial_fun is not None else self.solution_names
+        (self.spatial_domain, self.time_domain, self.solution) = (
+            mesh.on_initial_boundary(
+                [] if initial_fun is not None else self.solution_names
+            )
         )
 
         if initial_fun is not None:
@@ -38,22 +41,33 @@ class InitialCondition(SamplerBase):
                 raise ValueError("InitialCondition must specify solution names")
             self.solution = initial_fun(self.spatial_domain)
             if not isinstance(self.solution, dict):
-                raise ValueError("initial_conditions must return a dictionary of arrays")
+                raise ValueError(
+                    "initial_conditions must return a dictionary of arrays"
+                )
             for name in self.solution_names:
                 if name not in self.solution:
                     raise ValueError(f"initial_conditions is missing solution '{name}'")
                 values = np.asarray(self.solution[name])
-                if values.shape != (len(self.spatial_domain), 1) or not np.isfinite(values).all():
-                    raise ValueError(f"initial_conditions['{name}'] must be a finite (N, 1) array")
+                if (
+                    values.shape != (len(self.spatial_domain), 1)
+                    or not np.isfinite(values).all()
+                ):
+                    raise ValueError(
+                        f"initial_conditions['{name}'] must be a finite (N, 1) array"
+                    )
                 self.solution[name] = values
 
         (
             self.spatial_domain_sampled,
             self.time_domain_sampled,
             self.solution_sampled,
-        ) = self.sample_mesh(num_sample, (self.spatial_domain, self.time_domain, self.solution))
+        ) = self.sample_mesh(
+            num_sample, (self.spatial_domain, self.time_domain, self.solution)
+        )
 
-        self.spatial_domain_sampled = list(torch.split(self.spatial_domain_sampled, (1), dim=1))
+        self.spatial_domain_sampled = list(
+            torch.split(self.spatial_domain_sampled, (1), dim=1)
+        )
         self.solution_sampled = list(torch.split(self.solution_sampled, (1), dim=1))
 
     def sample_mesh(self, num_sample, flatten_mesh):
@@ -73,9 +87,15 @@ class InitialCondition(SamplerBase):
         if num_sample is None:
             return self.convert_to_tensor(flatten_mesh)
         else:
-            idx = np.random.choice(range(flatten_mesh[0].shape[0]), num_sample, replace=False)
+            idx = np.random.choice(
+                range(flatten_mesh[0].shape[0]), num_sample, replace=False
+            )
             return self.convert_to_tensor(
-                (flatten_mesh[0][idx, :], flatten_mesh[1][idx, :], flatten_mesh[2][idx, :])
+                (
+                    flatten_mesh[0][idx, :],
+                    flatten_mesh[1][idx, :],
+                    flatten_mesh[2][idx, :],
+                )
             )
 
     def _loss_fn(self, inputs, loss):

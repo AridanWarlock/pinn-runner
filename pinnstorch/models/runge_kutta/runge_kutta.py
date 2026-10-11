@@ -1,6 +1,5 @@
 import logging
-
-from typing import Dict, List, Union, Optional
+from typing import Dict, List
 
 import numpy as np
 import torch
@@ -46,18 +45,20 @@ class RungeKutta(torch.nn.Module):
         tmp = load_data_txt(root_dir, file_name)
 
         weights = np.reshape(tmp[0 : q**2 + q], (q + 1, q)).astype(np.float32)
-        
+
         self.register_buffer("alpha", torch.from_numpy(weights[0:-1, :].T))
         self.register_buffer("beta", torch.from_numpy(weights[-1:, :].T))
         self.register_buffer("weights", torch.from_numpy(weights.T))
-        
+
         self.IRK_times = tmp[q**2 + q :]
 
-    def forward(self,
-                outputs: Dict[str, torch.Tensor],
-                mode: str,
-                solution_names: List[str],
-                collection_points_names: List[str]):
+    def forward(
+        self,
+        outputs: Dict[str, torch.Tensor],
+        mode: str,
+        solution_names: List[str],
+        collection_points_names: List[str],
+    ):
         """Perform a forward step using the Runge-Kutta method for solving differential equations.
 
         :param outputs: Dictionary containing solution tensors and other variables.
@@ -68,19 +69,25 @@ class RungeKutta(torch.nn.Module):
         :return: Dictionary with updated solution tensors after the forward step.
         """
 
-        for solution_name, collection_points_name in zip(solution_names, collection_points_names):
+        for solution_name, collection_points_name in zip(
+            solution_names, collection_points_names
+        ):
             if mode == "inverse_discrete_1":
-                outputs[solution_name] = outputs[solution_name] - self.dt * torch.matmul(
-                    outputs[collection_points_name], self.alpha
-                )
+                outputs[solution_name] = outputs[
+                    solution_name
+                ] - self.dt * torch.matmul(outputs[collection_points_name], self.alpha)
 
             elif mode == "inverse_discrete_2":
-                outputs[solution_name] = outputs[solution_name] + self.dt * torch.matmul(
+                outputs[solution_name] = outputs[
+                    solution_name
+                ] + self.dt * torch.matmul(
                     outputs[collection_points_name], (self.beta - self.alpha)
                 )
 
             elif mode == "forward_discrete":
-                outputs[solution_name] = outputs[solution_name] - self.dt * torch.matmul(
+                outputs[solution_name] = outputs[
+                    solution_name
+                ] - self.dt * torch.matmul(
                     outputs[collection_points_name], self.weights
                 )
 

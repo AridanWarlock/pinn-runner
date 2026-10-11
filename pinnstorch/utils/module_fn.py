@@ -1,12 +1,15 @@
-from typing import Dict, List, Union, Optional, Tuple
+from typing import Dict, List, Tuple, Union
 
 import torch
 
-def sse(loss: torch.Tensor,
-        preds: Dict[str, torch.Tensor],
-        target: Union[Dict[str, torch.Tensor], None] = None,
-        keys: Union[List[str], None] = None,
-        mid: Union[int, None] = None) -> torch.Tensor:
+
+def sse(
+    loss: torch.Tensor,
+    preds: Dict[str, torch.Tensor],
+    target: Union[Dict[str, torch.Tensor], None] = None,
+    keys: Union[List[str], None] = None,
+    mid: Union[int, None] = None,
+) -> torch.Tensor:
     """Calculate the sum of squared errors (SSE) loss for given predictions and optional targets.
 
     :param loss: Loss variable.
@@ -16,7 +19,7 @@ def sse(loss: torch.Tensor,
     :param mid: Index to separate predictions for mid-point calculation (optional).
     :return: Calculated SSE loss.
     """
-    
+
     if keys is None:
         return loss
 
@@ -30,11 +33,14 @@ def sse(loss: torch.Tensor,
 
     return loss
 
-def mse(loss: torch.Tensor,
-        preds: Dict[str, torch.Tensor],
-        target: Union[Dict[str, torch.Tensor], None] = None,
-        keys: Union[List[str], None] = None,
-        mid: Union[int, None] = None) -> torch.Tensor:
+
+def mse(
+    loss: torch.Tensor,
+    preds: Dict[str, torch.Tensor],
+    target: Union[Dict[str, torch.Tensor], None] = None,
+    keys: Union[List[str], None] = None,
+    mid: Union[int, None] = None,
+) -> torch.Tensor:
     """Calculate the mean squared error (MSE) loss for given predictions and optional targets.
 
     :param loss: Loss variable.
@@ -66,12 +72,12 @@ def relative_l2_error(preds, target):
     :param target: Target tensors.
     :return: Relative L2 error value.
     """
-    l2_norm_error = torch.mean((preds - target)**2)
-    l2_norm_target = torch.mean((target)**2)
-    #print(l2_norm_error, l2_norm_target, relative_l2)
+    l2_norm_error = torch.mean((preds - target) ** 2)
+    l2_norm_target = torch.mean((target) ** 2)
+    # print(l2_norm_error, l2_norm_target, relative_l2)
     if l2_norm_target == 0:
         return l2_norm_error
-    return torch.sqrt(l2_norm_error/l2_norm_target)
+    return torch.sqrt(l2_norm_error / l2_norm_target)
 
 
 def fix_extra_variables(extra_variables):
@@ -111,9 +117,9 @@ def requires_grad(batch, enable_grad=True):
     return spatial, time, solutions
 
 
-def set_requires_grad(x: List[torch.Tensor],
-                      t: torch.Tensor,
-                      enable_grad: bool=True) -> Tuple[List[torch.Tensor], torch.Tensor]:
+def set_requires_grad(
+    x: List[torch.Tensor], t: torch.Tensor, enable_grad: bool = True
+) -> Tuple[List[torch.Tensor], torch.Tensor]:
     """Set the requires_grad attribute for tensors in the input list.
 
     :param x: List of tensors to modify requires_grad attribute.
@@ -127,8 +133,11 @@ def set_requires_grad(x: List[torch.Tensor],
 
     return x, t
 
-def fix_predictions(preds_list: List[Dict[str, torch.Tensor]]) -> Dict[str, torch.Tensor]:
-    """It will concatenate predictions for each solution 
+
+def fix_predictions(
+    preds_list: List[Dict[str, torch.Tensor]],
+) -> Dict[str, torch.Tensor]:
+    """It will concatenate predictions for each solution
     into a tensor and return a dictionary including them.
 
     :param preds_list: List of dictionary of predictions.
@@ -142,5 +151,3 @@ def fix_predictions(preds_list: List[Dict[str, torch.Tensor]]) -> Dict[str, torc
             else:
                 preds_dict[sol_key] = pred.detach()
     return preds_dict
-
-

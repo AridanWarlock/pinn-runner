@@ -1,11 +1,10 @@
-from typing import Dict, List, Any, Tuple, Callable
+from typing import Dict, List, Tuple
 
-import numpy as np
 import torch
 import torch._dynamo
 
 from .sampler_base import SamplerBase
-from pinnstorch.utils import set_requires_grad
+
 
 class MeshSampler(SamplerBase):
     """Sample from Mesh for continuous mode."""
@@ -34,7 +33,7 @@ class MeshSampler(SamplerBase):
         self.solution_names = solution
         self.collection_points_names = collection_points
         self.idx_t = idx_t
-        
+
         # On a time step.
         if self.idx_t:
             flatten_mesh = mesh.on_initial_boundary(self.solution_names, self.idx_t)
@@ -54,17 +53,17 @@ class MeshSampler(SamplerBase):
 
         # Collection Points only.
         else:
-            (self.spatial_domain_sampled, self.time_domain_sampled) = self.convert_to_tensor(
-                mesh.collection_points(num_sample, use_lhs)
+            (self.spatial_domain_sampled, self.time_domain_sampled) = (
+                self.convert_to_tensor(mesh.collection_points(num_sample, use_lhs))
             )
 
             self.solution_sampled = None
 
-        self.spatial_domain_sampled = list(torch.split(self.spatial_domain_sampled, (1), dim=1))
-    
-    def _loss_fn(self,
-                 inputs,
-                 loss) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+        self.spatial_domain_sampled = list(
+            torch.split(self.spatial_domain_sampled, (1), dim=1)
+        )
+
+    def _loss_fn(self, inputs, loss) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
         """Compute the loss function based on inputs and functions.
 
         :param inputs: Input data for computing the loss.
@@ -72,21 +71,25 @@ class MeshSampler(SamplerBase):
         :return: Loss variable and outputs dict from the forward pass.
         """
         x, t, u = inputs
-        
+
         outputs = self.functions["forward"](x, t)
 
         if self.collection_points_names:
             if self.functions["extra_variables"] is not None:
-                outputs = self.functions["pde_fn"](outputs, *x, t, self.functions["extra_variables"])
-            else:    
+                outputs = self.functions["pde_fn"](
+                    outputs, *x, t, self.functions["extra_variables"]
+                )
+            else:
                 outputs = self.functions["pde_fn"](outputs, *x, t)
 
-        loss = self.functions["loss_fn"](loss, outputs, keys=self.collection_points_names)
+        loss = self.functions["loss_fn"](
+            loss, outputs, keys=self.collection_points_names
+        )
         loss = self.functions["loss_fn"](loss, outputs, u, keys=self.solution_names)
 
         return loss, outputs
-    
- 
+
+
 class DiscreteMeshSampler(SamplerBase):
     """Sample from Mesh for discrete mode."""
 
@@ -121,7 +124,9 @@ class DiscreteMeshSampler(SamplerBase):
             self.solution_sampled,
         ) = self.sample_mesh(num_sample, flatten_mesh)
 
-        self.spatial_domain_sampled = list(torch.split(self.spatial_domain_sampled, (1), dim=1))
+        self.spatial_domain_sampled = list(
+            torch.split(self.spatial_domain_sampled, (1), dim=1)
+        )
         self.time_domain_sampled = None
         self.solution_sampled = list(torch.split(self.solution_sampled, (1), dim=1))
 
@@ -157,7 +162,9 @@ class DiscreteMeshSampler(SamplerBase):
 
         if self._mode:
             if self.functions["extra_variables"] is not None:
-                outputs = self.functions["pde_fn"](outputs, *x, self.functions["extra_variables"])
+                outputs = self.functions["pde_fn"](
+                    outputs, *x, self.functions["extra_variables"]
+                )
             else:
                 outputs = self.functions["pde_fn"](outputs, *x)
             outputs = self.functions["runge_kutta"](

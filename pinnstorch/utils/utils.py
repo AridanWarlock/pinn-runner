@@ -13,6 +13,7 @@ from pinnstorch.utils import pylogger, rich_utils
 
 log = pylogger.get_pylogger(__name__)
 
+
 def extras(cfg: DictConfig) -> None:
     """Applies optional utilities before the task is started.
 
@@ -67,26 +68,29 @@ def task_wrapper(task_func: Callable) -> Callable:
     """
 
     def wrap(
-        cfg: DictConfig, 
-        pde_fn: Callable, 
+        cfg: DictConfig,
+        pde_fn: Callable,
         mode: str,
-        read_data_fn: Callable = None, 
-        output_fn: Callable = None, 
+        read_data_fn: Callable = None,
+        output_fn: Callable = None,
         plot_func: Callable = None,
-        boundary_functions: Dict = None,     
+        boundary_functions: Dict = None,
         checkpoint: str = None,
-        initial_conditions: Callable[[NDArray[np.float64]], Dict[str, NDArray[np.float64]]] | None = None,
+        initial_conditions: Callable[
+            [NDArray[np.float64]], Dict[str, NDArray[np.float64]]
+        ]
+        | None = None,
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         # execute the task
         try:
             metric_dict, object_dict = task_func(
-                cfg=cfg, 
-                read_data_fn=read_data_fn, 
-                pde_fn=pde_fn, 
+                cfg=cfg,
+                read_data_fn=read_data_fn,
+                pde_fn=pde_fn,
                 mode=mode,
-                output_fn=output_fn, 
+                output_fn=output_fn,
                 plot_func=plot_func,
-                boundary_functions=boundary_functions, 
+                boundary_functions=boundary_functions,
                 checkpoint=checkpoint,
                 initial_conditions=initial_conditions,
             )
@@ -206,7 +210,7 @@ def load_data(root_path, file_name):
 
 def set_mode(cfg):
     import torch
-    
+
     if not torch.cuda.is_available():
         log.info("GPU is not found. Using CPU.")
         cfg.trainer.accelerator = "cpu"
@@ -224,8 +228,8 @@ def set_mode(cfg):
                     f"DDP is not supported for compiled model. Using device {cfg.trainer.devices[0]}"
                 )
                 cfg.trainer.devices = [cfg.trainer.devices[0]]
-        
-    elif not cfg.model.cudagraph_compile and cfg.trainer.accelerator != "cpu": 
+
+    elif not cfg.model.cudagraph_compile and cfg.trainer.accelerator != "cpu":
         log.info("Model will not be compiled.")
         if cfg.model._target_ == "torch.optim.Adam ":
             log.info("Setting optimizer capturable attribute to False.")
@@ -241,5 +245,5 @@ def set_mode(cfg):
         log.info("Setting optimizer capturable attribute to False.")
         cfg.model.optimizer.capturable = False
         log.info("Enabling automatic optimization.")
-    
+
     return cfg

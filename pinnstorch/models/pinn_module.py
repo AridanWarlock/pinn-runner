@@ -1,21 +1,13 @@
-from typing import Any, Callable, Dict, List, Tuple, Union
-
-import os
 import time
+from typing import Any, Callable, Dict, List, Tuple
+
 import torch
 import torch._lazy
 import torch._lazy.ts_backend
-import torch.distributed as dist
-import torch.cuda.amp as amp
-import numpy as np
-
 from lightning import LightningModule
-from lightning.pytorch.utilities import move_data_to_device
 from torchmetrics import MeanMetric, MinMetric
-from torchmetrics.classification.accuracy import Accuracy
-from lightning.pytorch.plugins.precision.amp import MixedPrecisionPlugin
 
-from pinnstorch.utils.gradient_fn import fwd_gradient, gradient
+from pinnstorch.utils import get_pylogger
 from pinnstorch.utils.module_fn import (
     fix_extra_variables,
     mse,
@@ -24,19 +16,18 @@ from pinnstorch.utils.module_fn import (
     sse,
 )
 
-from pinnstorch.utils import get_pylogger
-
 log = get_pylogger(__name__)
+
 
 class PINNModule(LightningModule):
     """
-    A LightningModule for training Physics-Informed Neural Networks (PINNs) to solve partial 
+    A LightningModule for training Physics-Informed Neural Networks (PINNs) to solve partial
     differential equations (PDEs).
     """
 
     function_mapping: Dict[str, Callable]
     net: torch.nn.Module
-    
+
     def __init__(
         self,
         net: torch.nn.Module,
@@ -46,13 +37,13 @@ class PINNModule(LightningModule):
         scaler: torch.cuda.amp.GradScaler = None,
         loss_fn: str = "mse",
         extra_variables: Dict[str, Any] = None,
-        output_fn = None,
+        output_fn=None,
         runge_kutta=None,
         cudagraph_compile: bool = False,
         jit_compile: bool = True,
         amp: bool = True,
         lazy: bool = False,
-        inline: bool = False
+        inline: bool = False,
     ) -> None:
         """
         Initialize the PINNModule.
@@ -83,7 +74,9 @@ class PINNModule(LightningModule):
 
         self.net = net
         self.capture_end = False
-        self.extra_variables: torch.nn.ParameterDict = fix_extra_variables(extra_variables)
+        self.extra_variables: torch.nn.ParameterDict = fix_extra_variables(
+            extra_variables
+        )
         self.pde_fn = pde_fn
         self.output_fn = output_fn
         self.rk = runge_kutta
@@ -108,18 +101,17 @@ class PINNModule(LightningModule):
 
         if self.cudagraph_compile:
             self.automatic_optimization = False
-            
+
         if self.jit_compile and self.cudagraph_compile:
             if inline:
                 torch._C._debug_set_autodiff_subgraph_inlining(False)
                 torch._C._jit_set_nvfuser_single_node_mode(True)
             else:
                 torch._C._jit_set_nvfuser_enabled(True)
-        
+
         if self.lazy:
             torch._lazy.ts_backend.init()
 
-        
         # for averaging loss across batches
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
@@ -142,7 +134,9 @@ class PINNModule(LightningModule):
             "jit_compile": self.jit_compile,
         }
 
-    def forward(self, spatial: List[torch.Tensor], time: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(
+        self, spatial: List[torch.Tensor], time: torch.Tensor
+    ) -> Dict[str, torch.Tensor]:
         """Perform a forward pass through the model `self.net`.
 
         :param spatial: List of input spatial tensors.
@@ -160,29 +154,31 @@ class PINNModule(LightningModule):
 
         :return: None
         """
-        
+
         self.function_mapping = self.trainer.datamodule.function_mapping
-        
+
     def on_train_start(self) -> None:
         """
         Lightning hook that is called when training begins.
 
         By default lightning executes validation step sanity checks before training starts,
         so it's worth to make sure validation metrics don't store results from these checks
-        
+
         :return: None
         """
-        
+
         self.val_loss.reset()
         self.val_error.reset()
         self.val_loss_best.reset()
 
-        self.functions["batch_size"] = True if self.trainer.datamodule.batch_size else False
-        
-        if self.lazy: 
-            device = 'lazy'
+        self.functions["batch_size"] = (
+            True if self.trainer.datamodule.batch_size else False
+        )
+
+        if self.lazy:
+            device = "lazy"
         elif self.xla:
-            device = 'xla'
+            device = "xla"
         else:
             device = self.device
         self.net = self.net.to(device)
@@ -192,24 +188,6 @@ class PINNModule(LightningModule):
         if self.rk:
             self.rk = self.rk.to(device)
 
-    def on_train_batch_start(self):
-        """
-        Prepare the training loss tensor for the upcoming training batch.
-        This method is called at the beginning of each training batch
-        to ensure the `train_loss` tensor is on the appropriate device.
-        
-        :return: None
-        """
-        
-        if self.lazy: 
-            device = 'lazy'
-        elif self.xla:
-            device = 'xla'
-        else:
-            device = self.device
-            
-        self.train_loss = self.train_loss.to(device)
-            
     def transfer_batch_to_device(self, batch, device, dataloader_idx):
         """
         Perform moving the data to the target device.
@@ -218,16 +196,16 @@ class PINNModule(LightningModule):
 
         :param batch: A batch of data (a tuple) containing the
         :param device: The target device
-        :param dataloader_idx: The index of dataloader 
+        :param dataloader_idx: The index of dataloader
 
         :return: The batch in target device.
         """
-        
+
         if self.lazy:
-            device = 'lazy'
+            device = "lazy"
 
         if self.xla:
-            device = 'xla'
+            device = "xla"
 
         if self.automatic_optimization:
             # If we do not use CUDA graphs we need to move the batch to self.device.
@@ -240,58 +218,59 @@ class PINNModule(LightningModule):
                 if self.trainer.datamodule.batch_size and self.val_stage is False:
                     self.copy_batch(batch)
                 elif self.trainer.datamodule.batch_size and self.val_stage is True:
-                    batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
-            
+                    batch = super().transfer_batch_to_device(
+                        batch, device, dataloader_idx
+                    )
+
         return batch
 
-   
     def on_before_backward(self, loss):
-        """    
+        """
         This method is invoked before the backward pass in the training process.
         If both AMP and CUDA Graph compilation are enabled,
-        it scales the loss value using the model's scaler to facilitate a more numerically stable 
+        it scales the loss value using the model's scaler to facilitate a more numerically stable
         and efficient backward pass. Otherwise, the loss remains unmodified.
-    
+
         :param loss: The original loss value calculated from the forward pass.
         :return: The potentially scaled loss value, depending on the AMP and CUDA Graph compilation settings.
         """
-        
+
         if self.amp and self.cudagraph_compile:
             return self.scaler.scale(loss)
         else:
             return loss
-    
+
     def capture_graph(self, batch):
         """
         Capture the computation graph after warming up with 11 iterations.
-    
-        This method initiates a warm-up phase of 11 training iterations and then captures the CUDA computation graph for 
-        the subsequent iterations. This is particularly useful for optimizing GPU computations by reusing the 
+
+        This method initiates a warm-up phase of 11 training iterations and then captures the CUDA computation graph for
+        the subsequent iterations. This is particularly useful for optimizing GPU computations by reusing the
         precompiled computation graph.
-    
-        The warm-up and graph capturing are performed on a separate CUDA stream to avoid interfering with the ongoing 
-        computations on the default stream. The captured graph encompasses the forward and backward passes, as well 
+
+        The warm-up and graph capturing are performed on a separate CUDA stream to avoid interfering with the ongoing
+        computations on the default stream. The captured graph encompasses the forward and backward passes, as well
         as the optimizer step, making the entire training iteration highly efficient.
-    
+
         :param batch: The input batch of data to be used for warm-up and graph capturing.
         :return: None
         """
-        
+
         self.capture_time = time.time()
         self.opt = self.optimizers()
-        
+
         self.static_batch = batch
         self.batch_idx = 0
-        
+
         self.s = torch.cuda.Stream()
         self.s.wait_stream(torch.cuda.current_stream())
 
         with torch.cuda.stream(self.s):
             for i in range(11):
                 self.opt.zero_grad(set_to_none=True)
-                with torch.autocast(device_type='cuda', enabled = self.amp):
+                with torch.autocast(device_type="cuda", enabled=self.amp):
                     loss, pred = self.model_step(self.static_batch)
-                    
+
                 self.manual_backward(loss)
                 if self.amp:
                     self.scaler.step(self.opt)
@@ -300,11 +279,11 @@ class PINNModule(LightningModule):
                     self.opt.step()
 
         torch.cuda.current_stream().wait_stream(self.s)
-        
+
         self.g = torch.cuda.CUDAGraph()
         self.opt.zero_grad(set_to_none=True)
         with torch.cuda.graph(self.g):
-            with torch.autocast(device_type='cuda', enabled = self.amp):
+            with torch.autocast(device_type="cuda", enabled=self.amp):
                 self.static_loss, self.static_pred = self.model_step(self.static_batch)
             self.manual_backward(self.static_loss)
             if self.amp is False:
@@ -312,8 +291,8 @@ class PINNModule(LightningModule):
 
         self.batch_idx = 1
         self.capture_end = True
-        print('Capture Time', time.time() - self.capture_time)
-    
+        print("Capture Time", time.time() - self.capture_time)
+
     def copy_batch(self, batch) -> None:
         """
         Fills the graph's input memory with new data to compute on. If the batch_size is not
@@ -321,32 +300,28 @@ class PINNModule(LightningModule):
 
         :param batch: A batch of data (a tuple) containing the input tensor of images and target labels.
         """
-        
+
         import time as tm
+
         st = tm.time()
-        
+
         for key in batch:
             spatial, time, solution = self.static_batch[key]
             spatial_new, time_new, solution_new = batch[key]
             time = time.requires_grad_(False).copy_(time_new)
-            x = [
+            for i, spatial_ in enumerate(spatial):
                 spatial_.requires_grad_(False).copy_(spatial_new[i])
-                for i, spatial_ in enumerate(spatial)
-            ]
             if solution_new is not None:
                 solution = {
                     key_sol: solution[key_sol].copy_(solution_new[key_sol])
                     for key_sol in solution_new
                 }
-        
+
         self.times_batch.append(tm.time() - st)
-        
+
     def model_step(
         self,
-        batch: Dict[
-            str,
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
-        ],
+        batch: Dict[str, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
     ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
         """Perform a single model step on a batch of data.
 
@@ -357,22 +332,18 @@ class PINNModule(LightningModule):
             - A tensor of losses.
             - A dictionary of predictions.
         """
-        
+
         loss = 0.0
-        
+
         for loss_fn, data in batch.items():
             x, t, u = data
             x, t = set_requires_grad(x, t, True)
             loss, preds = self.function_mapping[loss_fn](data, loss, self.functions)
         return loss, preds
-        
 
     def training_step(
         self,
-        batch: Dict[
-            str,
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
-        ],
+        batch: Dict[str, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
         batch_idx: int,
     ) -> torch.Tensor:
         """Perform a single training step on a batch of data from the training set. self.g.replay()
@@ -384,7 +355,7 @@ class PINNModule(LightningModule):
         :return: A tensor of losses between model predictions and targets.
         """
         self.start_time = time.time()
-        
+
         if self.cudagraph_compile:
             if batch_idx == 0 and not self.capture_end:
                 self.capture_graph(batch)
@@ -396,28 +367,40 @@ class PINNModule(LightningModule):
 
             # update and log metrics
             self.train_loss(self.static_loss)
-            self.log("train/loss", self.train_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=False)
+            self.log(
+                "train/loss",
+                self.train_loss,
+                on_step=False,
+                on_epoch=True,
+                prog_bar=True,
+                sync_dist=False,
+            )
 
         else:
-                
-            loss, pred = self.model_step(batch)            
-            
-            # update and log metrics    
-            self.train_loss(loss)
-            self.log("train/loss", self.train_loss, on_step=True, on_epoch=True, prog_bar=True, sync_dist=False)
-            
-            return loss
+            loss, pred = self.model_step(batch)
 
+            # update and log metrics
+            self.train_loss(loss)
+            self.log(
+                "train/loss",
+                self.train_loss,
+                on_step=True,
+                on_epoch=True,
+                prog_bar=True,
+                sync_dist=False,
+            )
+
+            return loss
 
     def on_train_batch_start(self, batch, batch_idx):
         """
         Set validation flag to False and record start time at a specific training step.
-    
+
         :param batch: The current batch of data being processed.
         :param batch_idx: The index of the current batch.
         :return: None
         """
-        self.functions['val'] = False
+        self.functions["val"] = False
 
     def on_train_batch_end(self, batch_output, batch, batch_idx):
         """
@@ -431,7 +414,7 @@ class PINNModule(LightningModule):
         self.times.append(time.time() - self.start_time)
         if self.lazy:
             torch._lazy.mark_step()
-    
+
     def on_train_epoch_end(self):
         """Called at the end of each training epoch.
 
@@ -440,15 +423,14 @@ class PINNModule(LightningModule):
         if self.extra_variables:
             for key in self.extra_variables:
                 self.log(key, self.extra_variables[key], prog_bar=True, sync_dist=False)
-        
-        
+
     def on_validation_start(self):
         """
         Set the validation stage flag to True at the start of the validation phase.
 
         :return: None
         """
-        
+
         self.val_stage = True
 
     def on_validation_end(self):
@@ -457,7 +439,7 @@ class PINNModule(LightningModule):
 
         :return: None
         """
-        
+
         self.val_stage = False
 
     def eval_step(
@@ -472,10 +454,9 @@ class PINNModule(LightningModule):
         # `loss_fn` and `solution` are passed from PINNDataModule class.
         loss_fn = self.trainer.datamodule.loss_fn
         solution = self.trainer.datamodule.solution_names or []
-        
-        
-        self.functions['val'] = True
-        
+
+        self.functions["val"] = True
+
         # In evalutation, because we do not use captured graph,
         # we need to transfer batch manually.
         batch = super().transfer_batch_to_device(batch, self.device, 0)
@@ -492,14 +473,16 @@ class PINNModule(LightningModule):
                 for solution_name in solution
             }
             for solution_name in solution:
-                print(preds[solution_name][:, -1][:, None].shape, u[solution_name].shape)
+                print(
+                    preds[solution_name][:, -1][:, None].shape, u[solution_name].shape
+                )
 
         else:
             error_dict = {
                 solution_name: relative_l2_error(preds[solution_name], u[solution_name])
                 for solution_name in solution
             }
-        
+
         return loss, error_dict, preds
 
     def validation_step(
@@ -514,25 +497,38 @@ class PINNModule(LightningModule):
         :param batch_idx: The index of the current batch.
         """
         loss, error_dict, preds = self.eval_step(batch)
-        
+
         self.val_loss(loss)
-        self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=False)
+        self.log(
+            "val/loss",
+            self.val_loss,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=False,
+        )
 
         for solution_name, error in error_dict.items():
             self.val_error(error)
-            self.log(f"val/error_{solution_name}", error, prog_bar=True, sync_dist=False)
+            self.log(
+                f"val/error_{solution_name}", error, prog_bar=True, sync_dist=False
+            )
 
-    
     def on_validation_epoch_end(self) -> None:
         """
         Lightning hook that is called when a validation epoch ends.
 
         :return: None
         """
-        
+
         loss = self.val_loss.compute()
         self.val_loss_best(loss)
-        self.log("val/loss_best", self.val_loss_best.compute(), sync_dist=False, prog_bar=True)
+        self.log(
+            "val/loss_best",
+            self.val_loss_best.compute(),
+            sync_dist=False,
+            prog_bar=True,
+        )
 
     def test_step(
         self,
@@ -550,11 +546,20 @@ class PINNModule(LightningModule):
 
         # update and log metrics
         self.test_loss(loss)
-        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True, sync_dist=False)
+        self.log(
+            "test/loss",
+            loss,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+            sync_dist=False,
+        )
 
         for solution_name, error in error_dict.items():
             self.test_error(error)
-            self.log(f"test/error_{solution_name}", error, prog_bar=True, sync_dist=False)
+            self.log(
+                f"test/error_{solution_name}", error, prog_bar=True, sync_dist=False
+            )
 
     def predict_step(
         self,

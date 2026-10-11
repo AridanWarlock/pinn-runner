@@ -1,9 +1,10 @@
-from typing import Tuple, List, Dict
+from typing import Dict, Tuple
 
 import numpy as np
 import torch
 
 from pinnstorch.utils import jit_compiler
+
 
 class SamplerBase:
     """Other samplers will be used this helper class."""
@@ -19,7 +20,6 @@ class SamplerBase:
         self.solution_names = None
         self.first_batch = True
         self.zeros_tensor = torch.tensor(0.0, dtype=torch.float32)
-        
 
     def concatenate_solutions(self, flatten_mesh):
         """Concatenate dictionary of sampled solution data.
@@ -48,9 +48,15 @@ class SamplerBase:
         if num_sample is None:
             return self.convert_to_tensor(flatten_mesh)
         else:
-            idx = np.random.choice(range(flatten_mesh[0].shape[0]), num_sample, replace=False)
+            idx = np.random.choice(
+                range(flatten_mesh[0].shape[0]), num_sample, replace=False
+            )
             return self.convert_to_tensor(
-                (flatten_mesh[0][idx, :], flatten_mesh[1][idx, :], flatten_mesh[2][idx, :])
+                (
+                    flatten_mesh[0][idx, :],
+                    flatten_mesh[1][idx, :],
+                    flatten_mesh[2][idx, :],
+                )
             )
 
     @staticmethod
@@ -63,7 +69,9 @@ class SamplerBase:
 
         return [torch.from_numpy(array.astype(np.float32)) for array in arrays]
 
-    def loss_fn(self, inputs, loss, functions) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+    def loss_fn(
+        self, inputs, loss, functions
+    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
         """Compute the loss function based on inputs and functions.
 
         :param inputs: Input data for computing the loss.
@@ -71,9 +79,13 @@ class SamplerBase:
         :param functions: Additional functions required for loss computation.
         :return: Loss variable and outputs dict from the forward pass.
         """
-        
+
         self.functions = functions
-        if self.first_batch and self.functions["jit_compile"] and not self.functions["val"]:
+        if (
+            self.first_batch
+            and self.functions["jit_compile"]
+            and not self.functions["val"]
+        ):
             if self.functions["batch_size"]:
                 self.functions["pde_fn"] = torch.jit.script(self.functions["pde_fn"])
             else:
@@ -125,13 +137,15 @@ class SamplerBase:
         :return: Tuple containing spatial, time, and solution data for the indexed point.
         """
 
-        spatial_domain = [spatial_domain[idx] for spatial_domain in self.spatial_domain_sampled]
+        spatial_domain = [
+            spatial_domain[idx] for spatial_domain in self.spatial_domain_sampled
+        ]
 
         time_domain = self.zeros_tensor
         if self.time_domain_sampled is not None:
             time_domain = self.time_domain_sampled[idx]
 
-        solution_domain = {'///': self.zeros_tensor}
+        solution_domain = {"///": self.zeros_tensor}
         if self.solution_sampled is not None:
             solution_domain = {
                 solution_name: self.solution_sampled[i][idx]

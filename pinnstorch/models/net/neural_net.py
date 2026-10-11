@@ -10,8 +10,9 @@ class FCN(nn.Module):
 
     In this model, lower and upper bound will be used for normalization of input data
     """
+
     output_names: List[str]
-    
+
     def __init__(self, layers, lb, ub, output_names, discrete: bool = False) -> None:
         """Initialize a `FCN` module.
 
@@ -24,8 +25,12 @@ class FCN(nn.Module):
         super().__init__()
 
         self.model = self.initalize_net(layers)
-        self.register_buffer("lb", torch.tensor(lb, dtype=torch.float32, requires_grad=False))
-        self.register_buffer("ub", torch.tensor(ub, dtype=torch.float32, requires_grad=False))
+        self.register_buffer(
+            "lb", torch.tensor(lb, dtype=torch.float32, requires_grad=False)
+        )
+        self.register_buffer(
+            "ub", torch.tensor(ub, dtype=torch.float32, requires_grad=False)
+        )
         self.output_names = output_names
         self.discrete = discrete
 
@@ -48,15 +53,17 @@ class FCN(nn.Module):
         for i in range(1, len(layers) - 2):
             hidden_layer = nn.Linear(layers[i], layers[i + 1])
             initializer(hidden_layer.weight)
-            net.add_module(f"hidden_{i+1}", hidden_layer)
-            net.add_module(f"activation_{i+1}", nn.Tanh())
+            net.add_module(f"hidden_{i + 1}", hidden_layer)
+            net.add_module(f"activation_{i + 1}", nn.Tanh())
 
         output_layer = nn.Linear(layers[-2], layers[-1])
         initializer(output_layer.weight)
         net.add_module("output", output_layer)
         return net
 
-    def forward(self, spatial: List[torch.Tensor], time: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(
+        self, spatial: List[torch.Tensor], time: torch.Tensor
+    ) -> Dict[str, torch.Tensor]:
         """Perform a single forward pass through the network.
 
         :param spatial: List of input spatial tensors.
@@ -97,7 +104,9 @@ class FCN(nn.Module):
 
         # Continuous Mode
         else:
-            outputs_dict = {name: z[:, i : i + 1] for i, name in enumerate(self.output_names)}
+            outputs_dict = {
+                name: z[:, i : i + 1] for i, name in enumerate(self.output_names)
+            }
         return outputs_dict
 
 
@@ -107,8 +116,9 @@ class NetHFM(nn.Module):
     In this model, mean and std will be used for normalization of input data. Also, weight
     normalization will be done.
     """
+
     output_names: List[str]
-    
+
     def __init__(self, mean, std, layers: List, output_names: List):
         super().__init__()
         """Initialize a `NetHFM` module.
@@ -151,7 +161,9 @@ class NetHFM(nn.Module):
         self.biases = nn.ParameterList(self.biases)
         self.gammas = nn.ParameterList(self.gammas)
 
-    def forward(self, spatial: List[torch.Tensor], time: torch.Tensor) -> Dict[str, torch.Tensor]:
+    def forward(
+        self, spatial: List[torch.Tensor], time: torch.Tensor
+    ) -> Dict[str, torch.Tensor]:
         """Perform a forward pass through the network.
 
         :param spatial: List of input spatial tensors.
@@ -167,7 +179,7 @@ class NetHFM(nn.Module):
         else:
             x, y, z = spatial
             H = torch.cat((x, y, z, time), 1)
-        
+
         H = (H - self.X_mean) / self.X_std
 
         for i, (W, b, g) in enumerate(zip(self.weights, self.biases, self.gammas)):
@@ -180,8 +192,10 @@ class NetHFM(nn.Module):
             # activation
             if i < self.num_layers - 2:
                 H = H * self.sigmoid(H)
-        
-        outputs_dict = {name: H[:, i : i + 1] for i, name in enumerate(self.output_names)}
+
+        outputs_dict = {
+            name: H[:, i : i + 1] for i, name in enumerate(self.output_names)
+        }
 
         return outputs_dict
 
