@@ -1,0 +1,43 @@
+seed: 1234
+save_pred: true
+
+train_datasets:
+  - initial:
+      _target_: pinnstorch.data.InitialCondition
+      solution: [T]
+  - pde:
+      _target_: pinnstorch.data.MeshSampler
+      collection_points: [residual]
+      use_lhs: false
+val_dataset:
+  - data:
+      _target_: pinnstorch.data.MeshSampler
+      solution: [T]
+pred_dataset:
+  - data:
+      _target_: pinnstorch.data.MeshSampler
+      solution: [T]
+
+net:
+  _target_: pinnstorch.models.FCN
+  layers: [2, 16, 16, 1]
+  output_names: [T]
+model:
+  optimizer:
+    lr: 0.01
+  scheduler: null
+  scaler: null
+trainer:
+  accelerator: cpu
+  devices: 1
+  max_epochs: 3
+  max_steps: 3
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: 0
+  enable_progress_bar: false
+  enable_model_summary: false
+callbacks:
+  model_summary: null
+  rich_progress_bar: null
+  model_checkpoint:
+    filename: best

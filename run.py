@@ -11,15 +11,19 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import logging
 import os
 import sys
 import traceback
+from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Sequence
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
+
+    from pinnstorch.data import PointCloudData
 
 INPUT_DIR = Path("/task_data")
 OUTPUT_DIR = Path("/task_output")
@@ -29,29 +33,24 @@ class Mode(Enum):
     RETRAIN = "retrain"
     PREDICT = "predict"
 
-FUNC_FILE = INPUT_DIR / "functions.py"
-CONF_FILE = INPUT_DIR / "config.yaml"
-DATA_FILE = INPUT_DIR / "data.mat"
-CHECKPOINT_FILE = INPUT_DIR / "checkpoint.ckpt"
-
 REQUIRED_FILES = {
-    Mode.TRAIN: [FUNC_FILE, CONF_FILE, DATA_FILE],
-    Mode.RETRAIN: [FUNC_FILE, CONF_FILE, DATA_FILE, CHECKPOINT_FILE],
-    Mode.PREDICT: [FUNC_FILE, CONF_FILE, CHECKPOINT_FILE],
+    Mode.TRAIN: ["functions.py", "config.yaml", "data.mat"],
+    Mode.RETRAIN: ["functions.py", "config.yaml", "data.mat", "checkpoint.ckpt"],
+    Mode.PREDICT: ["functions.py", "config.yaml", "checkpoint.ckpt"],
 }
 
-def setup(log):
+def setup(log: logging.Logger, output_dir: Path = OUTPUT_DIR) -> None:
     """Setup output directory structure."""
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    (OUTPUT_DIR / "checkpoints").mkdir(exist_ok=True)
-    log.info("Input:  %s", INPUT_DIR)
-    log.info("Output: %s", OUTPUT_DIR)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "checkpoints").mkdir(exist_ok=True)
+    log.info("Output: %s", output_dir)
 
 
-def validate_input(mode, log) -> bool:
+def validate_input(mode: Mode, log: logging.Logger, input_dir: Path = INPUT_DIR) -> bool:
     """Check required input files."""
     log.info("Validating input files...")
-    for file_path in REQUIRED_FILES[mode]:
+    for filename in REQUIRED_FILES[mode]:
+        file_path = input_dir / filename
         if not file_path.exists():
             log.error("Missing: %s", file_path)
             return False
@@ -85,14 +84,19 @@ def load_user_functions(functions_path: Path, log) -> Dict[str, Any]:
     return functions
 
 
-def create_read_data_wrapper(user_read_data_fn, data_file_name: str, log):
+def create_read_data_wrapper(
+    user_read_data_fn: Callable[[dict[str, Any]], dict[str, Any]],
+    data_file_name: str,
+    log: logging.Logger,
+    input_dir: Path = INPUT_DIR,
+) -> Callable[[], PointCloudData]:
     """Wrap user read_data_fn to load .mat file automatically."""
     
     import pinnstorch
 
-    def wrapped_read_data_fn():
+    def wrapped_read_data_fn() -> PointCloudData:
         log.info("Loading data: %s", data_file_name)
-        raw_data = pinnstorch.utils.load_data(INPUT_DIR, data_file_name)
+        raw_data = pinnstorch.utils.load_data(input_dir, data_file_name)
         user_result = user_read_data_fn(raw_data)
         
         return pinnstorch.data.PointCloudData(
@@ -116,9 +120,9 @@ def create_plot_func_wrapper(user_plot_fn):
     
     return wrapped_plot_func
 
-def save_error_report(error: Exception):
+def save_error_report(error: Exception, output_dir: Path = OUTPUT_DIR) -> None:
     """Save error details."""
-    error_path = OUTPUT_DIR / "error.log"
+    error_path = output_dir / "error.log"
     with open(error_path, 'w') as f:
         f.write("PINN Experiment Failed\n")
         f.write("=" * 60 + "\n\n")
@@ -126,7 +130,7 @@ def save_error_report(error: Exception):
         f.write(traceback.format_exc())
 
 def setup_config(
-    cfg: DictConfig
+    cfg: DictConfig, output_dir: Path = OUTPUT_DIR
 ) -> DictConfig: 
     from omegaconf import OmegaConf
 
@@ -170,7 +174,7 @@ def setup_config(
     cfg.test = False
     
     cfg.paths = cfg.get('paths', {})
-    cfg.paths.output_dir = str(OUTPUT_DIR)
+    cfg.paths.output_dir = str(output_dir)
     
     return cfg
     
@@ -179,6 +183,8 @@ class RunnerArguments(argparse.Namespace):
 
     mode: str
     checkpoint: str | None
+    input_dir: Path
+    output_dir: Path
 
 
 def parse_args(argv: Sequence[str] | None = None) -> RunnerArguments:
@@ -196,10 +202,14 @@ def parse_args(argv: Sequence[str] | None = None) -> RunnerArguments:
         default=None,
         help="Имя файла с весами ранее обученной модели",
     )
+    parser.add_argument("--input-dir", type=Path, default=INPUT_DIR, help="Directory with task files")
+    parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR, help="Directory for results")
     return parser.parse_args(argv, namespace=RunnerArguments())
 
 
-def run(mode: Mode) -> int:
+def run(mode: Mode, input_dir: Path = INPUT_DIR, output_dir: Path = OUTPUT_DIR) -> int:
+    input_dir = input_dir.resolve()
+    output_dir = output_dir.resolve()
     import hydra
     from hydra import compose, initialize_config_dir
     from omegaconf import OmegaConf
@@ -214,16 +224,17 @@ def run(mode: Mode) -> int:
         log.info("PINN Universal Runner")
         log.info("=" * 60)
         
-        setup(log)
-        utils.get_pylogger("pinnstorch.train", output_path=OUTPUT_DIR / "log.log")
+        log.info("Input:  %s", input_dir)
+        setup(log, output_dir)
+        utils.get_pylogger("pinnstorch.train", output_path=output_dir / "log.log")
         
-        if not validate_input(mode, log):
+        if not validate_input(mode, log, input_dir):
             return 1
         
-        user_functions = load_user_functions(FUNC_FILE, log)
+        user_functions = load_user_functions(input_dir / "functions.py", log)
 
         with initialize_config_dir(
-            config_dir=str(INPUT_DIR),
+            config_dir=str(input_dir),
             version_base="1.3"
         ):
             cfg = hydra.compose(config_name="config.yaml")
@@ -245,10 +256,10 @@ def run(mode: Mode) -> int:
         # print(OmegaConf.to_yaml(cfg))
         
         read_data_fn = create_read_data_wrapper(
-            user_functions['read_data_fn'], 'data.mat', log
+            user_functions['read_data_fn'], 'data.mat', log, input_dir
         )
         
-        cfg = setup_config(cfg)
+        cfg = setup_config(cfg, output_dir)
         log.info(f"running mode: {mode.name}({mode.value})")
         # print("cfg after setup")
         # print(OmegaConf.to_yaml(cfg))
@@ -263,7 +274,7 @@ def run(mode: Mode) -> int:
             output_fn=user_functions.get('output_fn'),
             boundary_functions=user_functions.get('boundary_functions'),
             plot_func=plot_func,
-            checkpoint=CHECKPOINT_FILE,
+            checkpoint=input_dir / "checkpoint.ckpt",
         )
         
         log.info("=" * 60)
@@ -271,7 +282,7 @@ def run(mode: Mode) -> int:
         for k, v in metric_dict.items():
             if isinstance(v, (int, float)):
                 log.info("  %s: %.6f", k, v)
-        log.info("Results: %s", OUTPUT_DIR)
+        log.info("Results: %s", output_dir)
         log.info("=" * 60)
         
         return 0
@@ -285,14 +296,14 @@ def run(mode: Mode) -> int:
         
         print(f"Running error: {str(e)}", file=sys.stderr)
         
-        save_error_report(e)
+        save_error_report(e, output_dir)
         return 1
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Validate CLI arguments before loading the training dependencies."""
     args = parse_args(argv)
-    return run(Mode(args.mode))
+    return run(Mode(args.mode), input_dir=args.input_dir, output_dir=args.output_dir)
 
 
 if __name__ == '__main__':
