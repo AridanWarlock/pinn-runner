@@ -36,7 +36,7 @@ class Mode(Enum):
 REQUIRED_FILES = {
     Mode.TRAIN: ["functions.py", "config.yaml", "data.mat"],
     Mode.RETRAIN: ["functions.py", "config.yaml", "data.mat", "checkpoint.ckpt"],
-    Mode.PREDICT: ["functions.py", "config.yaml", "checkpoint.ckpt"],
+    Mode.PREDICT: ["functions.py", "config.yaml", "data.mat", "checkpoint.ckpt"],
 }
 
 def setup(log: logging.Logger, output_dir: Path = OUTPUT_DIR) -> None:
@@ -46,11 +46,18 @@ def setup(log: logging.Logger, output_dir: Path = OUTPUT_DIR) -> None:
     log.info("Output: %s", output_dir)
 
 
-def validate_input(mode: Mode, log: logging.Logger, input_dir: Path = INPUT_DIR) -> bool:
+def validate_input(
+    mode: Mode,
+    log: logging.Logger,
+    input_dir: Path = INPUT_DIR,
+    checkpoint: Path | None = None,
+) -> bool:
     """Check required input files."""
     log.info("Validating input files...")
     for filename in REQUIRED_FILES[mode]:
         file_path = input_dir / filename
+        if filename == "checkpoint.ckpt" and checkpoint is not None:
+            file_path = checkpoint
         if not file_path.exists():
             log.error("Missing: %s", file_path)
             return False
@@ -182,7 +189,7 @@ class RunnerArguments(argparse.Namespace):
     """Arguments accepted by the container entry point."""
 
     mode: str
-    checkpoint: str | None
+    checkpoint: Path | None
     input_dir: Path
     output_dir: Path
 
@@ -198,7 +205,7 @@ def parse_args(argv: Sequence[str] | None = None) -> RunnerArguments:
     )
     parser.add_argument(
         "--checkpoint",
-        type=str,
+        type=Path,
         default=None,
         help="Имя файла с весами ранее обученной модели",
     )
@@ -207,9 +214,15 @@ def parse_args(argv: Sequence[str] | None = None) -> RunnerArguments:
     return parser.parse_args(argv, namespace=RunnerArguments())
 
 
-def run(mode: Mode, input_dir: Path = INPUT_DIR, output_dir: Path = OUTPUT_DIR) -> int:
+def run(
+    mode: Mode,
+    input_dir: Path = INPUT_DIR,
+    output_dir: Path = OUTPUT_DIR,
+    checkpoint: Path | None = None,
+) -> int:
     input_dir = input_dir.resolve()
     output_dir = output_dir.resolve()
+    checkpoint_path = (input_dir / (checkpoint or Path("checkpoint.ckpt"))).resolve()
     import hydra
     from hydra import compose, initialize_config_dir
     from omegaconf import OmegaConf
@@ -228,7 +241,7 @@ def run(mode: Mode, input_dir: Path = INPUT_DIR, output_dir: Path = OUTPUT_DIR) 
         setup(log, output_dir)
         utils.get_pylogger("pinnstorch.train", output_path=output_dir / "log.log")
         
-        if not validate_input(mode, log, input_dir):
+        if not validate_input(mode, log, input_dir, checkpoint_path):
             return 1
         
         user_functions = load_user_functions(input_dir / "functions.py", log)
@@ -274,7 +287,7 @@ def run(mode: Mode, input_dir: Path = INPUT_DIR, output_dir: Path = OUTPUT_DIR) 
             output_fn=user_functions.get('output_fn'),
             boundary_functions=user_functions.get('boundary_functions'),
             plot_func=plot_func,
-            checkpoint=input_dir / "checkpoint.ckpt",
+            checkpoint=checkpoint_path,
         )
         
         log.info("=" * 60)
@@ -303,7 +316,10 @@ def run(mode: Mode, input_dir: Path = INPUT_DIR, output_dir: Path = OUTPUT_DIR) 
 def main(argv: Sequence[str] | None = None) -> int:
     """Validate CLI arguments before loading the training dependencies."""
     args = parse_args(argv)
-    return run(Mode(args.mode), input_dir=args.input_dir, output_dir=args.output_dir)
+    return run(
+        Mode(args.mode), input_dir=args.input_dir, output_dir=args.output_dir,
+        checkpoint=args.checkpoint,
+    )
 
 
 if __name__ == '__main__':

@@ -55,6 +55,8 @@ def save_predictions_to_mat(preds_dict, mesh, file_path):
     mat_dict = {"x": x, "t": t}
     
     for key, value in preds_dict.items():
+        if isinstance(value, torch.Tensor):
+            value = value.detach().cpu().numpy()
         mat_dict[key] = np.array(value).reshape(nx, nt)
     
     scipy.io.savemat(file_path, mat_dict)
@@ -232,8 +234,8 @@ def train(
     elif mode == 'predict':
         log.info("Starting predicting!")
         
-        ckpt = torch.load(checkpoint, map_location="cuda" if torch.cuda.is_available() else "cpu")
-        model.load_state_dict(ckpt['state_dict'], strict=False)
+        ckpt = torch.load(checkpoint, map_location="cpu")
+        model.load_state_dict(ckpt['state_dict'], strict=True)
         model.eval()
         
         # Подменяем pde_fn
@@ -242,7 +244,6 @@ def train(
         datamodule.setup()
         
         model.function_mapping = datamodule.function_mapping
-        model.trainer = type('obj', (object,), {'datamodule': datamodule})()
         
         # Получаем предсказания
         preds_list = trainer.predict(model=model, datamodule=datamodule)
@@ -251,7 +252,8 @@ def train(
         save_predictions_to_mat(preds_dict, mesh, f'{cfg.paths.output_dir}/predictions.mat')
         log.info(f"Elapsed time: {time.time() - start_time}")
 
-    log.info(f"Median time for each batch: {np.median(model.times)}")
+    if model.times:
+        log.info(f"Median time for each batch: {np.median(model.times)}")
     
     train_metrics = trainer.callback_metrics
     

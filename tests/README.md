@@ -52,3 +52,16 @@ To run a task locally with the integration dependencies installed:
 Set `trainer.accelerator: cpu` and `trainer.devices: 1` in `config.yaml` for CPU
 development. Directory arguments default to `/task_data` and `/task_output` for
 the existing container workflow.
+
+For prediction, supply the same input files plus a checkpoint:
+
+```sh
+.venv/bin/python run.py --mode predict --input-dir ./task_data --output-dir ./prediction --checkpoint trained.ckpt
+```
+
+A relative checkpoint path is resolved inside the input directory; absolute
+paths are also accepted. The default filename is `checkpoint.ckpt`.
+The current prediction pipeline requires `data.mat` for its mesh and reference
+values. It writes `predictions.mat` with `x`, `t`, and solution arrays. Integration
+tests compare this output with predictions from the training checkpoint and
+verify rejection of missing data and incomplete model weights.
