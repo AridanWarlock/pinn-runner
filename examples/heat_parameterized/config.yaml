@@ -29,16 +29,19 @@ train_datasets:
     collection_points:
     - residual
     use_lhs: false
-- boundary_x:
-    _target_: pinnstorch.data.BoundaryCondition
-    bc_func_name: boundary
-    axis: x
-    location: both
-- boundary_y:
-    _target_: pinnstorch.data.BoundaryCondition
-    bc_func_name: boundary
-    axis: y
-    location: both
+- boundary:
+    _target_: pinnstorch.data.BoundaryConditions
+    conditions:
+    - kind: dirichlet
+      field: T
+      axis: x
+      side: both
+      value: 0.0
+    - kind: dirichlet
+      field: T
+      axis: y
+      side: both
+      value: 0.0
 val_dataset:
 - data:
     _target_: pinnstorch.data.MeshSampler

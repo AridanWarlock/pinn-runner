@@ -158,3 +158,76 @@ roles. User callback adapters expose them separately.
 This initial parameterized path uses continuous time without JIT compilation
 or inverse extra_variables. A runnable typed example is in
 [examples/heat_parameterized](../examples/heat_parameterized).
+
+## Explicit boundary conditions and intersections
+
+Use one `pinnstorch.data.BoundaryConditions` dataset for all faces. The runner
+rejects multiple owners or mixing this dataset with the older boundary APIs.
+The maintained 2D examples now use this interface:
+
+```yaml
+- boundary:
+    _target_: pinnstorch.data.BoundaryConditions
+    conditions:
+      - kind: dirichlet
+        field: T
+        axis: x
+        side: both
+        value: 0.0
+        weight: 1.0
+      - kind: neumann
+        field: T
+        axis: y
+        side: both
+        value: 0.0
+```
+
+Kinds and residuals:
+
+| kind | residual |
+| --- | --- |
+| dirichlet | T - value |
+| neumann | dT/dn - value |
+| robin | alpha*T + beta*dT/dn - value |
+| heat_flux | -conductivity*dT/dn - value |
+
+The normal points outward: negative on lower faces and positive on upper faces.
+Neumann means a normal derivative, not heat flux. Robin alpha/beta default to 1
+and cannot both be zero. Heat flux conductivity defaults to 1 and accepts either
+a positive constant or the name of a positive ranged parameter. Tensor-valued
+anisotropic conductivity and coefficient fields are not part of this interface.
+
+`value` defaults to zero. Alternatively, use `value_fn: name` and define
+`boundary_values = {"name": callback}` in functions.py. The callback receives
+`(spatial, time)`, where spatial is a list of physical coordinate tensors.
+Parameterized tasks also pass keyword `parameters`. Return a finite scalar or
+an `(N, 1)` tensor. Values are evaluated on the configured grid during dataset
+construction and treated as fixed targets, not network outputs.
+
+### Ownership policy
+
+* Dirichlet conditions on the same output share one union of points. Intersections
+  are included once, including physical edges/vertices in 3D.
+* Different Dirichlet values for the same output at shared grid points are an
+  error (comparison tolerances: absolute and relative 1e-6). This checks sampled
+  coordinates/times/parameters, not equality between arbitrary functions everywhere.
+* At a shared Dirichlet point the effective weight is the maximum face weight;
+  it does not increase with the number of incident faces. Each output's penalty
+  is the weighted squared residual summed over unique points, divided by their count.
+* Neumann, Robin and heat-flux conditions exclude every physical edge/vertex.
+  Parameter endpoints and initial/final times are not geometric corners and are
+  retained. Each derivative condition contributes its own weighted mean loss.
+* Mixed conditions retain Dirichlet intersections and exclude derivative
+  constraints there. Different output fields have independent constraints.
+* Faces need interior grid points for derivative conditions. In 2D/3D use at
+  least three points on every tangential axis; an empty eligible face is rejected.
+
+The dataset stores a unique union of boundary rows and per-constraint masks.
+Training batches carry masks and targets with coordinates, so subsampling keeps
+normal signs and ownership aligned. A batch without a given constraint contributes
+zero for it. Normals and derivative penalties are calculated with autograd;
+this initial path requires continuous mode with JIT disabled.
+
+The raw `BoundaryCondition` callback API remains available for custom constraints;
+it does not perform the typed-condition intersection policy. Do not mix it with
+BoundaryConditions. New tasks should use the explicit interface above.

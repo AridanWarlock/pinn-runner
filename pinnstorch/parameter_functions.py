@@ -62,6 +62,18 @@ def bind_parameters(
             name: wrap_boundary(function)
             for name, function in functions["boundary_functions"].items()
         }
+    if "boundary_values" in functions:
+
+        def wrap_value(function: Callable[..., torch.Tensor]) -> Callable[..., torch.Tensor]:
+            def wrapped(columns: list[torch.Tensor], time: torch.Tensor) -> torch.Tensor:
+                parameters = dict(zip(names, columns[spatial_dimension:]))
+                return function(columns[:spatial_dimension], time, parameters=parameters)
+
+            return wrapped
+
+        result["boundary_values"] = {
+            name: wrap_value(function) for name, function in functions["boundary_values"].items()
+        }
     if "plot_fn" in functions:
         result["plot_fn"] = functions["plot_fn"]
     return result

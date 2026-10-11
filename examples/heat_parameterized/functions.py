@@ -26,17 +26,3 @@ def pde_fn(
         gradient(dx, x)[0] + gradient(dy, y)[0]
     )
     return outputs
-
-
-def boundary(
-    outputs: dict[str, torch.Tensor],
-    spatial: list[torch.Tensor],
-    t: torch.Tensor,
-    *,
-    parameters: dict[str, torch.Tensor],
-) -> dict[str, torch.Tensor]:
-    outputs["boundary"] = outputs["T"]
-    return outputs
-
-
-boundary_functions = {"boundary": boundary}

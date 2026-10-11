@@ -1,6 +1,8 @@
 import logging
 import pickle
 import time
+from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import hydra
@@ -11,7 +13,6 @@ import scipy
 import torch
 from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
-from numpy.typing import NDArray
 from omegaconf import DictConfig, OmegaConf
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
@@ -19,6 +20,7 @@ rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 # Imports follow root setup so direct script execution can find the package.
 from pinnstorch import utils  # noqa: E402
+from pinnstorch.contracts import BoundaryFunctions, FieldFunction, InitialConditions  # noqa: E402
 from pinnstorch.data import (  # noqa: E402
     BoundaryCondition,
     BoundaryCondition1D,
@@ -65,15 +67,15 @@ def save_predictions_to_mat(preds_dict, mesh, file_path):
 @utils.task_wrapper
 def train(
     cfg: DictConfig,
-    pde_fn: Callable,
+    pde_fn: FieldFunction,
     mode: str,
-    read_data_fn: Callable = None,
-    output_fn: Callable = None,
-    boundary_functions: Dict = None,
-    plot_func: Callable = None,
-    checkpoint: str = None,
-    initial_conditions: Callable[[NDArray[np.float64]], Dict[str, NDArray[np.float64]]]
-    | None = None,
+    read_data_fn: Callable | None = None,
+    output_fn: FieldFunction | None = None,
+    boundary_values: Mapping[str, Callable[..., torch.Tensor]] | None = None,
+    boundary_functions: BoundaryFunctions | None = None,
+    plot_func: Callable[..., None] | None = None,
+    checkpoint: str | Path | None = None,
+    initial_conditions: InitialConditions | None = None,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Trains the model. Can additionally evaluate on a testset, using best weights obtained during
     training.
@@ -120,7 +122,18 @@ def train(
         for key, dataset in dataset_dic.items():
             target = OmegaConf.select(dataset, "_target_") or ""
 
-            if target in (
+            if target == "pinnstorch.data.BoundaryConditions":
+                if cfg.model.get("jit_compile") or cfg.net.get("discrete"):
+                    raise ValueError("BoundaryConditions requires continuous mode without JIT")
+                if any(
+                    specification.get("field") not in cfg.net.output_names
+                    for specification in dataset.conditions
+                ):
+                    raise ValueError("Boundary fields must name model outputs")
+                train_datasets.append(
+                    hydra.utils.instantiate(dataset)(mesh=mesh, boundary_values=boundary_values)
+                )
+            elif target in (
                 "pinnstorch.data.BoundaryCondition1D",
                 "pinnstorch.data.BoundaryCondition",
             ):

@@ -11,3 +11,6 @@ The model represents T(x, y, t, conductivity); conductivity is supplied, not
 inferred. The three CPU steps only exercise the pipeline, not convergence.
 MAT output includes the conductivity of each spatial row. Prediction may use
 a different parameter grid with the same names and input ordering.
+
+BoundaryConditions applies zero Dirichlet temperature to a union of all faces;
+shared corner points are included once.

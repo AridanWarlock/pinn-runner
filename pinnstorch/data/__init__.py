@@ -11,11 +11,13 @@ from .sampler.boundary_condition import (
     DirichletBoundaryCondition,
     PeriodicBoundaryCondition,
 )
+from .sampler.explicit_boundary import BoundaryConditions
 from .sampler.initial_condition import InitialCondition
 from .sampler.mesh_sampler import DiscreteMeshSampler, MeshSampler, SamplerBase
 
 __all__ = [
     "BoundaryCondition",
+    "BoundaryConditions",
     "BoundaryCondition1D",
     "DirichletBoundaryCondition",
     "DiscreteMeshSampler",

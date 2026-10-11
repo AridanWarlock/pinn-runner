@@ -1,12 +1,12 @@
 import os
 import warnings
+from functools import wraps
 from importlib.util import find_spec
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable, Dict, ParamSpec, TypeVar, cast
 
 import numpy as np
 import requests
 import scipy
-from numpy.typing import NDArray
 from omegaconf import DictConfig, open_dict
 
 from pinnstorch.utils import pylogger, rich_utils
@@ -45,78 +45,30 @@ def extras(cfg: DictConfig) -> None:
         rich_utils.print_config_tree(cfg, resolve=True, save_to_file=True)
 
 
-def task_wrapper(task_func: Callable) -> Callable:
-    """Optional decorator that controls the failure behavior when executing the task function.
+P = ParamSpec("P")
+R = TypeVar("R")
 
-    This wrapper can be used to:
-        - make sure loggers are closed even if the task function raises an exception (prevents multirun failure)
-        - save the exception to a `.log` file
-        - mark the run as failed with a dedicated file in the `logs/` folder (so we can find and rerun it later)
-        - etc. (adjust depending on your needs)
 
-    Example:
-    ```
-    @utils.task_wrapper
-    def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        ...
-        return metric_dict, object_dict
-    ```
+def task_wrapper(task_func: Callable[P, R]) -> Callable[P, R]:
+    """Preserve the task signature while logging failures and closing loggers."""
 
-    :param task_func: The task function to be wrapped.
-
-    :return: The wrapped task function.
-    """
-
-    def wrap(
-        cfg: DictConfig,
-        pde_fn: Callable,
-        mode: str,
-        read_data_fn: Callable = None,
-        output_fn: Callable = None,
-        plot_func: Callable = None,
-        boundary_functions: Dict = None,
-        checkpoint: str = None,
-        initial_conditions: Callable[[NDArray[np.float64]], Dict[str, NDArray[np.float64]]]
-        | None = None,
-    ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        # execute the task
+    @wraps(task_func)
+    def wrap(*args: P.args, **kwargs: P.kwargs) -> R:
+        cfg = cast(DictConfig, kwargs.get("cfg", args[0] if args else None))
         try:
-            metric_dict, object_dict = task_func(
-                cfg=cfg,
-                read_data_fn=read_data_fn,
-                pde_fn=pde_fn,
-                mode=mode,
-                output_fn=output_fn,
-                plot_func=plot_func,
-                boundary_functions=boundary_functions,
-                checkpoint=checkpoint,
-                initial_conditions=initial_conditions,
-            )
-
-        # things to do if exception occurs
-        except Exception as ex:
-            # save exception to `.log` file
+            return task_func(*args, **kwargs)
+        except Exception:
             log.exception("")
-
-            # some hyperparameter combinations might be invalid or cause out-of-memory errors
-            # so when using hparam search plugins like Optuna, you might want to disable
-            # raising the below exception to avoid multirun failure
-            raise ex
-
-        # things to always do after either success or exception
+            raise
         finally:
-            # display output dir path in terminal
-            log.info(f"Output dir: {cfg.paths.output_dir}")
-
-            # always close wandb run (even if exception occurs so multirun won't fail)
-            if find_spec("wandb"):  # check if wandb is installed
+            if cfg is not None:
+                log.info(f"Output dir: {cfg.paths.output_dir}")
+            if find_spec("wandb"):
                 import wandb
 
                 if wandb.run:
                     log.info("Closing wandb!")
                     wandb.finish()
-
-        return metric_dict, object_dict
 
     return wrap
 

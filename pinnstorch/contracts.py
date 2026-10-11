@@ -61,6 +61,7 @@ class UserFunctions(TypedDict):
     initial_conditions: InitialConditions
     output_fn: NotRequired[FieldFunction]
     boundary_functions: NotRequired[BoundaryFunctions]
+    boundary_values: NotRequired[Mapping[str, Callable[..., torch.Tensor]]]
     plot_fn: NotRequired[PlotFunction]
 
 

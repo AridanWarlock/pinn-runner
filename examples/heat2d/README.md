@@ -11,3 +11,6 @@ convergence. Initial temperature is sin(pi*x)*sin(pi*y), conductivity is 0.3,
 and all four faces have zero temperature. No reference solution file is needed.
 For 3D add z_interval/z_points, use four network inputs, constrain z faces, and
 include the z derivative in the PDE. See docs/task-inputs.md for grid ordering.
+
+BoundaryConditions applies zero Dirichlet temperature to a union of all faces;
+shared corner points are included once.

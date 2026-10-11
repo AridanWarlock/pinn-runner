@@ -94,7 +94,7 @@ def load_user_functions(functions_path: Path, log: logging.Logger) -> UserFuncti
         functions[func_name] = getattr(user_module, func_name)
         log.info("  Loaded: %s", func_name)
 
-    for func_name in ["output_fn", "boundary_functions", "plot_fn"]:
+    for func_name in ["output_fn", "boundary_functions", "boundary_values", "plot_fn"]:
         if hasattr(user_module, func_name):
             functions[func_name] = getattr(user_module, func_name)
             log.info("  Loaded: %s", func_name)
@@ -159,6 +159,16 @@ def setup_config(cfg: DictConfig, output_dir: Path = OUTPUT_DIR) -> DictConfig:
         for item in group.values()
     ):
         raise ValueError("train_datasets must include InitialCondition")
+    boundary_targets = [
+        item.get("_target_")
+        for group in cfg.train_datasets
+        for item in group.values()
+        if "BoundaryCondition" in str(item.get("_target_", ""))
+    ]
+    if "pinnstorch.data.BoundaryConditions" in boundary_targets and len(boundary_targets) != 1:
+        raise ValueError(
+            "Put all boundary conditions in one BoundaryConditions dataset; do not mix boundary APIs"
+        )
     cfg.mesh = {}
     cfg.mesh._target_ = "pinnstorch.data.PointCloud"
 
@@ -321,6 +331,7 @@ def run(
             read_data_fn=read_data_fn,
             output_fn=user_functions.get("output_fn"),
             boundary_functions=user_functions.get("boundary_functions"),
+            boundary_values=user_functions.get("boundary_values"),
             plot_func=plot_func,
             checkpoint=checkpoint_path,
         )
