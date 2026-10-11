@@ -2,7 +2,7 @@
 
 ```sh
 python run.py --mode train --input-dir examples/heat2d --output-dir /tmp/pinn-heat2d
-python run.py --mode predict --input-dir examples/heat2d --output-dir /tmp/pinn-heat2d-predict --checkpoint /tmp/pinn-heat2d/checkpoints/best.ckpt
+python run.py --mode predict --input-dir examples/heat2d --output-dir /tmp/pinn-heat2d-predict --checkpoint /tmp/pinn-heat2d/checkpoints/final.ckpt
 ```
 
 Install the integration dependencies first. The supplied configuration uses CPU

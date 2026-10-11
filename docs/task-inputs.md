@@ -231,3 +231,5 @@ this initial path requires continuous mode with JIT disabled.
 The raw `BoundaryCondition` callback API remains available for custom constraints;
 it does not perform the typed-condition intersection policy. Do not mix it with
 BoundaryConditions. New tasks should use the explicit interface above.
+
+For the complete runner API and explicit prediction queries, see [API.md](API.md).
