@@ -1,14 +1,23 @@
+from collections.abc import Callable
+
 import numpy as np
 import torch
+from numpy.typing import NDArray
 
+from ..mesh.mesh import MeshBase
 from .sampler_base import SamplerBase
-from pinnstorch.utils import set_requires_grad
 
 
 class InitialCondition(SamplerBase):
     """Initialize initial boundary condition."""
 
-    def __init__(self, mesh, num_sample=None, solution=None, initial_fun=None):
+    def __init__(
+        self,
+        mesh: MeshBase,
+        num_sample: int | None = None,
+        solution: list[str] | None = None,
+        initial_fun: Callable[[NDArray[np.float64]], dict[str, NDArray[np.float64]]] | None = None,
+    ) -> None:
         """Initialize an InitialCondition object for sampling initial condition data.
 
         :param mesh: Mesh object containing spatial and time domain information.
@@ -21,11 +30,22 @@ class InitialCondition(SamplerBase):
         self.solution_names = solution
 
         (self.spatial_domain, self.time_domain, self.solution) = mesh.on_initial_boundary(
-            self.solution_names
+            [] if initial_fun is not None else self.solution_names
         )
 
-        if initial_fun:
+        if initial_fun is not None:
+            if not self.solution_names:
+                raise ValueError("InitialCondition must specify solution names")
             self.solution = initial_fun(self.spatial_domain)
+            if not isinstance(self.solution, dict):
+                raise ValueError("initial_conditions must return a dictionary of arrays")
+            for name in self.solution_names:
+                if name not in self.solution:
+                    raise ValueError(f"initial_conditions is missing solution '{name}'")
+                values = np.asarray(self.solution[name])
+                if values.shape != (len(self.spatial_domain), 1) or not np.isfinite(values).all():
+                    raise ValueError(f"initial_conditions['{name}'] must be a finite (N, 1) array")
+                self.solution[name] = values
 
         (
             self.spatial_domain_sampled,

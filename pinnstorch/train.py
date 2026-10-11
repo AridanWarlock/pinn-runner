@@ -11,6 +11,7 @@ import rootutils
 import pickle 
 import torch
 import numpy as np
+from numpy.typing import NDArray
 import scipy
 
 from lightning import Callback, LightningDataModule, LightningModule, Trainer
@@ -75,6 +76,7 @@ def train(
     boundary_functions: Dict = None,
     plot_func: Callable = None,
     checkpoint: str = None,
+    initial_conditions: Callable[[NDArray[np.float64]], Dict[str, NDArray[np.float64]]] | None = None,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """Trains the model. Can additionally evaluate on a testset, using best weights obtained during
     training.
@@ -117,7 +119,7 @@ def train(
         raise "Mesh should be defined in config file."
 
     train_datasets = []
-    for i, dataset_dic in enumerate(cfg.train_datasets):
+    for i, dataset_dic in enumerate(cfg.train_datasets if mode != 'predict' else []):
         for key, dataset in dataset_dic.items():
             target = OmegaConf.select(dataset, '_target_') or ''
             
@@ -140,6 +142,10 @@ def train(
                         location=location,
                         num_sample=ds_dict.get('num_sample')
                     )
+                )
+            elif target == 'pinnstorch.data.InitialCondition' and initial_conditions is not None:
+                train_datasets.append(
+                    hydra.utils.instantiate(dataset)(mesh=mesh, initial_fun=initial_conditions)
                 )
             else:
                 log.info(f"Instantiating training dataset number {i+1}: <{dataset._target_}>")
@@ -257,7 +263,7 @@ def train(
     
     train_metrics = trainer.callback_metrics
     
-    if cfg.get("val"):
+    if cfg.get("val") and mode != 'predict':
         log.info("Starting validation!")
         model.amp = False
         trainer.validate(model=model, datamodule=datamodule)

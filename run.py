@@ -3,7 +3,7 @@
 Universal PINN runner for Docker containers.
 
 Mounted directories:
-    /task_data   - User input (functions.py, config.yaml, data.mat)
+    /task_data   - User input (functions.py, config.yaml)
     /task_output - Results output
 """
 
@@ -15,15 +15,13 @@ import logging
 import os
 import sys
 import traceback
-from collections.abc import Callable
 from enum import Enum
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Sequence
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
-
-    from pinnstorch.data import PointCloudData
 
 INPUT_DIR = Path("/task_data")
 OUTPUT_DIR = Path("/task_output")
@@ -34,9 +32,9 @@ class Mode(Enum):
     PREDICT = "predict"
 
 REQUIRED_FILES = {
-    Mode.TRAIN: ["functions.py", "config.yaml", "data.mat"],
-    Mode.RETRAIN: ["functions.py", "config.yaml", "data.mat", "checkpoint.ckpt"],
-    Mode.PREDICT: ["functions.py", "config.yaml", "data.mat", "checkpoint.ckpt"],
+    Mode.TRAIN: ["functions.py", "config.yaml"],
+    Mode.RETRAIN: ["functions.py", "config.yaml", "checkpoint.ckpt"],
+    Mode.PREDICT: ["functions.py", "config.yaml", "checkpoint.ckpt"],
 }
 
 def setup(log: logging.Logger, output_dir: Path = OUTPUT_DIR) -> None:
@@ -65,7 +63,7 @@ def validate_input(
     return True
 
 
-def load_user_functions(functions_path: Path, log) -> Dict[str, Any]:
+def load_user_functions(functions_path: Path, log: logging.Logger) -> Dict[str, Any]:
     """Load user functions from Python file."""
     log.info("Loading functions: %s", functions_path)
     
@@ -75,13 +73,13 @@ def load_user_functions(functions_path: Path, log) -> Dict[str, Any]:
     
     functions = {}
     
-    for func_name in ['read_data_fn', 'pde_fn']:
-        if not hasattr(user_module, func_name):
+    for func_name in ['pde_fn', 'initial_conditions']:
+        if not callable(getattr(user_module, func_name, None)):
             raise ValueError("Required function '%s' not found" % func_name)
         functions[func_name] = getattr(user_module, func_name)
         log.info("  Loaded: %s", func_name)
     
-    for func_name in ['output_fn', 'initial_fun', 'boundary_functions', 'plot_fn']:
+    for func_name in ['output_fn', 'boundary_functions', 'plot_fn']:
         if hasattr(user_module, func_name):
             functions[func_name] = getattr(user_module, func_name)
             log.info("  Loaded: %s", func_name)
@@ -90,29 +88,6 @@ def load_user_functions(functions_path: Path, log) -> Dict[str, Any]:
     
     return functions
 
-
-def create_read_data_wrapper(
-    user_read_data_fn: Callable[[dict[str, Any]], dict[str, Any]],
-    data_file_name: str,
-    log: logging.Logger,
-    input_dir: Path = INPUT_DIR,
-) -> Callable[[], PointCloudData]:
-    """Wrap user read_data_fn to load .mat file automatically."""
-    
-    import pinnstorch
-
-    def wrapped_read_data_fn() -> PointCloudData:
-        log.info("Loading data: %s", data_file_name)
-        raw_data = pinnstorch.utils.load_data(input_dir, data_file_name)
-        user_result = user_read_data_fn(raw_data)
-        
-        return pinnstorch.data.PointCloudData(
-            spatial=user_result['spatial'],
-            time=user_result['time'],
-            solution=user_result['solution']
-        )
-    
-    return wrapped_read_data_fn
 
 def create_plot_func_wrapper(user_plot_fn):
     import pinnstorch
@@ -143,6 +118,13 @@ def setup_config(
 
     OmegaConf.set_struct(cfg, False)
     
+    if not cfg.get("domain"):
+        raise ValueError("config.yaml must define domain (x_interval, t_interval, x_points, t_points)")
+    if not any(
+        item.get("_target_") == "pinnstorch.data.InitialCondition"
+        for group in cfg.train_datasets for item in group.values()
+    ):
+        raise ValueError("train_datasets must include InitialCondition")
     cfg.mesh = {}
     cfg.mesh._target_ = "pinnstorch.data.PointCloud"
     
@@ -160,7 +142,7 @@ def setup_config(
     cfg.model._partial_ = True
             
     cfg.model.optimizer._partial_ = True
-    if cfg.model.scheduler:
+    if cfg.model.get('scheduler'):
         cfg.model.scheduler._partial_ = True
     
     if cfg.model.optimizer._target_ == "torch.optim.Adam":
@@ -177,7 +159,7 @@ def setup_config(
         cfg.net._partial_ = True
     
     cfg.train = True
-    cfg.val = True
+    cfg.val = cfg.get("val_dataset") is not None
     cfg.test = False
     
     cfg.paths = cfg.get('paths', {})
@@ -268,11 +250,11 @@ def run(
         # print("cfg after merge")
         # print(OmegaConf.to_yaml(cfg))
         
-        read_data_fn = create_read_data_wrapper(
-            user_functions['read_data_fn'], 'data.mat', log, input_dir
-        )
-        
         cfg = setup_config(cfg, output_dir)
+        read_data_fn = partial(
+            pinnstorch.data.create_interval_data,
+            **OmegaConf.to_container(cfg.domain, resolve=True),
+        )
         log.info(f"running mode: {mode.name}({mode.value})")
         # print("cfg after setup")
         # print(OmegaConf.to_yaml(cfg))
@@ -282,6 +264,7 @@ def run(
         metric_dict, _ = pinnstorch.train(
             cfg=cfg,
             pde_fn=user_functions['pde_fn'],
+            initial_conditions=user_functions['initial_conditions'],
             mode=mode.value,
             read_data_fn=read_data_fn,
             output_fn=user_functions.get('output_fn'),

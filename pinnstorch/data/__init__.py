@@ -1,5 +1,5 @@
 from .dataloader.dataloader import PINNDataLoader
-from .domains.point_cloud import PointCloudData
+from .domains.point_cloud import PointCloudData, create_interval_data as create_interval_data
 from .domains.spatial import Interval, Rectangle, RectangularPrism
 from .domains.time import TimeDomain
 from .mesh.mesh import Mesh, MeshBase, PointCloud

@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, Tuple
 import numpy as np
 import requests
 import scipy
+from numpy.typing import NDArray
 from omegaconf import DictConfig, open_dict
 
 from pinnstorch.utils import pylogger, rich_utils
@@ -74,6 +75,7 @@ def task_wrapper(task_func: Callable) -> Callable:
         plot_func: Callable = None,
         boundary_functions: Dict = None,     
         checkpoint: str = None,
+        initial_conditions: Callable[[NDArray[np.float64]], Dict[str, NDArray[np.float64]]] | None = None,
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         # execute the task
         try:
@@ -86,6 +88,7 @@ def task_wrapper(task_func: Callable) -> Callable:
                 plot_func=plot_func,
                 boundary_functions=boundary_functions, 
                 checkpoint=checkpoint,
+                initial_conditions=initial_conditions,
             )
 
         # things to do if exception occurs

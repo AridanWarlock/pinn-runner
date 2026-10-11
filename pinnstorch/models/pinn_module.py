@@ -471,7 +471,7 @@ class PINNModule(LightningModule):
 
         # `loss_fn` and `solution` are passed from PINNDataModule class.
         loss_fn = self.trainer.datamodule.loss_fn
-        solution = self.trainer.datamodule.solution_names
+        solution = self.trainer.datamodule.solution_names or []
         
         
         self.functions['val'] = True
@@ -558,9 +558,9 @@ class PINNModule(LightningModule):
 
     def predict_step(
         self,
-        batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+        batch: Tuple[List[torch.Tensor], torch.Tensor, Dict[str, torch.Tensor]],
         batch_idx: int,
-    ) -> None:
+    ) -> Dict[str, torch.Tensor]:
         """
         Perform a single predict step on a batch of data from the prediction set.
 
@@ -568,9 +568,11 @@ class PINNModule(LightningModule):
         :param batch_idx: The index of the current batch.
         """
 
-        loss, error, preds = self.eval_step(batch)
-
-        return preds
+        spatial, time, _ = batch
+        # Output transforms may derive physical fields from a network potential.
+        with torch.set_grad_enabled(self.output_fn is not None):
+            spatial, time = set_requires_grad(spatial, time, self.output_fn is not None)
+            return self.forward(spatial, time)
 
     def configure_optimizers(self) -> Dict[str, Any]:
         """

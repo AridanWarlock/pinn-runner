@@ -1,5 +1,10 @@
 seed: 1234
 save_pred: true
+domain:
+  x_interval: [0.0, 1.0]
+  t_interval: [0.0, 0.5]
+  x_points: 8
+  t_points: 3
 
 train_datasets:
   - initial:
@@ -9,14 +14,19 @@ train_datasets:
       _target_: pinnstorch.data.MeshSampler
       collection_points: [residual]
       use_lhs: false
+  - boundary:
+      _target_: pinnstorch.data.BoundaryCondition1D
+      bc_func_name: boundary
+      location: both
 val_dataset:
   - data:
       _target_: pinnstorch.data.MeshSampler
-      solution: [T]
+      collection_points: [residual]
+      use_lhs: false
 pred_dataset:
   - data:
       _target_: pinnstorch.data.MeshSampler
-      solution: [T]
+      use_lhs: false
 
 net:
   _target_: pinnstorch.models.FCN

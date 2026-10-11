@@ -3,6 +3,7 @@
 import math
 from functools import partial
 from pathlib import Path
+from unittest.mock import Mock
 
 import lightning as L
 import numpy as np
@@ -15,6 +16,7 @@ from pinnstorch.data import (
     PINNDataModule,
     PointCloud,
     PointCloudData,
+    create_interval_data,
 )
 from pinnstorch.models import FCN, PINNModule
 from pinnstorch.utils import gradient
@@ -116,3 +118,36 @@ def test_lightning_cpu_fit_validate_and_predict(tmp_path: Path) -> None:
     temperature = predictions[0]["temperature"]
     assert temperature.shape == (24, 1)
     assert torch.isfinite(temperature).all()
+
+
+def test_prediction_applies_output_transform_without_pde(tmp_path: Path) -> None:
+    mesh = PointCloud(read_data_fn=lambda: create_interval_data([0, 1], [0, 1], 4, 3))
+    prediction = MeshSampler(mesh, use_lhs=False)
+    data = PINNDataModule(train_datasets=[], val_dataset=None, pred_dataset=prediction)
+    pde = Mock(side_effect=AssertionError("Inference must not evaluate PDE"))
+
+    def output_transform(
+        outputs: dict[str, torch.Tensor], x: torch.Tensor, time: torch.Tensor
+    ) -> dict[str, torch.Tensor]:
+        outputs["derivative"] = gradient(outputs["potential"], x)[0]
+        return outputs
+
+    model = PINNModule(
+        net=FCN([2, 8, 1], mesh.lb, mesh.ub, ["potential"]),
+        pde_fn=pde,
+        output_fn=output_transform,
+        amp=False,
+        jit_compile=False,
+    )
+    spatial, time, _ = prediction[:]
+    expected = model([spatial[0].requires_grad_()], time.requires_grad_())
+    trainer = L.Trainer(
+        accelerator="cpu", devices=1, inference_mode=False, logger=False,
+        enable_checkpointing=False, enable_progress_bar=False, default_root_dir=tmp_path,
+    )
+
+    predictions = trainer.predict(model, datamodule=data)
+
+    pde.assert_not_called()
+    assert predictions is not None
+    torch.testing.assert_close(predictions[0]["derivative"], expected["derivative"])

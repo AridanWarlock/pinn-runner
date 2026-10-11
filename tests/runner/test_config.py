@@ -22,7 +22,8 @@ def config() -> DictConfig:
         {
             "trainer": trainer,
             "seed": defaults.seed,
-            "train_datasets": [],
+            "domain": {"x_interval": [0, 1], "t_interval": [0, 1], "x_points": 8, "t_points": 3},
+            "train_datasets": [{"initial": {"_target_": "pinnstorch.data.InitialCondition"}}],
             "model": {"optimizer": {"_target_": "torch.optim.Adam"}, "scheduler": None},
             "net": {"_target_": "pinnstorch.models.FCN"},
         }

@@ -189,7 +189,12 @@ class PointCloud(MeshBase):
         if not isinstance(self.spatial_domain, list):
             self.spatial_domain = [self.spatial_domain]
 
-        spatial_num_points, time_num_points = list(self.solution.values())[0].shape
+        spatial_num_points = self.spatial_domain[0].shape[0]
+        time_num_points = self.time_domain.shape[0]
+
+        for name, values in self.solution.items():
+            if values.shape != (spatial_num_points, time_num_points):
+                raise ValueError(f"Solution '{name}' does not match the coordinate grid")
 
         self.spatial_dim = len(self.spatial_domain)
         self.time_dim = 1
