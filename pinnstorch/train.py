@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import os
@@ -35,7 +34,7 @@ from torch.profiler import profile, record_function, ProfilerActivity
 
 torch.set_float32_matmul_precision('high')
 
-log = utils.get_pylogger(__name__, output_path=Path("/task_output/log.log"))
+log = utils.get_pylogger(__name__)
 
 OmegaConf.register_new_resolver("eval", eval)
 

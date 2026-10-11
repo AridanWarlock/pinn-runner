@@ -215,6 +215,7 @@ def run(mode: Mode) -> int:
         log.info("=" * 60)
         
         setup(log)
+        utils.get_pylogger("pinnstorch.train", output_path=OUTPUT_DIR / "log.log")
         
         if not validate_input(mode, log):
             return 1
