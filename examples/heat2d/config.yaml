@@ -1,0 +1,73 @@
+seed: 1234
+save_pred: true
+domain:
+  x_interval:
+  - 0.0
+  - 1.0
+  t_interval:
+  - 0.0
+  - 0.5
+  x_points: 8
+  t_points: 3
+  y_interval:
+  - 0
+  - 1
+  y_points: 6
+train_datasets:
+- initial:
+    _target_: pinnstorch.data.InitialCondition
+    solution:
+    - T
+- pde:
+    _target_: pinnstorch.data.MeshSampler
+    collection_points:
+    - residual
+    use_lhs: false
+- boundary_x:
+    _target_: pinnstorch.data.BoundaryCondition
+    bc_func_name: boundary
+    axis: x
+    location: both
+- boundary_y:
+    _target_: pinnstorch.data.BoundaryCondition
+    bc_func_name: boundary
+    axis: y
+    location: both
+val_dataset:
+- data:
+    _target_: pinnstorch.data.MeshSampler
+    collection_points:
+    - residual
+    use_lhs: false
+pred_dataset:
+- data:
+    _target_: pinnstorch.data.MeshSampler
+    use_lhs: false
+net:
+  _target_: pinnstorch.models.FCN
+  layers:
+  - 3
+  - 16
+  - 16
+  - 1
+  output_names:
+  - T
+model:
+  optimizer:
+    lr: 0.01
+  scheduler: null
+  scaler: null
+trainer:
+  accelerator: cpu
+  devices: 1
+  max_epochs: 3
+  max_steps: 3
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: 0
+  enable_progress_bar: false
+  enable_model_summary: false
+callbacks:
+  model_summary: null
+  rich_progress_bar: null
+  model_checkpoint:
+    filename: best

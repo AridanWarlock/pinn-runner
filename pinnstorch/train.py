@@ -20,6 +20,7 @@ rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # Imports follow root setup so direct script execution can find the package.
 from pinnstorch import utils  # noqa: E402
 from pinnstorch.data import (  # noqa: E402
+    BoundaryCondition,
     BoundaryCondition1D,
     Interval,
     Mesh,
@@ -39,23 +40,16 @@ OmegaConf.register_new_resolver("eval", eval)
 def save_predictions_to_mat(preds_dict, mesh, file_path):
     """Save predictions to .mat file with x, t, and all solution variables."""
 
-    # Координаты
-    if hasattr(mesh, "spatial_domain_mesh"):
-        x = np.array(mesh.spatial_domain_mesh[:, 0, 0]).reshape(-1, 1)
-    else:
-        x = np.linspace(float(mesh.lb[0]), float(mesh.ub[0]), 100).reshape(-1, 1)
-
-    t = np.array(mesh.time_domain).flatten().reshape(-1, 1)
-
-    nx, nt = len(x), len(t)
-
-    # Собираем словарь
-    mat_dict = {"x": x, "t": t}
-
+    spatial = mesh.spatial_domain_mesh[:, 0, :]
+    t = np.asarray(mesh.time_domain).reshape(-1, 1)
+    mat_dict = {
+        name: spatial[:, i : i + 1] for i, name in enumerate(("x", "y", "z")[: mesh.spatial_dim])
+    }
+    mat_dict["t"] = t
     for key, value in preds_dict.items():
         if isinstance(value, torch.Tensor):
             value = value.detach().cpu().numpy()
-        mat_dict[key] = np.array(value).reshape(nx, nt)
+        mat_dict[key] = np.asarray(value).reshape(len(spatial), len(t))
 
     scipy.io.savemat(file_path, mat_dict)
 
@@ -122,7 +116,10 @@ def train(
         for key, dataset in dataset_dic.items():
             target = OmegaConf.select(dataset, "_target_") or ""
 
-            if "BoundaryCondition1D" in target:
+            if target in (
+                "pinnstorch.data.BoundaryCondition1D",
+                "pinnstorch.data.BoundaryCondition",
+            ):
                 ds_dict = OmegaConf.to_container(dataset, resolve=True)
                 bc_func_name = ds_dict.get("bc_func_name")
                 location = ds_dict.get("location")
@@ -136,12 +133,21 @@ def train(
                     f"Instantiating training dataset number {i + 1}: BC {bc_func_name} on {location}"
                 )
                 train_datasets.append(
-                    BoundaryCondition1D(
+                    (
+                        BoundaryCondition
+                        if target.endswith(".BoundaryCondition")
+                        else BoundaryCondition1D
+                    )(
                         mesh=mesh,
                         bc_name=bc_func_name,
                         boundary_fun=boundary_functions[bc_func_name],
                         location=location,
                         num_sample=ds_dict.get("num_sample"),
+                        **(
+                            {"axis": ds_dict.get("axis")}
+                            if target.endswith(".BoundaryCondition")
+                            else {}
+                        ),
                     )
                 )
             elif target == "pinnstorch.data.InitialCondition" and initial_conditions is not None:

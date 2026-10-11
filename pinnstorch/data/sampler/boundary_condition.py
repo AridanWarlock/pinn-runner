@@ -1,7 +1,11 @@
+from typing import Literal
+
 import numpy as np
 import torch
 
 from pinnstorch import utils
+from pinnstorch.contracts import FieldFunction
+from pinnstorch.data.mesh.mesh import MeshBase
 
 from .sampler_base import SamplerBase
 
@@ -158,6 +162,10 @@ class BoundaryCondition1D(SamplerBase):
     ):
         super().__init__()
 
+        if mesh.spatial_dim != 1:
+            raise ValueError(
+                "BoundaryCondition1D requires one spatial axis; use BoundaryCondition"
+            )
         if boundary_fun is None:
             raise ValueError("boundary_fun is REQUIRED")
 
@@ -319,3 +327,40 @@ class PeriodicBoundaryCondition(SamplerBase):
         loss = self.functions["loss_fn"](loss, outputs, keys=self.solution_names, mid=self.mid)
 
         return loss, outputs
+
+
+class BoundaryCondition(BoundaryCondition1D):
+    """A constraint evaluated on complete faces of a Cartesian spatial grid."""
+
+    def __init__(
+        self,
+        mesh: MeshBase,
+        bc_name: str,
+        boundary_fun: FieldFunction,
+        axis: Literal["x", "y", "z"],
+        location: Literal["lower", "upper", "both"],
+        num_sample: int | None = None,
+    ) -> None:
+        SamplerBase.__init__(self)
+        index = {"x": 0, "y": 1, "z": 2}.get(axis)
+        if index is None or index >= mesh.spatial_dim:
+            raise ValueError(f"Boundary axis '{axis}' is absent from the spatial domain")
+        if location not in ("lower", "upper", "both"):
+            raise ValueError("Boundary location must be lower, upper, or both")
+        if not callable(boundary_fun):
+            raise ValueError("boundary_fun must be callable")
+        self.boundary_fun = boundary_fun
+        self.bc_name = bc_name
+        self.discrete = False
+        self.idx_t = None
+        spatial, time, _ = mesh.flatten_mesh(None)
+        coordinate = spatial[:, index]
+        mask = np.zeros(len(coordinate), dtype=bool)
+        if location in ("lower", "both"):
+            mask |= coordinate == mesh.lb[index]
+        if location in ("upper", "both"):
+            mask |= coordinate == mesh.ub[index]
+        self.spatial_domain_sampled, self.time_domain_sampled = self.sample_mesh(
+            num_sample, (spatial[mask], time[mask])
+        )
+        self.spatial_domain_sampled = list(torch.split(self.spatial_domain_sampled, 1, dim=1))
