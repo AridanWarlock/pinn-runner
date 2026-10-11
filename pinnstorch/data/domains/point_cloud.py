@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-FloatArray = NDArray[np.float32 | np.float64]
+from pinnstorch.contracts import FloatArray
 
 
 @dataclass
@@ -33,6 +33,6 @@ def create_interval_data(
     for name, count in (("x_points", x_points), ("t_points", t_points)):
         if isinstance(count, bool) or not isinstance(count, int) or count < 2:
             raise ValueError(f"{name} must be an integer >= 2")
-    x: NDArray[np.float64] = np.linspace(*x_interval, x_points).reshape(-1, 1)
-    time: NDArray[np.float64] = np.linspace(*t_interval, t_points).reshape(-1, 1)
+    x: NDArray[np.float64] = np.linspace(x_interval[0], x_interval[1], x_points).reshape(-1, 1)
+    time: NDArray[np.float64] = np.linspace(t_interval[0], t_interval[1], t_points).reshape(-1, 1)
     return PointCloudData(spatial=[x], time=time, solution={})

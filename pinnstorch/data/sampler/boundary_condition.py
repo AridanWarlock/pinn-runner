@@ -34,11 +34,11 @@ class DirichletBoundaryCondition(SamplerBase):
         self.solution_names = solution
         self.discrete = discrete
 
-        spatial_upper_bound, time_upper_bound, solution_upper_bound = (
-            mesh.on_upper_boundary(self.solution_names)
+        spatial_upper_bound, time_upper_bound, solution_upper_bound = mesh.on_upper_boundary(
+            self.solution_names
         )
-        spatial_lower_bound, time_lower_bound, solution_lower_bound = (
-            mesh.on_lower_boundary(self.solution_names)
+        spatial_lower_bound, time_lower_bound, solution_lower_bound = mesh.on_lower_boundary(
+            self.solution_names
         )
 
         spatial_bound = np.vstack([spatial_upper_bound, spatial_lower_bound])
@@ -64,9 +64,7 @@ class DirichletBoundaryCondition(SamplerBase):
             self.solution_sampled,
         ) = self.sample_mesh(num_sample, (spatial_bound, time_bound, solution_bound))
 
-        self.spatial_domain_sampled = list(
-            torch.split(self.spatial_domain_sampled, (1), dim=1)
-        )
+        self.spatial_domain_sampled = list(torch.split(self.spatial_domain_sampled, (1), dim=1))
         self.solution_sampled = list(torch.split(self.solution_sampled, (1), dim=1))
 
     def sample_mesh(self, num_sample, flatten_mesh):
@@ -86,9 +84,7 @@ class DirichletBoundaryCondition(SamplerBase):
                 np.vstack(
                     (
                         flatten_mesh_[self.idx_t : self.idx_t + 1, :],
-                        flatten_mesh_[
-                            self.idx_t + t_points : self.idx_t + t_points + 1, :
-                        ],
+                        flatten_mesh_[self.idx_t + t_points : self.idx_t + t_points + 1, :],
                     )
                 )
                 for flatten_mesh_ in flatten_mesh
@@ -97,9 +93,7 @@ class DirichletBoundaryCondition(SamplerBase):
         if num_sample is None:
             return self.convert_to_tensor(flatten_mesh)
         else:
-            idx = np.random.choice(
-                range(flatten_mesh[0].shape[0]), num_sample, replace=False
-            )
+            idx = np.random.choice(range(flatten_mesh[0].shape[0]), num_sample, replace=False)
             return self.convert_to_tensor(
                 (
                     flatten_mesh[0][idx, :],
@@ -168,9 +162,7 @@ class BoundaryCondition1D(SamplerBase):
             raise ValueError("boundary_fun is REQUIRED")
 
         if location not in ["left", "right", "both"]:
-            raise ValueError(
-                f"location must be 'left', 'right', or 'both', got '{location}'"
-            )
+            raise ValueError(f"location must be 'left', 'right', or 'both', got '{location}'")
 
         self.boundary_fun = boundary_fun
         self.location = location
@@ -193,9 +185,7 @@ class BoundaryCondition1D(SamplerBase):
             self.time_domain_sampled,
         ) = self.sample_mesh(num_sample, (spatial_bound, time_bound))
 
-        self.spatial_domain_sampled = list(
-            torch.split(self.spatial_domain_sampled, 1, dim=1)
-        )
+        self.spatial_domain_sampled = list(torch.split(self.spatial_domain_sampled, 1, dim=1))
 
     def sample_mesh(self, num_sample, flatten_mesh):
         spatial, time = flatten_mesh
@@ -255,12 +245,8 @@ class PeriodicBoundaryCondition(SamplerBase):
         self.idx_t = idx_t
         self.solution_names = solution
 
-        spatial_upper_bound, time_upper_bound, _ = mesh.on_upper_boundary(
-            self.solution_names
-        )
-        spatial_lower_bound, time_lower_bound, _ = mesh.on_lower_boundary(
-            self.solution_names
-        )
+        spatial_upper_bound, time_upper_bound, _ = mesh.on_upper_boundary(self.solution_names)
+        spatial_lower_bound, time_lower_bound, _ = mesh.on_lower_boundary(self.solution_names)
 
         self.discrete = discrete
 
@@ -275,9 +261,7 @@ class PeriodicBoundaryCondition(SamplerBase):
         )
 
         self.mid = len(self.time_domain_sampled) // 2
-        self.spatial_domain_sampled = list(
-            torch.split(self.spatial_domain_sampled, (1), dim=1)
-        )
+        self.spatial_domain_sampled = list(torch.split(self.spatial_domain_sampled, (1), dim=1))
 
     def sample_mesh(self, num_sample, flatten_mesh):
         """Sample the mesh data for training.
@@ -289,8 +273,7 @@ class PeriodicBoundaryCondition(SamplerBase):
 
         if self.discrete:
             flatten_mesh = [
-                flatten_mesh_[self.idx_t : self.idx_t + 1, :]
-                for flatten_mesh_ in flatten_mesh
+                flatten_mesh_[self.idx_t : self.idx_t + 1, :] for flatten_mesh_ in flatten_mesh
             ]
 
         if num_sample is None:
@@ -301,9 +284,7 @@ class PeriodicBoundaryCondition(SamplerBase):
                 )
             )
         else:
-            idx = np.random.choice(
-                range(flatten_mesh[0].shape[0]), num_sample, replace=False
-            )
+            idx = np.random.choice(range(flatten_mesh[0].shape[0]), num_sample, replace=False)
             return self.convert_to_tensor(
                 (
                     np.vstack((flatten_mesh[0][idx, :], flatten_mesh[2][idx, :])),
@@ -333,12 +314,8 @@ class PeriodicBoundaryCondition(SamplerBase):
                     outputs["tmp"] = utils.fwd_gradient(outputs[solution_name], x)[0]
                 else:
                     outputs["tmp"] = utils.gradient(outputs[solution_name], x)[0]
-                loss = self.functions["loss_fn"](
-                    loss, outputs, keys=["tmp"], mid=self.mid
-                )
+                loss = self.functions["loss_fn"](loss, outputs, keys=["tmp"], mid=self.mid)
 
-        loss = self.functions["loss_fn"](
-            loss, outputs, keys=self.solution_names, mid=self.mid
-        )
+        loss = self.functions["loss_fn"](loss, outputs, keys=self.solution_names, mid=self.mid)
 
         return loss, outputs

@@ -23,9 +23,9 @@ def load_module(relative_path: str, name: str) -> ModuleType:
 
 net_module = load_module("pinnstorch/models/net/neural_net.py", "network_under_test")
 grad_module = load_module("pinnstorch/utils/gradient_fn.py", "network_gradients_under_test")
-gradient: Callable[
-    [torch.Tensor, torch.Tensor | list[torch.Tensor]], list[torch.Tensor]
-] = grad_module.gradient
+gradient: Callable[[torch.Tensor, torch.Tensor | list[torch.Tensor]], list[torch.Tensor]] = (
+    grad_module.gradient
+)
 
 
 def make_network(dimensions: int, outputs: list[str]) -> torch.nn.Module:
@@ -43,9 +43,7 @@ def test_network_outputs_and_coordinate_derivatives(dimensions: int) -> None:
         torch.manual_seed(1234)
         net = make_network(dimensions, ["temperature", "pressure"])
     spatial = [
-        torch.linspace(0.1 + 0.1 * axis, 0.7 + 0.1 * axis, 5)
-        .reshape(-1, 1)
-        .requires_grad_()
+        torch.linspace(0.1 + 0.1 * axis, 0.7 + 0.1 * axis, 5).reshape(-1, 1).requires_grad_()
         for axis in range(dimensions)
     ]
     time = torch.linspace(0.0, 0.5, 5).reshape(-1, 1).requires_grad_()
@@ -102,6 +100,5 @@ def test_short_cpu_training_updates_weights_and_reduces_loss() -> None:
     final_loss = heat_loss(net, x, time).detach()
     assert final_loss < initial_loss
     assert any(
-        not torch.equal(before, after)
-        for before, after in zip(original_weights, net.parameters())
+        not torch.equal(before, after) for before, after in zip(original_weights, net.parameters())
     )

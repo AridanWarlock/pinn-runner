@@ -144,46 +144,33 @@ def train(
                         num_sample=ds_dict.get("num_sample"),
                     )
                 )
-            elif (
-                target == "pinnstorch.data.InitialCondition"
-                and initial_conditions is not None
-            ):
+            elif target == "pinnstorch.data.InitialCondition" and initial_conditions is not None:
                 train_datasets.append(
-                    hydra.utils.instantiate(dataset)(
-                        mesh=mesh, initial_fun=initial_conditions
-                    )
+                    hydra.utils.instantiate(dataset)(mesh=mesh, initial_fun=initial_conditions)
                 )
             else:
-                log.info(
-                    f"Instantiating training dataset number {i + 1}: <{dataset._target_}>"
-                )
+                log.info(f"Instantiating training dataset number {i + 1}: <{dataset._target_}>")
                 train_datasets.append(hydra.utils.instantiate(dataset)(mesh=mesh))
 
     val_dataset = None
     if cfg.get("val_dataset"):
         for i, dataset_dic in enumerate(cfg.val_dataset):
             for key, dataset in dataset_dic.items():
-                log.info(
-                    f"Instantiating validation dataset number {i + 1}: <{dataset._target_}>"
-                )
+                log.info(f"Instantiating validation dataset number {i + 1}: <{dataset._target_}>")
                 val_dataset = hydra.utils.instantiate(dataset)(mesh=mesh)
 
     test_dataset = None
     if cfg.get("test_dataset"):
         for i, dataset_dic in enumerate(cfg.test_dataset):
             for key, dataset in dataset_dic.items():
-                log.info(
-                    f"Instantiating test dataset number {i + 1}: <{dataset._target_}>"
-                )
+                log.info(f"Instantiating test dataset number {i + 1}: <{dataset._target_}>")
                 test_dataset = hydra.utils.instantiate(dataset)(mesh=mesh)
 
     pred_dataset = None
     if cfg.get("pred_dataset"):
         for i, dataset_dic in enumerate(cfg.pred_dataset):
             for key, dataset in dataset_dic.items():
-                log.info(
-                    f"Instantiating prediction dataset number {i + 1}: <{dataset._target_}>"
-                )
+                log.info(f"Instantiating prediction dataset number {i + 1}: <{dataset._target_}>")
                 pred_dataset = hydra.utils.instantiate(dataset)(mesh=mesh)
 
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
@@ -220,9 +207,7 @@ def train(
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
 
-    trainer: Trainer = hydra.utils.instantiate(
-        cfg.trainer, callbacks=callbacks, logger=logger
-    )
+    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
 
     object_dict = {
         "cfg": cfg,
@@ -245,9 +230,7 @@ def train(
     elif mode == "retrain":
         log.info("Starting retraining!")
 
-        ckpt = torch.load(
-            checkpoint, map_location="cuda" if torch.cuda.is_available() else "cpu"
-        )
+        ckpt = torch.load(checkpoint, map_location="cuda" if torch.cuda.is_available() else "cpu")
         model.load_state_dict(ckpt["state_dict"], strict=False)
         log.info("Checkpoint loaded, continuing training with new PDE")
 
@@ -272,9 +255,7 @@ def train(
         preds_list = trainer.predict(model=model, datamodule=datamodule)
         preds_dict = utils.fix_predictions(preds_list)
 
-        save_predictions_to_mat(
-            preds_dict, mesh, f"{cfg.paths.output_dir}/predictions.mat"
-        )
+        save_predictions_to_mat(preds_dict, mesh, f"{cfg.paths.output_dir}/predictions.mat")
         log.info(f"Elapsed time: {time.time() - start_time}")
 
     if model.times:

@@ -1,3 +1,5 @@
+"""Legacy upstream sweep tests, retained outside the active suite."""
+
 from pathlib import Path
 
 import pytest

@@ -21,13 +21,20 @@ def prepare_input(directory: Path) -> None:
         shutil.copyfile(FIXTURE / name, directory / name)
 
 
-
 def launch(
     input_dir: Path, output_dir: Path, mode: str = "train", checkpoint: str | None = None
 ) -> subprocess.CompletedProcess[str]:
     environment = dict(os.environ, MPLCONFIGDIR=str(input_dir.parent / "matplotlib"))
-    command = [sys.executable, str(ROOT / "run.py"), "--mode", mode,
-               "--input-dir", str(input_dir), "--output-dir", str(output_dir)]
+    command = [
+        sys.executable,
+        str(ROOT / "run.py"),
+        "--mode",
+        mode,
+        "--input-dir",
+        str(input_dir),
+        "--output-dir",
+        str(output_dir),
+    ]
     if checkpoint is not None:
         command.extend(["--checkpoint", checkpoint])
     return subprocess.run(
@@ -114,10 +121,15 @@ def test_runner_requires_initial_conditions(tmp_path: Path) -> None:
     input_dir, output_dir = tmp_path / "input", tmp_path / "output"
     prepare_input(input_dir)
     functions = input_dir / "functions.py"
-    functions.write_text(functions.read_text().replace("def initial_conditions(", "def unused_initial("))
+    functions.write_text(
+        functions.read_text().replace("def initial_conditions(", "def unused_initial(")
+    )
 
     result = launch(input_dir, output_dir)
 
     assert result.returncode == 1
-    assert "Required function 'initial_conditions' not found" in (output_dir / "error.log").read_text()
+    assert (
+        "Required function 'initial_conditions' not found"
+        in (output_dir / "error.log").read_text()
+    )
     assert not (output_dir / "predictions.pkl").exists()

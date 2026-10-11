@@ -1,3 +1,5 @@
+"""Legacy upstream configuration tests, retained outside the active suite."""
+
 import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple

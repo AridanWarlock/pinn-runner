@@ -1,4 +1,11 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import torch
+
+if TYPE_CHECKING:
+    from pinnstorch.contracts import SamplerBatch, SamplerDataset
 
 
 class PINNDataLoader:
@@ -7,7 +14,13 @@ class PINNDataLoader:
     This allows you to have a fast dataloader.
     """
 
-    def __init__(self, dataset, batch_size=None, ignore=False, shuffle=False):
+    def __init__(
+        self,
+        dataset: SamplerDataset,
+        batch_size: int | None = None,
+        ignore: bool = False,
+        shuffle: bool = False,
+    ) -> None:
         """Initialize a PINNDataLoader.
 
         :param dataset: The dataset to load data from.
@@ -27,7 +40,7 @@ class PINNDataLoader:
         else:
             self.indices = torch.arange(self.dataset_size)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Get the number of batches in the dataloader.
 
         :return: The number of batches.
@@ -39,7 +52,7 @@ class PINNDataLoader:
         else:
             return (self.dataset_size // self.batch_size) + 1
 
-    def __iter__(self):
+    def __iter__(self) -> PINNDataLoader:
         """Initialize the data loader iterator.
 
         :return: The data loader iterator.
@@ -47,7 +60,7 @@ class PINNDataLoader:
         self.current_index = 0
         return self
 
-    def __next__(self):
+    def __next__(self) -> SamplerBatch:
         """Generate the next batch of data.
 
         :return: The next batch of data.
@@ -61,9 +74,7 @@ class PINNDataLoader:
             self.current_index += self.dataset_size
             return batch
 
-        batch_indices = self.indices[
-            self.current_index : self.current_index + self.batch_size
-        ]
+        batch_indices = self.indices[self.current_index : self.current_index + self.batch_size]
         batch = self.dataset[batch_indices]
         self.current_index += self.batch_size
 

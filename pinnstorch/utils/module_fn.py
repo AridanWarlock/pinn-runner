@@ -1,15 +1,21 @@
-from typing import Dict, List, Tuple, Union
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Dict, List, Tuple, Union
 
 import torch
 
+if TYPE_CHECKING:
+    from pinnstorch.contracts import LossAccumulator, SamplerBatch, TensorOutputs
+
 
 def sse(
-    loss: torch.Tensor,
+    loss: LossAccumulator,
     preds: Dict[str, torch.Tensor],
     target: Union[Dict[str, torch.Tensor], None] = None,
     keys: Union[List[str], None] = None,
     mid: Union[int, None] = None,
-) -> torch.Tensor:
+) -> LossAccumulator:
     """Calculate the sum of squared errors (SSE) loss for given predictions and optional targets.
 
     :param loss: Loss variable.
@@ -35,12 +41,12 @@ def sse(
 
 
 def mse(
-    loss: torch.Tensor,
+    loss: LossAccumulator,
     preds: Dict[str, torch.Tensor],
     target: Union[Dict[str, torch.Tensor], None] = None,
     keys: Union[List[str], None] = None,
     mid: Union[int, None] = None,
-) -> torch.Tensor:
+) -> LossAccumulator:
     """Calculate the mean squared error (MSE) loss for given predictions and optional targets.
 
     :param loss: Loss variable.
@@ -65,7 +71,7 @@ def mse(
     return loss
 
 
-def relative_l2_error(preds, target):
+def relative_l2_error(preds: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
     """Calculate the relative L2 error between predictions and target tensors.
 
     :param preds: Predicted tensors.
@@ -80,7 +86,9 @@ def relative_l2_error(preds, target):
     return torch.sqrt(l2_norm_error / l2_norm_target)
 
 
-def fix_extra_variables(extra_variables):
+def fix_extra_variables(
+    extra_variables: Mapping[str, float] | None,
+) -> torch.nn.ParameterDict | None:
     """Convert extra variables to torch tensors with gradient tracking. These variables are
     trainables in inverse problems.
 
@@ -89,16 +97,15 @@ def fix_extra_variables(extra_variables):
     """
     if extra_variables is None:
         return None
-    extra_variables_parameters = {}
+    extra_variables_parameters: dict[str, torch.Tensor] = {}
     for key in extra_variables:
         extra_variables_parameters[key] = torch.tensor(
             [extra_variables[key]], dtype=torch.float32, requires_grad=True
         )
-    extra_variables_parameters = torch.nn.ParameterDict(extra_variables_parameters)
-    return extra_variables_parameters
+    return torch.nn.ParameterDict(extra_variables_parameters)
 
 
-def requires_grad(batch, enable_grad=True):
+def requires_grad(batch: SamplerBatch, enable_grad: bool = True) -> SamplerBatch:
     """Set the requires_grad attribute for tensors in the input list.
 
     :param batch: A batch containing spatial, time, solutions.
@@ -143,7 +150,7 @@ def fix_predictions(
     :param preds_list: List of dictionary of predictions.
     :return: A dictionary containing the predictions.
     """
-    preds_dict = {}
+    preds_dict: TensorOutputs = {}
     for preds in preds_list:
         for sol_key, pred in preds.items():
             if sol_key in preds_dict.keys():

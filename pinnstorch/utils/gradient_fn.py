@@ -36,10 +36,7 @@ def gradient(
         allow_unused=False,
     )
 
-    grads = [
-        grad if grad is not None else torch.zeros_like(dx[i])
-        for i, grad in enumerate(dy_dx)
-    ]
+    grads = [grad if grad is not None else torch.zeros_like(dx[i]) for i, grad in enumerate(dy_dx)]
     return grads
 
 

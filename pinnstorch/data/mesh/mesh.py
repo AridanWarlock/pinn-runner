@@ -71,9 +71,7 @@ class MeshBase:
         :return: Spatial, time, and solution data on the initial boundary.
         """
 
-        spatial_domain = np.squeeze(
-            self.spatial_domain_mesh[:, idx : idx + 1, :], axis=-2
-        )
+        spatial_domain = np.squeeze(self.spatial_domain_mesh[:, idx : idx + 1, :], axis=-2)
         time_domain = self.time_domain_mesh[:, idx]
         solution_domain = {
             solution_name: self.solution[solution_name][:, idx : idx + 1]
@@ -103,18 +101,16 @@ class MeshBase:
         :return: Flattened spatial, time, and solution data.
         """
         time_domain = self.time_domain_mesh.flatten()[:, None]
-        spatial_domain = np.zeros(
-            (len(time_domain), self.spatial_domain_mesh.shape[-1])
-        )
+        spatial_domain = np.zeros((len(time_domain), self.spatial_domain_mesh.shape[-1]))
         for i in range(self.spatial_domain_mesh.shape[-1]):
             spatial_domain[:, i] = self.spatial_domain_mesh[:, :, i].flatten()
 
         solution_domain = {}
         if solution_names is not None:
             for solution_name in solution_names:
-                solution_domain[solution_name] = self.solution[solution_name][
-                    :, :
-                ].flatten()[:, None]
+                solution_domain[solution_name] = self.solution[solution_name][:, :].flatten()[
+                    :, None
+                ]
 
         return spatial_domain, time_domain, solution_domain
 
@@ -197,9 +193,7 @@ class PointCloud(MeshBase):
 
         for name, values in self.solution.items():
             if values.shape != (spatial_num_points, time_num_points):
-                raise ValueError(
-                    f"Solution '{name}' does not match the coordinate grid"
-                )
+                raise ValueError(f"Solution '{name}' does not match the coordinate grid")
 
         self.spatial_dim = len(self.spatial_domain)
         self.time_dim = 1
@@ -213,9 +207,7 @@ class PointCloud(MeshBase):
         for i, interval in enumerate(self.spatial_domain):
             self.spatial_domain_mesh[:, :, i] = np.tile(interval, (1, time_num_points))
 
-        self.time_domain_mesh = np.tile(self.time_domain, (1, spatial_num_points)).T[
-            :, :, None
-        ]
+        self.time_domain_mesh = np.tile(self.time_domain, (1, spatial_num_points)).T[:, :, None]
 
         # We utilize the user-defined lower and upper bounds if they are specified.
         if ub is None and lb is None:

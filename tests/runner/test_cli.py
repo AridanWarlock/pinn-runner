@@ -41,7 +41,9 @@ def test_main_dispatches_mode_and_returns_exit_code(mode: str) -> None:
     with patch.object(runner, "run", return_value=7) as execute:
         assert runner.main(["--mode", mode]) == 7
     execute.assert_called_once_with(
-        runner.Mode(mode), input_dir=runner.INPUT_DIR, output_dir=runner.OUTPUT_DIR,
+        runner.Mode(mode),
+        input_dir=runner.INPUT_DIR,
+        output_dir=runner.OUTPUT_DIR,
         checkpoint=None,
     )
 
@@ -68,9 +70,9 @@ def test_help_without_training_dependencies() -> None:
 
 def test_main_passes_custom_directories() -> None:
     with patch.object(runner, "run", return_value=0) as execute:
-        assert runner.main(
-            ["--mode", "train", "--input-dir", "input", "--output-dir", "output"]
-        ) == 0
+        assert (
+            runner.main(["--mode", "train", "--input-dir", "input", "--output-dir", "output"]) == 0
+        )
     execute.assert_called_once_with(
         runner.Mode.TRAIN, input_dir=Path("input"), output_dir=Path("output"), checkpoint=None
     )
@@ -80,6 +82,8 @@ def test_main_passes_checkpoint_path() -> None:
     with patch.object(runner, "run", return_value=0) as execute:
         assert runner.main(["--mode", "predict", "--checkpoint", "trained.ckpt"]) == 0
     execute.assert_called_once_with(
-        runner.Mode.PREDICT, input_dir=runner.INPUT_DIR, output_dir=runner.OUTPUT_DIR,
+        runner.Mode.PREDICT,
+        input_dir=runner.INPUT_DIR,
+        output_dir=runner.OUTPUT_DIR,
         checkpoint=Path("trained.ckpt"),
     )

@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import time
-from typing import Any, Callable, Dict, List, Tuple
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 import torch
 import torch._lazy
@@ -16,6 +19,17 @@ from pinnstorch.utils.module_fn import (
     sse,
 )
 
+if TYPE_CHECKING:
+    from pinnstorch.contracts import (
+        FieldFunction,
+        LossAccumulator,
+        OptimizerFactory,
+        SamplerBatch,
+        SamplerFunctions,
+        SamplerLoss,
+        SchedulerFactory,
+    )
+
 log = get_pylogger(__name__)
 
 
@@ -25,20 +39,21 @@ class PINNModule(LightningModule):
     differential equations (PDEs).
     """
 
-    function_mapping: Dict[str, Callable]
+    function_mapping: dict[str, SamplerLoss]
+    functions: SamplerFunctions
     net: torch.nn.Module
 
     def __init__(
         self,
         net: torch.nn.Module,
-        pde_fn,
-        optimizer: torch.optim.Optimizer = torch.optim.Adam,
-        scheduler: torch.optim.lr_scheduler = None,
-        scaler: torch.cuda.amp.GradScaler = None,
+        pde_fn: FieldFunction,
+        optimizer: OptimizerFactory = torch.optim.Adam,
+        scheduler: SchedulerFactory | None = None,
+        scaler: torch.cuda.amp.GradScaler | None = None,
         loss_fn: str = "mse",
-        extra_variables: Dict[str, Any] = None,
-        output_fn=None,
-        runge_kutta=None,
+        extra_variables: Mapping[str, float] | None = None,
+        output_fn: FieldFunction | None = None,
+        runge_kutta: torch.nn.Module | None = None,
         cudagraph_compile: bool = False,
         jit_compile: bool = True,
         amp: bool = True,
@@ -74,9 +89,7 @@ class PINNModule(LightningModule):
 
         self.net = net
         self.capture_end = False
-        self.extra_variables: torch.nn.ParameterDict = fix_extra_variables(
-            extra_variables
-        )
+        self.extra_variables: torch.nn.ParameterDict | None = fix_extra_variables(extra_variables)
         self.pde_fn = pde_fn
         self.output_fn = output_fn
         self.rk = runge_kutta
@@ -134,9 +147,7 @@ class PINNModule(LightningModule):
             "jit_compile": self.jit_compile,
         }
 
-    def forward(
-        self, spatial: List[torch.Tensor], time: torch.Tensor
-    ) -> Dict[str, torch.Tensor]:
+    def forward(self, spatial: List[torch.Tensor], time: torch.Tensor) -> Dict[str, torch.Tensor]:
         """Perform a forward pass through the model `self.net`.
 
         :param spatial: List of input spatial tensors.
@@ -171,9 +182,7 @@ class PINNModule(LightningModule):
         self.val_error.reset()
         self.val_loss_best.reset()
 
-        self.functions["batch_size"] = (
-            True if self.trainer.datamodule.batch_size else False
-        )
+        self.functions["batch_size"] = True if self.trainer.datamodule.batch_size else False
 
         if self.lazy:
             device = "lazy"
@@ -218,9 +227,7 @@ class PINNModule(LightningModule):
                 if self.trainer.datamodule.batch_size and self.val_stage is False:
                     self.copy_batch(batch)
                 elif self.trainer.datamodule.batch_size and self.val_stage is True:
-                    batch = super().transfer_batch_to_device(
-                        batch, device, dataloader_idx
-                    )
+                    batch = super().transfer_batch_to_device(batch, device, dataloader_idx)
 
         return batch
 
@@ -321,8 +328,8 @@ class PINNModule(LightningModule):
 
     def model_step(
         self,
-        batch: Dict[str, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
-    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+        batch: dict[str, SamplerBatch],
+    ) -> Tuple[LossAccumulator, Dict[str, torch.Tensor]]:
         """Perform a single model step on a batch of data.
 
         :param batch: A batch of data (a tuple) containing the
@@ -333,7 +340,7 @@ class PINNModule(LightningModule):
             - A dictionary of predictions.
         """
 
-        loss = 0.0
+        loss: LossAccumulator = 0.0
 
         for loss_fn, data in batch.items():
             x, t, u = data
@@ -343,9 +350,9 @@ class PINNModule(LightningModule):
 
     def training_step(
         self,
-        batch: Dict[str, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+        batch: dict[str, SamplerBatch],
         batch_idx: int,
-    ) -> torch.Tensor:
+    ) -> LossAccumulator | None:
         """Perform a single training step on a batch of data from the training set. self.g.replay()
         includes forward, backward, and step.
 
@@ -443,7 +450,7 @@ class PINNModule(LightningModule):
         self.val_stage = False
 
     def eval_step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+        self, batch: SamplerBatch
     ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor], Dict[str, torch.Tensor]]:
         """Perform a single evaluation step on a batch of data.
 
@@ -473,9 +480,7 @@ class PINNModule(LightningModule):
                 for solution_name in solution
             }
             for solution_name in solution:
-                print(
-                    preds[solution_name][:, -1][:, None].shape, u[solution_name].shape
-                )
+                print(preds[solution_name][:, -1][:, None].shape, u[solution_name].shape)
 
         else:
             error_dict = {
@@ -487,7 +492,7 @@ class PINNModule(LightningModule):
 
     def validation_step(
         self,
-        batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+        batch: SamplerBatch,
         batch_idx: int,
     ) -> None:
         """
@@ -510,9 +515,7 @@ class PINNModule(LightningModule):
 
         for solution_name, error in error_dict.items():
             self.val_error(error)
-            self.log(
-                f"val/error_{solution_name}", error, prog_bar=True, sync_dist=False
-            )
+            self.log(f"val/error_{solution_name}", error, prog_bar=True, sync_dist=False)
 
     def on_validation_epoch_end(self) -> None:
         """
@@ -532,7 +535,7 @@ class PINNModule(LightningModule):
 
     def test_step(
         self,
-        batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+        batch: SamplerBatch,
         batch_idx: int,
     ) -> None:
         """
@@ -557,13 +560,11 @@ class PINNModule(LightningModule):
 
         for solution_name, error in error_dict.items():
             self.test_error(error)
-            self.log(
-                f"test/error_{solution_name}", error, prog_bar=True, sync_dist=False
-            )
+            self.log(f"test/error_{solution_name}", error, prog_bar=True, sync_dist=False)
 
     def predict_step(
         self,
-        batch: Tuple[List[torch.Tensor], torch.Tensor, Dict[str, torch.Tensor]],
+        batch: SamplerBatch,
         batch_idx: int,
     ) -> Dict[str, torch.Tensor]:
         """

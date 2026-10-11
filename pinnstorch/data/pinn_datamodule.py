@@ -106,9 +106,7 @@ class PINNDataModule(LightningDataModule):
                 self.data_train[str(train_dataset.loss_fn)] = PINNDataLoader(
                     train_dataset, batch_size=self.batch_size, ignore=True, shuffle=True
                 )
-                self.function_mapping[str(train_dataset.loss_fn)] = (
-                    train_dataset.loss_fn
-                )
+                self.function_mapping[str(train_dataset.loss_fn)] = train_dataset.loss_fn
 
     def set_mode_for_discrete_mesh(self):
         """This function will figuere out which training datasets are for discrete.
@@ -158,9 +156,7 @@ class PINNDataModule(LightningDataModule):
 
         :return: The test dataloader.
         """
-        self.loss_fn = (
-            self.test_dataset.loss_fn if self.test_dataset else self.val_dataset.loss_fn
-        )
+        self.loss_fn = self.test_dataset.loss_fn if self.test_dataset else self.val_dataset.loss_fn
         self.function_mapping[str(self.loss_fn)] = self.loss_fn
         self.solution_names = (
             self.test_dataset.solution_names
@@ -176,9 +172,7 @@ class PINNDataModule(LightningDataModule):
 
         :return: The test dataloader.
         """
-        self.loss_fn = (
-            self.pred_dataset.loss_fn if self.pred_dataset else self.val_dataset.loss_fn
-        )
+        self.loss_fn = self.pred_dataset.loss_fn if self.pred_dataset else self.val_dataset.loss_fn
         self.function_mapping[str(self.loss_fn)] = self.loss_fn
         self.solution_names = (
             self.pred_dataset.solution_names

@@ -142,8 +142,13 @@ def test_prediction_applies_output_transform_without_pde(tmp_path: Path) -> None
     spatial, time, _ = prediction[:]
     expected = model([spatial[0].requires_grad_()], time.requires_grad_())
     trainer = L.Trainer(
-        accelerator="cpu", devices=1, inference_mode=False, logger=False,
-        enable_checkpointing=False, enable_progress_bar=False, default_root_dir=tmp_path,
+        accelerator="cpu",
+        devices=1,
+        inference_mode=False,
+        logger=False,
+        enable_checkpointing=False,
+        enable_progress_bar=False,
+        default_root_dir=tmp_path,
     )
 
     predictions = trainer.predict(model, datamodule=data)

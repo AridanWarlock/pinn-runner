@@ -76,9 +76,7 @@ def task_wrapper(task_func: Callable) -> Callable:
         plot_func: Callable = None,
         boundary_functions: Dict = None,
         checkpoint: str = None,
-        initial_conditions: Callable[
-            [NDArray[np.float64]], Dict[str, NDArray[np.float64]]
-        ]
+        initial_conditions: Callable[[NDArray[np.float64]], Dict[str, NDArray[np.float64]]]
         | None = None,
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         # execute the task

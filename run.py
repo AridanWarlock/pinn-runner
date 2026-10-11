@@ -15,13 +15,23 @@ import logging
 import os
 import sys
 import traceback
+from collections.abc import Callable, Sequence
 from enum import Enum
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Sequence
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from omegaconf import DictConfig
+
+    from pinnstorch.contracts import (
+        ArrayOutputs,
+        PlotFunction,
+        SamplerDataset,
+        TensorOutputs,
+        UserFunctions,
+    )
+    from pinnstorch.data.mesh.mesh import MeshBase
 
 INPUT_DIR = Path("/task_data")
 OUTPUT_DIR = Path("/task_output")
@@ -66,15 +76,17 @@ def validate_input(
     return True
 
 
-def load_user_functions(functions_path: Path, log: logging.Logger) -> Dict[str, Any]:
+def load_user_functions(functions_path: Path, log: logging.Logger) -> UserFunctions:
     """Load user functions from Python file."""
     log.info("Loading functions: %s", functions_path)
 
     spec = importlib.util.spec_from_file_location("user_functions", functions_path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"Cannot load Python functions from '{functions_path}'")
     user_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(user_module)
 
-    functions = {}
+    functions: dict[str, Any] = {}
 
     for func_name in ["pde_fn", "initial_conditions"]:
         if not callable(getattr(user_module, func_name, None)):
@@ -89,17 +101,31 @@ def load_user_functions(functions_path: Path, log: logging.Logger) -> Dict[str, 
         else:
             log.info("  Not found: %s", func_name)
 
-    return functions
+    return cast("UserFunctions", functions)
 
 
-def create_plot_func_wrapper(user_plot_fn):
+def create_plot_func_wrapper(
+    user_plot_fn: PlotFunction | None,
+) -> (
+    Callable[
+        [MeshBase, TensorOutputs, Sequence[SamplerDataset], SamplerDataset | None, str],
+        None,
+    ]
+    | None
+):
     import pinnstorch
 
     if user_plot_fn is None:
         return None
 
-    def wrapped_plot_func(mesh, preds, train_datasets, val_dataset, filename):
-        preds_np = {k: v.detach().cpu().numpy() for k, v in preds.items()}
+    def wrapped_plot_func(
+        mesh: MeshBase,
+        preds: TensorOutputs,
+        train_datasets: Sequence[SamplerDataset],
+        val_dataset: SamplerDataset | None,
+        filename: str,
+    ) -> None:
+        preds_np: ArrayOutputs = {k: v.detach().cpu().numpy() for k, v in preds.items()}
         user_plot_fn(mesh, preds_np, train_datasets, val_dataset)
         pinnstorch.utils.savefig(filename + "/fig", False)
 
@@ -117,7 +143,7 @@ def save_error_report(error: Exception, output_dir: Path = OUTPUT_DIR) -> None:
 
 
 def setup_config(cfg: DictConfig, output_dir: Path = OUTPUT_DIR) -> DictConfig:
-    from omegaconf import OmegaConf
+    from omegaconf import DictConfig, OmegaConf
 
     OmegaConf.set_struct(cfg, False)
 
@@ -125,6 +151,8 @@ def setup_config(cfg: DictConfig, output_dir: Path = OUTPUT_DIR) -> DictConfig:
         raise ValueError(
             "config.yaml must define domain (x_interval, t_interval, x_points, t_points)"
         )
+    if not isinstance(cfg.domain, DictConfig):
+        raise ValueError("domain must be a mapping of interval bounds and point counts")
     if not any(
         item.get("_target_") == "pinnstorch.data.InitialCondition"
         for group in cfg.train_datasets
@@ -250,22 +278,15 @@ def run(
             train_cfg = compose(config_name="train")
 
         OmegaConf.set_struct(train_cfg, False)
-        # print("train_cfg")
-        # print(OmegaConf.to_yaml(train_cfg))
 
-        cfg = OmegaConf.merge(train_cfg, cfg)
-
-        # print("cfg after merge")
-        # print(OmegaConf.to_yaml(cfg))
+        cfg = cast("DictConfig", OmegaConf.merge(train_cfg, cfg))
 
         cfg = setup_config(cfg, output_dir)
         read_data_fn = partial(
             pinnstorch.data.create_interval_data,
-            **OmegaConf.to_container(cfg.domain, resolve=True),
+            **cast("dict[str, Any]", OmegaConf.to_container(cfg.domain, resolve=True)),
         )
         log.info(f"running mode: {mode.name}({mode.value})")
-        # print("cfg after setup")
-        # print(OmegaConf.to_yaml(cfg))
 
         plot_func = create_plot_func_wrapper(user_functions.get("plot_fn"))
 

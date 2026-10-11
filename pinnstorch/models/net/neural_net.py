@@ -1,8 +1,14 @@
-from typing import Dict, List
+from __future__ import annotations
+
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Dict, List, cast
 
 import numpy as np
 import torch
 from torch import nn
+
+if TYPE_CHECKING:
+    from pinnstorch.contracts import Bounds, FloatArray
 
 
 class FCN(nn.Module):
@@ -11,9 +17,19 @@ class FCN(nn.Module):
     In this model, lower and upper bound will be used for normalization of input data
     """
 
-    output_names: List[str]
+    output_names: Sequence[str]
 
-    def __init__(self, layers, lb, ub, output_names, discrete: bool = False) -> None:
+    lb: torch.Tensor
+    ub: torch.Tensor
+
+    def __init__(
+        self,
+        layers: Sequence[int],
+        lb: Bounds,
+        ub: Bounds,
+        output_names: Sequence[str],
+        discrete: bool = False,
+    ) -> None:
         """Initialize a `FCN` module.
 
         :param layers: The list indicating number of neurons in each layer.
@@ -25,16 +41,12 @@ class FCN(nn.Module):
         super().__init__()
 
         self.model = self.initalize_net(layers)
-        self.register_buffer(
-            "lb", torch.tensor(lb, dtype=torch.float32, requires_grad=False)
-        )
-        self.register_buffer(
-            "ub", torch.tensor(ub, dtype=torch.float32, requires_grad=False)
-        )
+        self.register_buffer("lb", torch.tensor(lb, dtype=torch.float32, requires_grad=False))
+        self.register_buffer("ub", torch.tensor(ub, dtype=torch.float32, requires_grad=False))
         self.output_names = output_names
         self.discrete = discrete
 
-    def initalize_net(self, layers: List):
+    def initalize_net(self, layers: Sequence[int]) -> nn.Sequential:
         """Initialize the layers of the neural network.
 
         :param layers: The list indicating number of neurons in each layer.
@@ -61,9 +73,7 @@ class FCN(nn.Module):
         net.add_module("output", output_layer)
         return net
 
-    def forward(
-        self, spatial: List[torch.Tensor], time: torch.Tensor
-    ) -> Dict[str, torch.Tensor]:
+    def forward(self, spatial: List[torch.Tensor], time: torch.Tensor) -> Dict[str, torch.Tensor]:
         """Perform a single forward pass through the network.
 
         :param spatial: List of input spatial tensors.
@@ -96,7 +106,7 @@ class FCN(nn.Module):
                 z = torch.cat((x, y, z, time), 1)
             z = 2.0 * (z - self.lb) / (self.ub - self.lb) - 1.0
 
-        z = self.model(z)
+        z = cast(torch.Tensor, self.model(z))
 
         # Discrete Mode
         if self.discrete:
@@ -104,9 +114,7 @@ class FCN(nn.Module):
 
         # Continuous Mode
         else:
-            outputs_dict = {
-                name: z[:, i : i + 1] for i, name in enumerate(self.output_names)
-            }
+            outputs_dict = {name: z[:, i : i + 1] for i, name in enumerate(self.output_names)}
         return outputs_dict
 
 
@@ -117,9 +125,21 @@ class NetHFM(nn.Module):
     normalization will be done.
     """
 
-    output_names: List[str]
+    output_names: Sequence[str]
 
-    def __init__(self, mean, std, layers: List, output_names: List):
+    X_mean: torch.Tensor
+    X_std: torch.Tensor
+    weights: nn.ParameterList
+    biases: nn.ParameterList
+    gammas: nn.ParameterList
+
+    def __init__(
+        self,
+        mean: FloatArray,
+        std: FloatArray,
+        layers: Sequence[int],
+        output_names: Sequence[str],
+    ) -> None:
         super().__init__()
         """Initialize a `NetHFM` module.
 
@@ -136,15 +156,15 @@ class NetHFM(nn.Module):
         self.initalize_net(layers)
         self.sigmoid = nn.Sigmoid()
 
-    def initalize_net(self, layers: List) -> None:
+    def initalize_net(self, layers: Sequence[int]) -> None:
         """Initialize the neural network weights, biases, and gammas.
 
         :param layers: The list indicating number of neurons in each layer.
         """
 
-        self.weights = []
-        self.biases = []
-        self.gammas = []
+        weights: list[torch.Tensor] = []
+        biases: list[torch.Tensor] = []
+        gammas: list[torch.Tensor] = []
 
         for i in range(0, self.num_layers - 1):
             in_dim = layers[i]
@@ -153,17 +173,15 @@ class NetHFM(nn.Module):
             b = np.zeros([1, out_dim])
             g = np.ones([1, out_dim])
             # tensorflow variables
-            self.weights.append(torch.tensor(W, dtype=torch.float32))
-            self.biases.append(torch.tensor(b, dtype=torch.float32))
-            self.gammas.append(torch.tensor(g, dtype=torch.float32))
+            weights.append(torch.tensor(W, dtype=torch.float32))
+            biases.append(torch.tensor(b, dtype=torch.float32))
+            gammas.append(torch.tensor(g, dtype=torch.float32))
 
-        self.weights = nn.ParameterList(self.weights)
-        self.biases = nn.ParameterList(self.biases)
-        self.gammas = nn.ParameterList(self.gammas)
+        self.weights = nn.ParameterList(weights)
+        self.biases = nn.ParameterList(biases)
+        self.gammas = nn.ParameterList(gammas)
 
-    def forward(
-        self, spatial: List[torch.Tensor], time: torch.Tensor
-    ) -> Dict[str, torch.Tensor]:
+    def forward(self, spatial: List[torch.Tensor], time: torch.Tensor) -> Dict[str, torch.Tensor]:
         """Perform a forward pass through the network.
 
         :param spatial: List of input spatial tensors.
@@ -193,13 +211,6 @@ class NetHFM(nn.Module):
             if i < self.num_layers - 2:
                 H = H * self.sigmoid(H)
 
-        outputs_dict = {
-            name: H[:, i : i + 1] for i, name in enumerate(self.output_names)
-        }
+        outputs_dict = {name: H[:, i : i + 1] for i, name in enumerate(self.output_names)}
 
         return outputs_dict
-
-
-if __name__ == "__main__":
-    _ = FCN()
-    _ = NetHFM()

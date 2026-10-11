@@ -69,25 +69,19 @@ class RungeKutta(torch.nn.Module):
         :return: Dictionary with updated solution tensors after the forward step.
         """
 
-        for solution_name, collection_points_name in zip(
-            solution_names, collection_points_names
-        ):
+        for solution_name, collection_points_name in zip(solution_names, collection_points_names):
             if mode == "inverse_discrete_1":
-                outputs[solution_name] = outputs[
-                    solution_name
-                ] - self.dt * torch.matmul(outputs[collection_points_name], self.alpha)
+                outputs[solution_name] = outputs[solution_name] - self.dt * torch.matmul(
+                    outputs[collection_points_name], self.alpha
+                )
 
             elif mode == "inverse_discrete_2":
-                outputs[solution_name] = outputs[
-                    solution_name
-                ] + self.dt * torch.matmul(
+                outputs[solution_name] = outputs[solution_name] + self.dt * torch.matmul(
                     outputs[collection_points_name], (self.beta - self.alpha)
                 )
 
             elif mode == "forward_discrete":
-                outputs[solution_name] = outputs[
-                    solution_name
-                ] - self.dt * torch.matmul(
+                outputs[solution_name] = outputs[solution_name] - self.dt * torch.matmul(
                     outputs[collection_points_name], self.weights
                 )
 
