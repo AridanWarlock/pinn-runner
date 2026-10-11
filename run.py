@@ -7,24 +7,20 @@ Mounted directories:
     /task_output - Results output
 """
 
-import sys
-import traceback
-import importlib.util
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, Any
+from __future__ import annotations
+
 import argparse
-
+import importlib.util
 import os
+import sys
 import time
-import hydra
-from hydra import initialize_config_dir, compose
-from omegaconf import OmegaConf
-from omegaconf import DictConfig
+import traceback
 from enum import Enum
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, Sequence
 
-import pinnstorch
-from pinnstorch import utils
+if TYPE_CHECKING:
+    from omegaconf import DictConfig
 
 INPUT_DIR = Path("/task_data")
 OUTPUT_DIR = Path("/task_output")
@@ -93,6 +89,8 @@ def load_user_functions(functions_path: Path, log) -> Dict[str, Any]:
 def create_read_data_wrapper(user_read_data_fn, data_file_name: str, log):
     """Wrap user read_data_fn to load .mat file automatically."""
     
+    import pinnstorch
+
     def wrapped_read_data_fn():
         log.info("Loading data: %s", data_file_name)
         raw_data = pinnstorch.utils.load_data(INPUT_DIR, data_file_name)
@@ -107,7 +105,9 @@ def create_read_data_wrapper(user_read_data_fn, data_file_name: str, log):
     return wrapped_read_data_fn
 
 def create_plot_func_wrapper(user_plot_fn):
-    if user_plot_fn == None:
+    import pinnstorch
+
+    if user_plot_fn is None:
         return None
     
     def wrapped_plot_func(mesh, preds, train_datasets, val_dataset, filename):
@@ -129,6 +129,8 @@ def save_error_report(error: Exception):
 def setup_config(
     cfg: DictConfig
 ) -> DictConfig: 
+    from omegaconf import OmegaConf
+
     OmegaConf.set_struct(cfg, False)
     
     cfg.mesh = {}
@@ -177,30 +179,45 @@ def setup_config(
     
     return cfg
     
-parser = argparse.ArgumentParser()
-parser.add_argument('--mode', type=str, help='Режим работы (train, retrain, predict)')
-parser.add_argument('--checkpoint', type=str, default=None, help='Имя файла с весами ранее обученной модели')
-args = parser.parse_args()
+class RunnerArguments(argparse.Namespace):
+    """Arguments accepted by the container entry point."""
 
-def run():
+    mode: str
+    checkpoint: str | None
+
+
+def parse_args(argv: Sequence[str] | None = None) -> RunnerArguments:
+    """Parse CLI arguments only when explicitly called."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--mode",
+        required=True,
+        choices=[mode.value for mode in Mode],
+        help="Режим работы (train, retrain, predict)",
+    )
+    parser.add_argument(
+        "--checkpoint",
+        type=str,
+        default=None,
+        help="Имя файла с весами ранее обученной модели",
+    )
+    return parser.parse_args(argv, namespace=RunnerArguments())
+
+
+def run(mode: Mode) -> int:
+    import hydra
+    from hydra import compose, initialize_config_dir
+    from omegaconf import OmegaConf
+
+    import pinnstorch
+    from pinnstorch import utils
+
     log = utils.get_pylogger(__name__)
     
     try:        
         log.info("=" * 60)
         log.info("PINN Universal Runner")
         log.info("=" * 60)
-        
-        mode = Mode(args.mode)
-        
-        match mode:
-            case Mode.TRAIN:
-                pass
-            case Mode.RETRAIN:
-                pass
-            case Mode.PREDICT:
-                pass
-            case _:
-                raise ValueError(f"Недопустимый режим {args.mode}")
         
         setup(log)
         
@@ -276,5 +293,11 @@ def run():
         return 1
 
 
+def main(argv: Sequence[str] | None = None) -> int:
+    """Validate CLI arguments before loading the training dependencies."""
+    args = parse_args(argv)
+    return run(Mode(args.mode))
+
+
 if __name__ == '__main__':
-    sys.exit(run())
+    sys.exit(main())
