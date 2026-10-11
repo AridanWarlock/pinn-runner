@@ -212,6 +212,6 @@ class PointCloud(MeshBase):
 
         # We utilize the user-defined lower and upper bounds if they are specified.
         if ub is None and lb is None:
-            self.lb, self.ub = self.domain_bounds()
+            self.lb, self.ub = data.normalization_bounds or self.domain_bounds()
         else:
             self.lb, self.ub = np.array(lb), np.array(ub)

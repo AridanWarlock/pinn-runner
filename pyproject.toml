@@ -13,6 +13,8 @@ ignore_missing_imports = true
 files = [
   "run.py",
   "pinnstorch/contracts.py",
+  "pinnstorch/checkpoint_contract.py",
+  "pinnstorch/config_validation.py",
   "pinnstorch/parameter_functions.py",
   "pinnstorch/data/domains/point_cloud.py",
   "pinnstorch/data/domains/time.py",

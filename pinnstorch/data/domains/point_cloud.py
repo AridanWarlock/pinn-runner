@@ -26,6 +26,7 @@ class PointCloudData:
     solution: dict[str, FloatArray]
     spatial_dimension: int | None = None
     parameter_names: tuple[str, ...] = ()
+    normalization_bounds: tuple[FloatArray, FloatArray] | None = None
 
 
 def create_interval_data(
@@ -38,6 +39,7 @@ def create_interval_data(
     z_interval: Sequence[float] | None = None,
     z_points: int | None = None,
     parameters: Mapping[str, ParameterSpec] | None = None,
+    parameter_values: Mapping[str, Sequence[float]] | None = None,
 ) -> PointCloudData:
     """Generate a Cartesian space/parameter grid crossed with time.
 
@@ -76,9 +78,32 @@ def create_interval_data(
     ]:
         if isinstance(count, bool) or not isinstance(count, int) or count < 2:
             raise ValueError(f"{name} must be an integer >= 2")
-    grids = np.meshgrid(
-        *(np.linspace(bounds[0], bounds[1], count) for _, bounds, count in axes), indexing="ij"
-    )
+    requested_values = parameter_values or {}
+    unknown = set(requested_values) - set(parameters or {})
+    if unknown:
+        raise ValueError(f"Unknown prediction parameters: {sorted(unknown)}")
+    vectors: list[FloatArray] = []
+    for name, bounds, count in axes:
+        if name in requested_values:
+            raw = np.asarray(requested_values[name])
+            if (
+                raw.ndim != 1
+                or not raw.size
+                or raw.dtype.kind not in "iuf"
+                or any(isinstance(value, (bool, np.bool_)) for value in requested_values[name])
+            ):
+                raise ValueError(f"Prediction values for '{name}' must be a nonempty numeric list")
+            values = raw.astype(np.float64)
+            if not np.isfinite(values).all():
+                raise ValueError(f"Prediction values for '{name}' must be a nonempty finite list")
+            if len(np.unique(values)) != len(values):
+                raise ValueError(f"Prediction values for '{name}' must be distinct")
+            vectors.append(values)
+        else:
+            vectors.append(np.linspace(bounds[0], bounds[1], count))
+    grids = np.meshgrid(*vectors, indexing="ij")
+    lower = np.asarray([bounds[0] for _, bounds, _ in axes] + [t_interval[0]], dtype=np.float64)
+    upper = np.asarray([bounds[1] for _, bounds, _ in axes] + [t_interval[1]], dtype=np.float64)
     spatial = [grid.reshape(-1, 1) for grid in grids]
     time: NDArray[np.float64] = np.linspace(t_interval[0], t_interval[1], t_points).reshape(-1, 1)
     return PointCloudData(
@@ -87,4 +112,5 @@ def create_interval_data(
         solution={},
         spatial_dimension=spatial_dimension,
         parameter_names=tuple(parameters or {}),
+        normalization_bounds=(lower, upper),
     )

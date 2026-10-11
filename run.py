@@ -177,7 +177,7 @@ def setup_config(cfg: DictConfig, output_dir: Path = OUTPUT_DIR) -> DictConfig:
             item[key]["_partial_"] = True
 
     for group in ["val_dataset", "pred_dataset"]:
-        if group in cfg:
+        if cfg.get(group) is not None:
             for item in cfg[group]:
                 for key in item:
                     item[key]["_partial_"] = True
@@ -196,7 +196,7 @@ def setup_config(cfg: DictConfig, output_dir: Path = OUTPUT_DIR) -> DictConfig:
 
     cfg.model.loss_fn = "mse"
 
-    cfg.data = {}
+    cfg.data = cfg.get("data", {})
     cfg.data._target_ = "pinnstorch.data.PINNDataModule"
 
     if cfg.net._target_ == "pinnstorch.models.FCN":
@@ -208,6 +208,7 @@ def setup_config(cfg: DictConfig, output_dir: Path = OUTPUT_DIR) -> DictConfig:
 
     cfg.paths = cfg.get("paths", {})
     cfg.paths.output_dir = str(output_dir)
+    cfg.paths.work_dir = str(Path.cwd())
 
     return cfg
 
@@ -292,9 +293,28 @@ def run(
         cfg = cast("DictConfig", OmegaConf.merge(train_cfg, cfg))
 
         cfg = setup_config(cfg, output_dir)
+        prediction = cfg.get("prediction", {})
+        if not isinstance(prediction, (DictConfig, dict)):
+            raise ValueError("prediction must be a mapping")
+        unknown_prediction = set(prediction) - {"parameters", "allow_extrapolation"}
+        if unknown_prediction:
+            raise ValueError(f"Unknown prediction options: {sorted(unknown_prediction)}")
+        if not isinstance(prediction.get("allow_extrapolation", False), bool):
+            raise ValueError("prediction.allow_extrapolation must be true or false")
+        query_values = prediction.get("parameters", {})
+        if not isinstance(query_values, (DictConfig, dict)):
+            raise ValueError("prediction.parameters must map names to lists of values")
+        if "parameter_values" in cfg.domain:
+            raise ValueError("Set explicit values under prediction.parameters, not domain")
+        resolved_query = (
+            cast("dict[str, Any]", OmegaConf.to_container(query_values, resolve=True))
+            if isinstance(query_values, DictConfig)
+            else query_values
+        )
         read_data_fn = partial(
             pinnstorch.data.create_interval_data,
             **cast("dict[str, Any]", OmegaConf.to_container(cfg.domain, resolve=True)),
+            parameter_values=resolved_query if mode == Mode.PREDICT else None,
         )
         from pinnstorch.parameter_functions import bind_parameters
 
@@ -303,13 +323,9 @@ def run(
         if parameters is not None and not isinstance(parameters, DictConfig):
             raise ValueError("domain.parameters must be a mapping of named intervals")
         parameters = parameters or {}
-        if set(parameters).intersection(cfg.net.output_names):
-            raise ValueError("Parameter names must differ from model output names")
-        if (
-            cfg.net._target_ == "pinnstorch.models.FCN"
-            and cfg.net.layers[0] != spatial_dimension + len(parameters) + 1
-        ):
-            raise ValueError("FCN input layer must match spatial dimensions + parameters + time")
+        from pinnstorch.config_validation import validate_task_settings
+
+        validate_task_settings(cfg, spatial_dimension, tuple(parameters))
         if parameters and (
             cfg.model.get("extra_variables")
             or cfg.model.get("jit_compile")
@@ -319,6 +335,7 @@ def run(
                 "Parameterized tasks require continuous mode without inverse variables or JIT"
             )
         user_functions = bind_parameters(user_functions, spatial_dimension, tuple(parameters))
+        OmegaConf.save(cfg, output_dir / "config.resolved.yaml", resolve=True)
         log.info(f"running mode: {mode.name}({mode.value})")
 
         plot_func = create_plot_func_wrapper(user_functions.get("plot_fn"))

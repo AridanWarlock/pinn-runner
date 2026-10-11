@@ -104,7 +104,7 @@ class PINNDataModule(LightningDataModule):
 
             for train_dataset in self.train_datasets:
                 self.data_train[str(train_dataset.loss_fn)] = PINNDataLoader(
-                    train_dataset, batch_size=self.batch_size, ignore=True, shuffle=True
+                    train_dataset, batch_size=self.batch_size, ignore=False, shuffle=True
                 )
                 self.function_mapping[str(train_dataset.loss_fn)] = train_dataset.loss_fn
 
@@ -144,6 +144,8 @@ class PINNDataModule(LightningDataModule):
         :return: The validation dataloader.
         """
 
+        if self.data_val is None:
+            return []
         self.loss_fn = self.data_val.loss_fn
         self.function_mapping[str(self.loss_fn)] = self.loss_fn
         self.solution_names = self.data_val.solution_names

@@ -1,3 +1,4 @@
+import json
 import logging
 import pickle
 import time
@@ -20,6 +21,7 @@ rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 # Imports follow root setup so direct script execution can find the package.
 from pinnstorch import utils  # noqa: E402
+from pinnstorch.checkpoint_contract import validate_checkpoint_domain  # noqa: E402
 from pinnstorch.contracts import BoundaryFunctions, FieldFunction, InitialConditions  # noqa: E402
 from pinnstorch.data import (  # noqa: E402
     BoundaryCondition,
@@ -53,9 +55,16 @@ def save_predictions_to_mat(preds_dict, mesh, file_path):
         mat_dict[name] = spatial[:, mesh.spatial_dim + i : mesh.spatial_dim + i + 1]
     mat_dict["t"] = t
     for key, value in preds_dict.items():
+        if key in mat_dict:
+            raise ValueError(f"Output name '{key}' conflicts with a coordinate or parameter")
         if isinstance(value, torch.Tensor):
             value = value.detach().cpu().numpy()
-        mat_dict[key] = np.asarray(value).reshape(len(spatial), len(t))
+        array = np.asarray(value)
+        if array.shape != (len(spatial) * len(t), 1) or not np.isfinite(array).all():
+            raise ValueError(
+                f"Prediction '{key}' must be finite with shape (number_of_grid_rows, 1)"
+            )
+        mat_dict[key] = array.reshape(len(spatial), len(t))
 
     scipy.io.savemat(file_path, mat_dict)
 
@@ -125,11 +134,6 @@ def train(
             if target == "pinnstorch.data.BoundaryConditions":
                 if cfg.model.get("jit_compile") or cfg.net.get("discrete"):
                     raise ValueError("BoundaryConditions requires continuous mode without JIT")
-                if any(
-                    specification.get("field") not in cfg.net.output_names
-                    for specification in dataset.conditions
-                ):
-                    raise ValueError("Boundary fields must name model outputs")
                 train_datasets.append(
                     hydra.utils.instantiate(dataset)(mesh=mesh, boundary_values=boundary_values)
                 )
@@ -203,7 +207,6 @@ def train(
         val_dataset=val_dataset,
         test_dataset=test_dataset,
         pred_dataset=pred_dataset,
-        batch_size=cfg.get("batch_size", None),
     )
 
     if cfg.net._target_ == "pinnstorch.models.FCN":
@@ -224,16 +227,23 @@ def train(
         "t",
     )
     model: LightningModule = hydra.utils.instantiate(cfg.model)(
-        net=net, pde_fn=pde_fn, output_fn=output_fn, input_names=input_names
+        net=net,
+        pde_fn=pde_fn,
+        output_fn=output_fn,
+        input_names=input_names,
+        input_bounds=tuple((float(lower), float(upper)) for lower, upper in zip(mesh.lb, mesh.ub)),
     )
 
-    def validate_checkpoint_inputs(ckpt: dict[str, Any]) -> None:
-        saved_names = ckpt.get("hyper_parameters", {}).get("input_names")
-        if saved_names or getattr(mesh, "parameter_names", ()):
-            if tuple(saved_names or ()) != input_names:
-                raise ValueError(
-                    f"Checkpoint input names {saved_names} do not match task inputs {input_names}"
-                )
+    def validate_checkpoint_inputs(
+        ckpt: dict[str, Any], allow_extrapolation: bool = False
+    ) -> None:
+        requested = [
+            (float(column.min()), float(column.max())) for column in mesh.spatial_domain
+        ] + [
+            (float(np.asarray(mesh.time_domain).min()), float(np.asarray(mesh.time_domain).max()))
+        ]
+        bounds = validate_checkpoint_domain(ckpt, input_names, requested, allow_extrapolation)
+        model.hparams.input_bounds = bounds
 
     log.info("Instantiating callbacks...")
     callbacks: List[Callback] = utils.instantiate_callbacks(cfg.get("callbacks"))
@@ -262,6 +272,7 @@ def train(
     if mode == "train":
         log.info("Starting training!")
         trainer.fit(model=model, datamodule=datamodule)
+        trainer.save_checkpoint(str(Path(cfg.paths.output_dir, "checkpoints", "final.ckpt")))
         log.info(f"Elapsed time: {time.time() - start_time}")
     elif mode == "retrain":
         log.info("Starting retraining!")
@@ -272,13 +283,16 @@ def train(
         log.info("Checkpoint loaded, continuing training with new PDE")
 
         trainer.fit(model=model, datamodule=datamodule)
+        trainer.save_checkpoint(str(Path(cfg.paths.output_dir, "checkpoints", "final.ckpt")))
 
         log.info(f"Elapsed time: {time.time() - start_time}")
     elif mode == "predict":
         log.info("Starting predicting!")
 
         ckpt = torch.load(checkpoint, map_location="cpu")
-        validate_checkpoint_inputs(ckpt)
+        validate_checkpoint_inputs(
+            ckpt, bool(cfg.get("prediction", {}).get("allow_extrapolation", False))
+        )
         model.load_state_dict(ckpt["state_dict"], strict=True)
         model.eval()
 
@@ -294,6 +308,28 @@ def train(
         preds_dict = utils.fix_predictions(preds_list)
 
         save_predictions_to_mat(preds_dict, mesh, f"{cfg.paths.output_dir}/predictions.mat")
+        requested_bounds = [
+            [float(column.min()), float(column.max())] for column in mesh.spatial_domain
+        ] + [
+            [float(np.asarray(mesh.time_domain).min()), float(np.asarray(mesh.time_domain).max())]
+        ]
+        metadata = {
+            "input_names": list(input_names),
+            "training_bounds": list(model.hparams.input_bounds),
+            "requested_bounds": requested_bounds,
+            "allow_extrapolation": bool(
+                cfg.get("prediction", {}).get("allow_extrapolation", False)
+            ),
+            "spatial_dimension": mesh.spatial_dim,
+            "parameter_names": list(getattr(mesh, "parameter_names", ())),
+            "field_shape": [len(mesh.spatial_domain[0]), len(mesh.time_domain)],
+            "grid_order": "ij/C; parameters after space, time fastest in batches",
+            "dtype": "float32",
+            "batch_size": datamodule.batch_size,
+        }
+        Path(cfg.paths.output_dir, "prediction.json").write_text(
+            json.dumps(metadata, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
         log.info(f"Elapsed time: {time.time() - start_time}")
 
     if model.times:
@@ -317,7 +353,10 @@ def train(
         preds_list = trainer.predict(
             model=model,
             datamodule=datamodule,
-            ckpt_path=trainer.checkpoint_callback.best_model_path,
+            ckpt_path=(
+                getattr(trainer.checkpoint_callback, "best_model_path", "")
+                or str(Path(cfg.paths.output_dir, "checkpoints", "final.ckpt"))
+            ),
         )
         preds_dict = utils.fix_predictions(preds_list)
         if cfg.get("save_pred"):

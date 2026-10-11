@@ -165,6 +165,10 @@ class BoundaryConditions(SamplerBase):
         columns, time, targets = inputs
         outputs = self.functions["forward"](columns, time)
         for i, constraint in enumerate(self.constraints):
+            if constraint.field not in outputs:
+                raise ValueError(
+                    f"Boundary field '{constraint.field}' is not returned by the model/output_fn"
+                )
             field = outputs[constraint.field]
             if constraint.kind == "dirichlet":
                 residual = field - targets[f"target_{i}"]

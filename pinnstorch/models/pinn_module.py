@@ -60,6 +60,7 @@ class PINNModule(LightningModule):
         lazy: bool = False,
         inline: bool = False,
         input_names: tuple[str, ...] = (),
+        input_bounds: tuple[tuple[float, float], ...] = (),
     ) -> None:
         """
         Initialize the PINNModule.
