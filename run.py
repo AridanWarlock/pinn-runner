@@ -13,7 +13,6 @@ import argparse
 import importlib.util
 import os
 import sys
-import time
 import traceback
 from enum import Enum
 from pathlib import Path
@@ -157,8 +156,6 @@ def setup_config(
         cfg.model.optimizer.capturable = False
     
     cfg.trainer._target_ = "lightning.pytorch.Trainer"
-    cfg.trainer.accelerator = "gpu" 
-    cfg.devices = [0]
     
     cfg.model.loss_fn = "mse"
     
@@ -171,8 +168,6 @@ def setup_config(
     cfg.train = True
     cfg.val = True
     cfg.test = False
-    
-    cfg.seed = int(time.time())
     
     cfg.paths = cfg.get('paths', {})
     cfg.paths.output_dir = str(OUTPUT_DIR)
