@@ -1,82 +1,29 @@
-seed: 1234
-save_pred: true
+version: 1
 domain:
-  x_interval:
-  - 0.0
-  - 1.0
-  t_interval:
-  - 0.0
-  - 0.5
-  x_points: 8
-  t_points: 3
-  y_interval:
-  - 0
-  - 1
-  y_points: 6
+  space:
+    x:
+      interval: [0, 1]
+      points: 8
+    y:
+      interval: [0, 1]
+      points: 6
+  time:
+    interval: [0, 0.5]
+    points: 3
   parameters:
     conductivity:
-      interval:
-      - 0.1
-      - 0.5
+      interval: [0.1, 0.5]
       points: 3
-train_datasets:
-- initial:
-    _target_: pinnstorch.data.InitialCondition
-    solution:
-    - T
-- pde:
-    _target_: pinnstorch.data.MeshSampler
-    collection_points:
-    - residual
-    use_lhs: false
-- boundary:
-    _target_: pinnstorch.data.BoundaryConditions
-    conditions:
-    - kind: dirichlet
-      field: T
-      axis: x
-      side: both
-      value: 0.0
-    - kind: dirichlet
-      field: T
-      axis: y
-      side: both
-      value: 0.0
-val_dataset:
-- data:
-    _target_: pinnstorch.data.MeshSampler
-    collection_points:
-    - residual
-    use_lhs: false
-pred_dataset:
-- data:
-    _target_: pinnstorch.data.MeshSampler
-    use_lhs: false
-net:
-  _target_: pinnstorch.models.FCN
-  layers:
-  - 4
-  - 16
-  - 16
-  - 1
-  output_names:
-  - T
-model:
-  optimizer:
-    lr: 0.01
-  scheduler: null
-  scaler: null
-trainer:
-  accelerator: cpu
-  devices: 1
-  max_epochs: 3
-  max_steps: 3
-  check_val_every_n_epoch: 1
-  num_sanity_val_steps: 0
-  enable_progress_bar: false
-  enable_model_summary: false
-callbacks:
-  model_summary: null
-  rich_progress_bar: null
-  model_checkpoint:
-    filename: best
+network:
+  hidden_layers: [16, 16]
+training:
+  epochs: 3
+  steps: 3
+  seed: 1234
+  optimizer: {learning_rate: 0.01}
+  collocation: {sampling: grid}
+validation: {sampling: grid}
+boundaries:
+- {kind: dirichlet, field: T, axis: x, side: both, value: 0}
+- {kind: dirichlet, field: T, axis: y, side: both, value: 0}
+runtime: {device: cpu, progress: false}

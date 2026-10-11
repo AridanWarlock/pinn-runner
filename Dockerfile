@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir "numpy<2.0.0"
 COPY requirements.txt .
 
 # 4. Устанавливаем остальное, игнорируя попытки обновить numpy
-RUN pip install --no-cache-dir -r requirements.txt || true
+RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir "numpy<2.0.0"
 
 COPY . .

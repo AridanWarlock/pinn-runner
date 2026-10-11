@@ -15,11 +15,7 @@ class ParameterSpec(TypedDict):
 
 @dataclass
 class PointCloudData:
-    """A data class to hold point cloud data, including spatial points, time values, and solution
-    data.
-
-    This is an alternative class to spatial and time class that should be used along with `PointCloud` class.
-    """
+    """Aligned Cartesian feature columns, time and optional reference fields."""
 
     spatial: list[FloatArray]
     time: FloatArray | list[FloatArray]
@@ -54,53 +50,13 @@ def create_interval_data(
                 raise ValueError("z requires a y axis")
             axes.append((name, bounds, count))
     spatial_dimension = len(axes)
-    for name, spec in (parameters or {}).items():
-        if (
-            not isinstance(name, str)
-            or not name.isidentifier()
-            or name.startswith("_")
-            or not name.isascii()
-            or name in ("x", "y", "z", "t")
-        ):
-            raise ValueError(
-                "Parameter names must be ASCII identifiers without a leading underscore, distinct from x/y/z/t"
-            )
-        if not isinstance(spec, Mapping) or set(spec) != {"interval", "points"}:
-            raise ValueError(f"Parameter '{name}' requires interval and points")
-        axes.append((name, spec["interval"], spec["points"]))
-    for name, bounds in [(f"{name}_interval", bounds) for name, bounds, _ in axes] + [
-        ("t_interval", t_interval)
-    ]:
-        if len(bounds) != 2 or not np.isfinite(bounds).all() or bounds[0] >= bounds[1]:
-            raise ValueError(f"{name} must contain two finite, increasing bounds")
-    for name, count in [(f"{name}_points", count) for name, _, count in axes] + [
-        ("t_points", t_points)
-    ]:
-        if isinstance(count, bool) or not isinstance(count, int) or count < 2:
-            raise ValueError(f"{name} must be an integer >= 2")
+    axes.extend(_parameter_axes(parameters or {}))
+    _validate_axes([*axes, ("t", t_interval, t_points)])
     requested_values = parameter_values or {}
     unknown = set(requested_values) - set(parameters or {})
     if unknown:
         raise ValueError(f"Unknown prediction parameters: {sorted(unknown)}")
-    vectors: list[FloatArray] = []
-    for name, bounds, count in axes:
-        if name in requested_values:
-            raw = np.asarray(requested_values[name])
-            if (
-                raw.ndim != 1
-                or not raw.size
-                or raw.dtype.kind not in "iuf"
-                or any(isinstance(value, (bool, np.bool_)) for value in requested_values[name])
-            ):
-                raise ValueError(f"Prediction values for '{name}' must be a nonempty numeric list")
-            values = raw.astype(np.float64)
-            if not np.isfinite(values).all():
-                raise ValueError(f"Prediction values for '{name}' must be a nonempty finite list")
-            if len(np.unique(values)) != len(values):
-                raise ValueError(f"Prediction values for '{name}' must be distinct")
-            vectors.append(values)
-        else:
-            vectors.append(np.linspace(bounds[0], bounds[1], count))
+    vectors = [_axis_vector(name, bounds, count, requested_values) for name, bounds, count in axes]
     grids = np.meshgrid(*vectors, indexing="ij")
     lower = np.asarray([bounds[0] for _, bounds, _ in axes] + [t_interval[0]], dtype=np.float64)
     upper = np.asarray([bounds[1] for _, bounds, _ in axes] + [t_interval[1]], dtype=np.float64)
@@ -114,3 +70,56 @@ def create_interval_data(
         parameter_names=tuple(parameters or {}),
         normalization_bounds=(lower, upper),
     )
+
+
+AxisDefinition = tuple[str, Sequence[float], int]
+
+
+def _parameter_axes(parameters: Mapping[str, ParameterSpec]) -> list[AxisDefinition]:
+    axes: list[AxisDefinition] = []
+    for name, spec in parameters.items():
+        if (
+            not isinstance(name, str)
+            or not name.isidentifier()
+            or name.startswith("_")
+            or not name.isascii()
+            or name in ("x", "y", "z", "t")
+        ):
+            raise ValueError(
+                "Parameter names must be ASCII identifiers without a leading underscore, distinct from x/y/z/t"
+            )
+        if not isinstance(spec, Mapping) or set(spec) != {"interval", "points"}:
+            raise ValueError(f"Parameter '{name}' requires interval and points")
+        axes.append((name, spec["interval"], spec["points"]))
+    return axes
+
+
+def _validate_axes(axes: Sequence[AxisDefinition]) -> None:
+    for name, bounds in [(f"{name}_interval", bounds) for name, bounds, _ in axes]:
+        if len(bounds) != 2 or not np.isfinite(bounds).all() or bounds[0] >= bounds[1]:
+            raise ValueError(f"{name} must contain two finite, increasing bounds")
+    for name, count in [(f"{name}_points", count) for name, _, count in axes]:
+        if isinstance(count, bool) or not isinstance(count, int) or count < 2:
+            raise ValueError(f"{name} must be an integer >= 2")
+
+
+def _axis_vector(
+    name: str, bounds: Sequence[float], count: int, requested_values: Mapping[str, Sequence[float]]
+) -> FloatArray:
+    if name in requested_values:
+        raw = np.asarray(requested_values[name])
+        if (
+            raw.ndim != 1
+            or not raw.size
+            or raw.dtype.kind not in "iuf"
+            or any(isinstance(value, (bool, np.bool_)) for value in requested_values[name])
+        ):
+            raise ValueError(f"Prediction values for '{name}' must be a nonempty numeric list")
+        values = raw.astype(np.float64)
+        if not np.isfinite(values).all():
+            raise ValueError(f"Prediction values for '{name}' must be a nonempty finite list")
+        if len(np.unique(values)) != len(values):
+            raise ValueError(f"Prediction values for '{name}' must be distinct")
+        return values
+    else:
+        return np.linspace(bounds[0], bounds[1], count)

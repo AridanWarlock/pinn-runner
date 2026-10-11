@@ -1,2 +1,0 @@
-_target_: src.data.domains.time.TimeDomain
-t_interval: [0, 1]

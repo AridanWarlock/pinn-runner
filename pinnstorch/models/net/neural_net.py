@@ -3,12 +3,11 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Dict, List, cast
 
-import numpy as np
 import torch
 from torch import nn
 
 if TYPE_CHECKING:
-    from pinnstorch.contracts import Bounds, FloatArray
+    from pinnstorch.contracts import Bounds
 
 
 class FCN(nn.Module):
@@ -28,7 +27,6 @@ class FCN(nn.Module):
         lb: Bounds,
         ub: Bounds,
         output_names: Sequence[str],
-        discrete: bool = False,
     ) -> None:
         """Initialize a `FCN` module.
 
@@ -36,17 +34,15 @@ class FCN(nn.Module):
         :param lb: Lower bound for the inputs.
         :param ub: Upper bound for the inputs.
         :param output_names: Names of outputs of net.
-        :param discrete: If the problem is discrete or not.
         """
         super().__init__()
 
-        self.model = self.initalize_net(layers)
+        self.model = self._build_layers(layers)
         self.register_buffer("lb", torch.tensor(lb, dtype=torch.float32, requires_grad=False))
         self.register_buffer("ub", torch.tensor(ub, dtype=torch.float32, requires_grad=False))
         self.output_names = output_names
-        self.discrete = discrete
 
-    def initalize_net(self, layers: Sequence[int]) -> nn.Sequential:
+    def _build_layers(self, layers: Sequence[int]) -> nn.Sequential:
         """Initialize the layers of the neural network.
 
         :param layers: The list indicating number of neurons in each layer.
@@ -81,109 +77,7 @@ class FCN(nn.Module):
         :return: A tensor of solutions.
         """
 
-        columns = spatial if self.discrete else [*spatial, time]
-        z = torch.cat(columns, dim=1)
-        lower = self.lb[:-1] if self.discrete else self.lb
-        upper = self.ub[:-1] if self.discrete else self.ub
-        z = 2.0 * (z - lower) / (upper - lower) - 1.0
-
-        z = cast(torch.Tensor, self.model(z))
-
-        # Discrete Mode
-        if self.discrete:
-            outputs_dict = {name: z for i, name in enumerate(self.output_names)}
-
-        # Continuous Mode
-        else:
-            outputs_dict = {name: z[:, i : i + 1] for i, name in enumerate(self.output_names)}
-        return outputs_dict
-
-
-class NetHFM(nn.Module):
-    """A simple fully-connected neural net for solving equations.
-
-    In this model, mean and std will be used for normalization of input data. Also, weight
-    normalization will be done.
-    """
-
-    output_names: Sequence[str]
-
-    X_mean: torch.Tensor
-    X_std: torch.Tensor
-    weights: nn.ParameterList
-    biases: nn.ParameterList
-    gammas: nn.ParameterList
-
-    def __init__(
-        self,
-        mean: FloatArray,
-        std: FloatArray,
-        layers: Sequence[int],
-        output_names: Sequence[str],
-    ) -> None:
-        super().__init__()
-        """Initialize a `NetHFM` module.
-
-        :param mesh: The number of layers.
-        :param layers: The list indicating number of neurons in each layer.
-        :param output_names: Names of outputs of net.
-        """
-        self.num_layers = len(layers)
-        self.output_names = output_names
-
-        self.register_buffer("X_mean", torch.from_numpy(mean))
-        self.register_buffer("X_std", torch.from_numpy(std))
-
-        self.initalize_net(layers)
-        self.sigmoid = nn.Sigmoid()
-
-    def initalize_net(self, layers: Sequence[int]) -> None:
-        """Initialize the neural network weights, biases, and gammas.
-
-        :param layers: The list indicating number of neurons in each layer.
-        """
-
-        weights: list[torch.Tensor] = []
-        biases: list[torch.Tensor] = []
-        gammas: list[torch.Tensor] = []
-
-        for i in range(0, self.num_layers - 1):
-            in_dim = layers[i]
-            out_dim = layers[i + 1]
-            W = np.random.normal(size=[in_dim, out_dim])
-            b = np.zeros([1, out_dim])
-            g = np.ones([1, out_dim])
-            # tensorflow variables
-            weights.append(torch.tensor(W, dtype=torch.float32))
-            biases.append(torch.tensor(b, dtype=torch.float32))
-            gammas.append(torch.tensor(g, dtype=torch.float32))
-
-        self.weights = nn.ParameterList(weights)
-        self.biases = nn.ParameterList(biases)
-        self.gammas = nn.ParameterList(gammas)
-
-    def forward(self, spatial: List[torch.Tensor], time: torch.Tensor) -> Dict[str, torch.Tensor]:
-        """Perform a forward pass through the network.
-
-        :param spatial: List of input spatial tensors.
-        :param time: Input tensor representing time.
-        :return: A dictionary with output names as keys and corresponding output tensors as values.
-        """
-        H = torch.cat([*spatial, time], dim=1)
-
-        H = (H - self.X_mean) / self.X_std
-
-        for i, (W, b, g) in enumerate(zip(self.weights, self.biases, self.gammas)):
-            # weight normalization
-            V = W / torch.norm(W, dim=0)
-            # matrix multiplication
-            H = torch.matmul(H, V)
-            # add bias
-            H = g * H + b
-            # activation
-            if i < self.num_layers - 2:
-                H = H * self.sigmoid(H)
-
-        outputs_dict = {name: H[:, i : i + 1] for i, name in enumerate(self.output_names)}
-
-        return outputs_dict
+        features = torch.cat([*spatial, time], dim=1)
+        normalized = 2.0 * (features - self.lb) / (self.ub - self.lb) - 1.0
+        outputs = cast(torch.Tensor, self.model(normalized))
+        return {name: outputs[:, i : i + 1] for i, name in enumerate(self.output_names)}

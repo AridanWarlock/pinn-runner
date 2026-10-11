@@ -1,77 +1,18 @@
-"""Public PINN classes and helpers, exported explicitly for callers."""
+"""Public problem language and vectorized PINN components."""
 
-from pinnstorch import data, models, utils
-from pinnstorch.data import (
-    BoundaryCondition1D,
-    DirichletBoundaryCondition,
-    DiscreteMeshSampler,
-    InitialCondition,
-    Interval,
-    Mesh,
-    MeshBase,
-    MeshSampler,
-    PeriodicBoundaryCondition,
-    PINNDataLoader,
-    PINNDataModule,
-    PointCloud,
-    PointCloudData,
-    Rectangle,
-    RectangularPrism,
-    SamplerBase,
-    TimeDomain,
-    create_interval_data,
-    dataloader,
-    domains,
-    mesh,
-    pinn_datamodule,
-    sampler,
-)
-from pinnstorch.models import (
-    FCN,
-    NetHFM,
-    PINNModule,
-    RungeKutta,
-    net,
-    pinn_module,
-    runge_kutta,
-)
-from pinnstorch.train import train
-from pinnstorch.utils import gradient
+from . import data, models, utils
+from .api import Coordinates, Equation, Problem
+from .models import FCN, PINNModule
+from .utils.gradient_fn import gradient
 
 __all__ = [
-    "BoundaryCondition1D",
-    "DirichletBoundaryCondition",
-    "DiscreteMeshSampler",
+    "Coordinates",
+    "Equation",
+    "Problem",
     "FCN",
-    "InitialCondition",
-    "Interval",
-    "Mesh",
-    "MeshBase",
-    "MeshSampler",
-    "NetHFM",
-    "PINNDataLoader",
-    "PINNDataModule",
     "PINNModule",
-    "PeriodicBoundaryCondition",
-    "PointCloud",
-    "PointCloudData",
-    "Rectangle",
-    "RectangularPrism",
-    "RungeKutta",
-    "SamplerBase",
-    "TimeDomain",
-    "create_interval_data",
     "data",
-    "dataloader",
-    "domains",
-    "gradient",
-    "mesh",
     "models",
-    "net",
-    "pinn_datamodule",
-    "pinn_module",
-    "runge_kutta",
-    "sampler",
-    "train",
     "utils",
+    "gradient",
 ]

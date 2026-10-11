@@ -50,9 +50,6 @@ def make_problem() -> tuple[PINNModule, PINNDataModule]:
         net=net,
         pde_fn=heat_pde,
         optimizer=partial(torch.optim.Adam, lr=0.01),
-        amp=False,
-        jit_compile=False,
-        cudagraph_compile=False,
     )
     return model, data
 
@@ -65,8 +62,6 @@ def test_combined_loss_counts_each_condition_once(pde_first: bool) -> None:
         data.train_datasets.reverse()
     data.setup("fit")
     model.function_mapping = data.function_mapping
-    model.functions["val"] = False
-    model.functions["batch_size"] = False
     batch = {key: next(iter(loader)) for key, loader in data.train_dataloader().items()}
 
     initial_x, initial_time, target = initial[:]
@@ -136,8 +131,6 @@ def test_prediction_applies_output_transform_without_pde(tmp_path: Path) -> None
         net=FCN([2, 8, 1], mesh.lb, mesh.ub, ["potential"]),
         pde_fn=pde,
         output_fn=output_transform,
-        amp=False,
-        jit_compile=False,
     )
     spatial, time, _ = prediction[:]
     expected = model([spatial[0].requires_grad_()], time.requires_grad_())

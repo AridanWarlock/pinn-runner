@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import TYPE_CHECKING, Dict, List, Tuple, Union
 
 import torch
 
 if TYPE_CHECKING:
-    from pinnstorch.contracts import LossAccumulator, SamplerBatch, TensorOutputs
+    from pinnstorch.contracts import LossAccumulator
 
 
 def sse(
@@ -86,44 +85,6 @@ def relative_l2_error(preds: torch.Tensor, target: torch.Tensor) -> torch.Tensor
     return torch.sqrt(l2_norm_error / l2_norm_target)
 
 
-def fix_extra_variables(
-    extra_variables: Mapping[str, float] | None,
-) -> torch.nn.ParameterDict | None:
-    """Convert extra variables to torch tensors with gradient tracking. These variables are
-    trainables in inverse problems.
-
-    :param extra_variables: Dictionary of extra variables to be converted.
-    :return: Dictionary of converted extra variables as torch tensors with gradients.
-    """
-    if extra_variables is None:
-        return None
-    extra_variables_parameters: dict[str, torch.Tensor] = {}
-    for key in extra_variables:
-        extra_variables_parameters[key] = torch.tensor(
-            [extra_variables[key]], dtype=torch.float32, requires_grad=True
-        )
-    return torch.nn.ParameterDict(extra_variables_parameters)
-
-
-def requires_grad(batch: SamplerBatch, enable_grad: bool = True) -> SamplerBatch:
-    """Set the requires_grad attribute for tensors in the input list.
-
-    :param batch: A batch containing spatial, time, solutions.
-    :param enable_grad: Boolean indicating whether to enable requires_grad or not.
-    :return: Modified list of tensors and tensor.
-    """
-    spatial, time, solutions = batch
-    if time is not None:
-        time = time.requires_grad_(enable_grad)
-    spatial = [x_.requires_grad_(enable_grad) for x_ in spatial]
-    solutions = {
-        solution_name: solutions[solution_name].requires_grad_(enable_grad)
-        for solution_name in solutions.keys()
-    }
-
-    return spatial, time, solutions
-
-
 def set_requires_grad(
     x: List[torch.Tensor], t: torch.Tensor, enable_grad: bool = True
 ) -> Tuple[List[torch.Tensor], torch.Tensor]:
@@ -150,11 +111,8 @@ def fix_predictions(
     :param preds_list: List of dictionary of predictions.
     :return: A dictionary containing the predictions.
     """
-    preds_dict: TensorOutputs = {}
-    for preds in preds_list:
-        for sol_key, pred in preds.items():
-            if sol_key in preds_dict.keys():
-                preds_dict[sol_key] = torch.cat((preds_dict[sol_key], pred.detach()), 0)
-            else:
-                preds_dict[sol_key] = pred.detach()
-    return preds_dict
+    chunks: dict[str, list[torch.Tensor]] = {}
+    for predictions in preds_list:
+        for name, tensor in predictions.items():
+            chunks.setdefault(name, []).append(tensor.detach())
+    return {name: torch.cat(parts, dim=0) for name, parts in chunks.items()}

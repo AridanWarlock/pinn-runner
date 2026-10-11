@@ -141,42 +141,27 @@ def test_runner_explicit_conditions(tmp_path: Path, parameterized: bool) -> None
     input_dir = tmp_path / "input"
     prepare_input(input_dir)
     cfg = yaml.safe_load((input_dir / "config.yaml").read_text())
-    cfg["domain"].update(y_interval=[0, 1], y_points=3)
-    cfg["net"]["layers"][0] = 3 + int(parameterized)
+    cfg["domain"]["space"]["y"] = {"interval": [0, 1], "points": 3}
     if parameterized:
         cfg["domain"]["parameters"] = {"k": {"interval": [0.1, 0.5], "points": 3}}
-    cfg["train_datasets"] = cfg["train_datasets"][:2] + [
-        {
-            "boundary": {
-                "_target_": "pinnstorch.data.BoundaryConditions",
-                "conditions": [
-                    condition("dirichlet", "x"),
-                    condition("neumann", "y", value_fn="insulated"),
-                ],
-            }
-        }
+    cfg["boundaries"] = [
+        condition("dirichlet", "x"),
+        condition("neumann", "y", value_function="insulated"),
     ]
     (input_dir / "config.yaml").write_text(yaml.safe_dump(cfg))
-    (input_dir / "functions.py").write_text("""import numpy as np
-from pinnstorch.utils import gradient
+    (input_dir / "functions.py").write_text("""import torch
+from pinnstorch.api import Coordinates, Equation, Problem, TensorFields
 
-def initial_conditions(spatial, *, parameters=None):
-    assert spatial.shape[1] == 2
-    return {"T": np.sin(np.pi * spatial[:, 0:1])}
+def initial(c: Coordinates) -> TensorFields:
+    return {"T": torch.sin(torch.pi * c.x)}
 
-def pde_fn(outputs, x, y, t, *, parameters=None):
-    dx, dy, dt = gradient(outputs["T"], [x, y, t])
-    coefficient = parameters["k"] if parameters is not None else 0.3
-    outputs["residual"] = dt - coefficient * (gradient(dx, x)[0] + gradient(dy, y)[0])
-    return outputs
+def heat(e: Equation) -> torch.Tensor:
+    return e.dt("T") - e.parameters.get("k", 0.3) * e.laplacian("T")
 
-def insulated(spatial, time, *, parameters=None):
-    assert len(spatial) == 2
-    if parameters is not None:
-        assert set(parameters) == {"k"}
-    return spatial[0] * 0
+def insulated(c: Coordinates) -> torch.Tensor:
+    return torch.zeros_like(c.t)
 
-boundary_values = {"insulated": insulated}
+problem = Problem(fields=("T",), equations={"heat": heat}, initial=initial, boundary_values={"insulated": insulated})
 """)
     result = launch(input_dir, tmp_path / "output")
     assert result.returncode == 0, result.stdout + result.stderr

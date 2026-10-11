@@ -1,0 +1,161 @@
+"""Build backend objects from typed problem settings, once before training."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from functools import partial
+from pathlib import Path
+
+import lightning as L
+import torch
+from lightning.pytorch.callbacks import ModelCheckpoint
+from lightning.pytorch.loggers import CSVLogger
+
+from pinnstorch.api import Problem
+from pinnstorch.data import (
+    BoundaryConditions,
+    InitialCondition,
+    MeshSampler,
+    PINNDataModule,
+    PointCloud,
+)
+from pinnstorch.data.sampler.sampler_base import SamplerBase
+from pinnstorch.models import FCN, PINNModule
+
+from .problem import ProblemAdapter
+from .settings import Sampling, TaskSettings
+
+
+@dataclass
+class ExecutionObjects:
+    mesh: PointCloud
+    data: PINNDataModule
+    model: PINNModule
+    trainer: L.Trainer
+    checkpoint: ModelCheckpoint
+
+
+class SolverFactory:
+    """Translate domain choices to vectorized samplers and a Lightning backend."""
+
+    def __init__(self, settings: TaskSettings, problem: Problem, output: Path) -> None:
+        self.settings, self.problem, self.output = settings, problem, output
+        self.adapter = ProblemAdapter(problem, settings.domain)
+        self._validate_boundaries()
+
+    def _validate_boundaries(self) -> None:
+        for boundary in self.settings.boundaries:
+            if boundary.field not in self.problem.fields:
+                raise ValueError(f"Unknown boundary field '{boundary.field}'")
+            if (
+                boundary.value_function is not None
+                and boundary.value_function not in self.problem.boundary_values
+            ):
+                raise ValueError(f"Unknown boundary value function '{boundary.value_function}'")
+
+    def build(self, predicting: bool) -> ExecutionObjects:
+        seed = self.settings.training.seed
+        if seed is not None:
+            L.seed_everything(seed, workers=True)
+        query = self.settings.prediction.parameters if predicting else None
+        grid = self.settings.domain.grid(query)
+        mesh = PointCloud(lambda: grid)
+        names, datasets = self._training_datasets(mesh) if not predicting else ([], [])
+        validation = (
+            self._sampler(mesh, self.settings.validation)
+            if not predicting and self.settings.validation is not None
+            else None
+        )
+        prediction = MeshSampler(mesh, use_lhs=False)
+        data = PINNDataModule(
+            datasets, validation, prediction, self.settings.training.batch_size, names
+        )
+        model = self._model(mesh)
+        checkpoint = self._checkpoint()
+        trainer = self._trainer(checkpoint)
+        return ExecutionObjects(mesh, data, model, trainer, checkpoint)
+
+    def _training_datasets(self, mesh: PointCloud) -> tuple[list[str], list[SamplerBase]]:
+        names = ["initial", "equations"]
+        datasets: list[SamplerBase] = [
+            InitialCondition(
+                mesh,
+                solution=list(self.problem.fields),
+                initial_fun=self.adapter.initial,
+                num_sample=self.settings.training.initial_points,
+            ),
+            self._sampler(mesh, self.settings.training.collocation),
+        ]
+        if self.settings.boundaries:
+            values = {
+                name: partial(self.adapter.boundary_value, name)
+                for name in self.problem.boundary_values
+            }
+            datasets.append(
+                BoundaryConditions(
+                    mesh, [boundary.compile() for boundary in self.settings.boundaries], values
+                )
+            )
+            names.append("boundaries")
+        return names, datasets
+
+    def _sampler(self, mesh: PointCloud, sampling: Sampling) -> MeshSampler:
+        return MeshSampler(
+            mesh,
+            collection_points=list(self.problem.equations),
+            use_lhs=sampling.sampling == "lhs",
+            num_sample=sampling.points,
+        )
+
+    def _model(self, mesh: PointCloud) -> PINNModule:
+        settings = self.settings
+        layers = [
+            len(settings.domain.input_names),
+            *settings.network.hidden_layers,
+            len(self.problem.outputs),
+        ]
+        net = FCN(layers, mesh.lb, mesh.ub, self.problem.outputs)
+        optimizer = settings.training.optimizer
+        optimizer_class = torch.optim.AdamW if optimizer.name == "adamw" else torch.optim.Adam
+        return PINNModule(
+            net,
+            self.adapter.residuals,
+            output_fn=self.adapter.transform if self.problem.transform else None,
+            optimizer=partial(
+                optimizer_class, lr=optimizer.learning_rate, weight_decay=optimizer.weight_decay
+            ),
+            input_names=settings.domain.input_names,
+            input_bounds=tuple(
+                (float(lower), float(upper)) for lower, upper in zip(mesh.lb, mesh.ub)
+            ),
+        )
+
+    def _checkpoint(self) -> ModelCheckpoint:
+        return ModelCheckpoint(
+            dirpath=self.output / "checkpoints",
+            filename="best",
+            monitor="val/loss" if self.settings.validation else "train/loss",
+            mode="min",
+            save_last=True,
+            auto_insert_metric_name=False,
+        )
+
+    def _trainer(self, checkpoint: ModelCheckpoint) -> L.Trainer:
+        training, runtime = self.settings.training, self.settings.runtime
+        logger = CSVLogger(str(self.output / "csv"), name="metrics") if runtime.metrics else False
+        devices = list(runtime.devices) if isinstance(runtime.devices, tuple) else runtime.devices
+        return L.Trainer(
+            accelerator="gpu" if runtime.device == "cuda" else runtime.device,
+            devices=devices,
+            precision=runtime.precision,
+            max_epochs=training.epochs,
+            max_steps=training.steps if training.steps is not None else -1,
+            num_sanity_val_steps=0,
+            inference_mode=False,
+            check_val_every_n_epoch=1,
+            callbacks=[checkpoint],
+            logger=logger,
+            default_root_dir=self.output,
+            enable_progress_bar=runtime.progress,
+            enable_model_summary=False,
+        )

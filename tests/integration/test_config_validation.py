@@ -1,13 +1,12 @@
-"""Public YAML validation should report actionable errors before training."""
+"""Strict public settings reject errors before constructing the solver."""
 
 from copy import deepcopy
 from pathlib import Path
 
 import pytest
 import yaml
-from omegaconf import OmegaConf
 
-from pinnstorch.config_validation import validate_task_settings
+from pinnstorch.runner.settings import TaskSettings
 
 CONFIG = yaml.safe_load(
     (Path(__file__).parents[2] / "examples/heat_parameterized/config.yaml").read_text()
@@ -17,50 +16,64 @@ CONFIG = yaml.safe_load(
 @pytest.mark.parametrize(
     "path,value,message",
     [
-        (("net", "layers"), [4, 16, 2], "output layer"),
-        (("net", "layers"), [3, 16, 1], "input layer"),
-        (("net", "layers"), [4, True, 1], "positive integers"),
-        (("net", "output_names"), ["x"], "distinct"),
-        (("net", "output_names"), ["conductivity"], "distinct"),
-        (("net", "output_names"), ["T", "T"], "distinct"),
-        (("net", "output_names"), [], "nonempty"),
-        (("data", "batch_size"), 0, "batch_size"),
-        (("trainer", "inference_mode"), True, "inference_mode"),
-        (("pred_dataset",), None, "full-grid"),
-        (("val_dataset",), None, "Monitoring val/loss"),
+        (("network", "hidden_layers"), [True], "positive integers"),
+        (("network", "hidden_layers"), [], "nonempty"),
+        (("training", "batch_size"), 0, "batch_size"),
+        (("training", "epochs"), None, "epochs"),
+        (("training", "optimizer", "learning_rate"), -1, "learning_rate"),
+        (("runtime", "device"), "gpu", "device"),
+        (("runtime", "devices"), [True], "devices"),
+        (("runtime", "precision"), "unknown", "precision"),
+        (("domain", "space", "x", "interval"), [1, 0], "increasing"),
+        (("domain", "space", "x", "points"), True, "points"),
+        (("prediction", "parameters"), {"missing": [0.2]}, "Unknown prediction"),
+        (("training", "collocation"), {"sampling": "lhs"}, "requires points"),
+        (("validation",), {"sampling": "grid", "points": 5}, "does not accept"),
+        (("version",), True, "version"),
+        (("_target_",), "anything", "unknown options"),
     ],
 )
 def test_invalid_settings(path: tuple[str, ...], value: object, message: str) -> None:
     source = deepcopy(CONFIG)
-    source.setdefault("data", {})
-    source.setdefault("callbacks", {}).setdefault("model_checkpoint", {})["monitor"] = "val/loss"
     target = source
     for key in path[:-1]:
-        target = target[key]
+        target = target.setdefault(key, {})
     target[path[-1]] = value
     with pytest.raises(ValueError, match=message):
-        validate_task_settings(OmegaConf.create(source), 2, ["conductivity"])
+        TaskSettings.read(source)
 
 
-def test_prediction_must_use_grid_and_validation_must_have_residual() -> None:
-    for group, update, message in [
-        ("pred_dataset", {"use_lhs": True}, "use_lhs"),
-        ("pred_dataset", {"collection_points": ["residual"]}, "collection_points"),
-        ("val_dataset", {"collection_points": []}, "collection_points"),
-        ("val_dataset", {"use_lhs": True}, "num_sample"),
-    ]:
-        source = deepcopy(CONFIG)
-        source["data"] = {}
-        source[group][0]["data"].update(update)
-        with pytest.raises(ValueError, match=message):
-            validate_task_settings(OmegaConf.create(source), 2, ["conductivity"])
-
-
-def test_lhs_requires_sample_count() -> None:
+def test_settings_roundtrip(tmp_path: Path) -> None:
     source = deepcopy(CONFIG)
-    source["data"] = {}
-    source["train_datasets"][1]["pde"]["use_lhs"] = True
-    with pytest.raises(ValueError, match="num_sample"):
-        validate_task_settings(OmegaConf.create(source), 2, ["conductivity"])
-    source["train_datasets"][1]["pde"]["num_sample"] = 32
-    validate_task_settings(OmegaConf.create(source), 2, ["conductivity"])
+    source["boundaries"].append(
+        {
+            "kind": "robin",
+            "field": "T",
+            "axis": "x",
+            "alpha": 2,
+            "beta": 3,
+            "value_function": "environment",
+        }
+    )
+    settings = TaskSettings.read(source)
+    path = tmp_path / "config.yaml"
+    settings.save(path)
+    assert TaskSettings.load(path) == settings
+    assert "_target_" not in path.read_text()
+
+
+@pytest.mark.parametrize(
+    "boundary",
+    [
+        {"kind": "dirichlet", "axis": "x", "field": "T", "alpha": 2},
+        {"kind": "robin", "axis": "x", "field": "T", "alpha": 0, "beta": 0},
+        {"kind": "neumann", "axis": "z", "field": "T"},
+        {"kind": "heat_flux", "axis": "x", "field": "T", "conductivity": "unknown"},
+        {"kind": "dirichlet", "axis": "x", "field": "T", "value": 1, "value_function": "wall"},
+    ],
+)
+def test_invalid_boundary_configuration(boundary: dict[str, object]) -> None:
+    source = deepcopy(CONFIG)
+    source["boundaries"] = [boundary]
+    with pytest.raises(ValueError):
+        TaskSettings.read(source)

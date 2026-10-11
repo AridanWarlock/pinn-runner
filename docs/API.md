@@ -1,586 +1,332 @@
-# API PINN runner
+# API файлового PINN-решателя, версия 1
 
-Этот документ описывает файловый интерфейс `run.py`, который запускается как
-одноразовый процесс. Сервер и HTTP API не требуются. Документ относится к
-поддерживаемому пути FCN, непрерывному времени и прямоугольным областям 1D/2D/3D.
-Сниппеты с `executable-*` ниже проверяются настоящим CPU-запуском в тестах.
+Задача состоит из `config.yaml` и `functions.py`. Для `predict` и `retrain` нужен
+checkpoint. `data.mat` не читается: обучение использует уравнения, обязательные
+начальные условия и заданные границы. Эталонное решение можно отдельно использовать
+для сравнения, но оно не входит в текущий API.
 
-## 1. Входные файлы и команды
+Поддерживаются непрерывное время, прямоугольная область 1D/2D/3D, несколько полей,
+несколько уравнений и семейства задач со скалярными входными параметрами.
+Восстановление неизвестных коэффициентов по наблюдениям не реализуется.
 
-В одной входной директории должны лежать:
+## Полный исполняемый пример
 
-- `config.yaml` — описание области, сети, обучения и условий;
-- `functions.py` — пользовательские функции Python;
-- checkpoint для режимов `predict` и `retrain`.
-
-`data.mat` не читается. Начальные условия задаются функцией, а PDE и границы —
-невязками. Эталонное решение для обучения и предсказания не требуется.
-
-```sh
-python run.py --mode train --input-dir ./task --output-dir ./result
-python run.py --mode predict --input-dir ./task --output-dir ./prediction --checkpoint /absolute/path/result/checkpoints/final.ckpt
-python run.py --mode retrain --input-dir ./task --output-dir ./retrained --checkpoint trained.ckpt
-```
-
-| Аргумент | Значение |
-| --- | --- |
-| `--mode` | обязательный: `train`, `predict`, `retrain` |
-| `--input-dir` | по умолчанию `/task_data` |
-| `--output-dir` | по умолчанию `/task_output` |
-| `--checkpoint` | по умолчанию `checkpoint.ckpt` внутри input-dir; относительный путь тоже считается от input-dir |
-
-CLI не принимает Hydra overrides вроде `trainer.accelerator=cpu`: меняйте YAML.
-Код выхода 0 означает успех, 1 — ошибку задачи; неверные CLI-аргументы дают 2.
-Ошибки после начала выполнения записываются в `error.log`. При отсутствии
-обязательного файла причина записывается в лог, но `error.log` может отсутствовать.
-
-Для разработки установите зависимости по [development.md](development.md).
-Примеры используют CPU и три шага; они проверяют pipeline, а не сходимость.
-
-## 2. Полный запускаемый пример: 2D и параметр теплопроводности
-
-Сохраните следующий блок как `config.yaml`.
+Это 2D теплопроводность с коэффициентом в диапазоне 0.1–0.5. Три шага предназначены
+для проверки запуска; этого недостаточно для решения физической задачи.
 
 <!-- executable-config -->
 ```yaml
-seed: 1234
-save_pred: true
+version: 1
 domain:
-  x_interval:
-  - 0.0
-  - 1.0
-  t_interval:
-  - 0.0
-  - 0.5
-  x_points: 8
-  t_points: 3
-  y_interval:
-  - 0
-  - 1
-  y_points: 6
-  parameters:
-    conductivity:
-      interval:
-      - 0.1
-      - 0.5
-      points: 3
-train_datasets:
-- initial:
-    _target_: pinnstorch.data.InitialCondition
-    solution:
-    - T
-- pde:
-    _target_: pinnstorch.data.MeshSampler
-    collection_points:
-    - residual
-    use_lhs: false
-- boundary:
-    _target_: pinnstorch.data.BoundaryConditions
-    conditions:
-    - kind: dirichlet
-      field: T
-      axis: x
-      side: both
-      value: 0.0
-    - kind: dirichlet
-      field: T
-      axis: y
-      side: both
-      value: 0.0
-val_dataset:
-- data:
-    _target_: pinnstorch.data.MeshSampler
-    collection_points:
-    - residual
-    use_lhs: false
-pred_dataset:
-- data:
-    _target_: pinnstorch.data.MeshSampler
-    use_lhs: false
-net:
-  _target_: pinnstorch.models.FCN
-  layers:
-  - 4
-  - 16
-  - 16
-  - 1
-  output_names:
-  - T
-model:
-  optimizer:
-    lr: 0.01
-  scheduler: null
-  scaler: null
-  jit_compile: false
-  amp: false
-  cudagraph_compile: false
-trainer:
-  accelerator: cpu
-  devices: 1
-  max_epochs: 3
-  max_steps: 3
-  check_val_every_n_epoch: 1
-  num_sanity_val_steps: 0
-  enable_progress_bar: false
-  enable_model_summary: false
-  inference_mode: false
-callbacks:
-  model_summary: null
-  rich_progress_bar: null
-  model_checkpoint:
-    filename: best
-data:
-  batch_size: 16
-prediction:
-  parameters:
-    conductivity:
-    - 0.25
-  allow_extrapolation: false
-```
-
-Сохраните следующий блок как `functions.py`.
-
-<!-- executable-functions -->
-```python
-"""Heat equation family on a square, conditioned on conductivity."""
-
-import numpy as np
-import torch
-from numpy.typing import NDArray
-
-from pinnstorch.utils import gradient
-
-
-def initial_conditions(
-    spatial: NDArray[np.float64], *, parameters: dict[str, NDArray[np.float64]]
-) -> dict[str, NDArray[np.float64]]:
-    return {"T": np.prod(np.sin(np.pi * spatial), axis=1, keepdims=True)}
-
-
-def pde_fn(
-    outputs: dict[str, torch.Tensor],
-    x: torch.Tensor,
-    y: torch.Tensor,
-    t: torch.Tensor,
-    *,
-    parameters: dict[str, torch.Tensor],
-) -> dict[str, torch.Tensor]:
-    dx, dy, dt = gradient(outputs["T"], [x, y, t])
-    outputs["residual"] = dt - parameters["conductivity"] * (
-        gradient(dx, x)[0] + gradient(dy, y)[0]
-    )
-    return outputs
-```
-
-В этом примере сеть представляет `T(x, y, conductivity, t)`. Обучение охватывает
-коэффициенты от 0.1 до 0.5. Раздел `prediction` используется только в режиме
-`predict`, где запрашивается коэффициент 0.25; `train` и `retrain` используют
-исходную сетку из `domain`.
-
-### Как читаются служебные ключи YAML
-
-`_target_` — Python-путь класса, который создаёт Hydra. Например,
-`pinnstorch.data.InitialCondition` означает импортировать этот класс и передать
-ему остальные ключи словаря как аргументы конструктора. `initial`/`pde`/`boundary`
-в списке datasets — названия блоков, а не имена специальных Python-функций.
-Runner сам добавляет `_partial_`, чтобы сначала создать фабрику dataset, а затем
-передать ей общую mesh. Для optimizer это аналогично фабрике, получающей параметры
-сети. Вам достаточно указывать содержательные аргументы.
-
-`null` в YAML превращается в None и отключает optional-компоненты, например
-scheduler. `[T]` — список, `{batch_size: 16}` — словарь. Размеры задавайте числами,
-а не строками. Имена полей/невязок чувствительны к регистру и должны совпадать с
-ключами, возвращаемыми Python-функциями.
-
-## 3. Область: domain
-
-| Ключ | Правило |
-| --- | --- |
-| `x_interval`, `t_interval` | обязательные конечные строго возрастающие пары |
-| `x_points`, `t_points` | обязательные целые числа >= 2; bool не принимается |
-| `y_interval`, `y_points` | оба вместе включают 2D |
-| `z_interval`, `z_points` | оба вместе включают 3D; требуется y |
-| `parameters` | необязательный словарь скалярных входных параметров |
-
-`x/y/z_points` задают число узлов на каждой оси, а не суммарное число точек.
-Временные границы включены. Начальные условия применяются при `t_interval[0]`,
-который не обязан быть нулём.
-
-```yaml
-domain:
-  x_interval: [0, 1]
-  x_points: 20
-  y_interval: [-1, 1]
-  y_points: 10
-  z_interval: [0, 2]
-  z_points: 8
-  t_interval: [0, 0.5]
-  t_points: 6
-```
-
-Размер полной пространственно-временной сетки здесь равен `20*10*8*6`.
-Параметры дополнительно умножают размер сетки. Сетка сейчас материализуется
-в памяти; batching ограничивает размер вычисления сетью, но не устраняет
-хранение самой сетки. Начните с небольшой сетки и LHS для PDE.
-
-## 4. Входные параметры и запросы предсказания
-
-```yaml
-domain:
+  space:
+    x:
+      interval: [0, 1]
+      points: 8
+    y:
+      interval: [0, 1]
+      points: 6
+  time:
+    interval: [0, 0.5]
+    points: 3
   parameters:
     conductivity:
       interval: [0.1, 0.5]
-      points: 5
-    amplitude:
-      interval: [1.0, 2.0]
       points: 3
+network:
+  hidden_layers: [16, 16]
+training:
+  epochs: 3
+  steps: 3
+  seed: 1234
+  batch_size: 16
+  optimizer: {learning_rate: 0.01}
+  collocation: {sampling: grid}
+validation: {sampling: grid}
+boundaries:
+- {kind: dirichlet, field: T, axis: x, side: both, value: 0}
+- {kind: dirichlet, field: T, axis: y, side: both, value: 0}
+runtime: {device: cpu, progress: false}
 prediction:
   parameters:
     conductivity: [0.25]
-    amplitude: [1.5, 1.0]
-  allow_extrapolation: false
 ```
 
-Это фрагмент: остальные ключи области и сети также необходимы.
-Параметры упорядочены как в `domain.parameters`; порядок ключей в запросе не
-меняет входы сети. Значения запроса должны быть непустыми списками конечных
-чисел без повторений. Допускается один элемент и несортированный список;
-указанный порядок значений сохраняется. Неуказанные параметры используют
-свою исходную сетку. Для нескольких списков строится декартово произведение.
-
-Имена — ASCII-идентификаторы Python без начального `_`, отличные от x/y/z/t
-и имён выходов сети. В обучении каждый параметр требует `interval` и `points >= 2`.
-Он является входом, а не обучаемым неизвестным коэффициентом обратной задачи.
-
-Checkpoint сохраняет имена входов и диапазоны нормализации. Запрос одного
-коэффициента не меняет нормализацию. По умолчанию запрошенные координаты,
-время и параметры должны укладываться в диапазоны checkpoint. Опция
-`prediction.allow_extrapolation: true` разрешает выход за них при `predict`;
-она не означает, что модель будет точной за обученным диапазоном.
-`retrain` не расширяет исходный диапазон нормализации этой опцией.
-
-Скалярные параметры считаются постоянными внутри одной задачи. Поле `c(x,y)`
-можно вычислять формулой внутри PDE, но произвольная табличная карта коэффициента
-как вход семейства решений пока не поддерживается.
-
-## 5. Сеть: net
-
-```yaml
-net:
-  _target_: pinnstorch.models.FCN
-  layers: [4, 32, 32, 1]
-  output_names: [T]
-```
-
-Первый размер равен `число пространственных осей + число параметров + 1`.
-Последний размер равен числу `output_names`. Между ними находятся скрытые слои.
-Все размеры — положительные целые числа; имена выходов уникальны и не должны
-совпадать с координатами или параметрами. Каждый выход имеет форму `(N, 1)`.
-FCN нормализует входы в [-1, 1] и использует tanh в скрытых слоях.
-
-Для нескольких полей, например `output_names: [u, v, p]`, последний размер — 3.
-Функция `output_fn` может преобразовать сырые выходы или получить физические
-поля из потенциала; тогда InitialCondition/PDE/границы обращаются к именам
-полей, которые возвращает это преобразование.
-
-## 6. functions.py: сигнатуры и формы
-
-| Функция | Обязательность и результат |
-| --- | --- |
-| `initial_conditions(spatial)` | обязательна; dict[str, NumPy array (N,1)] |
-| `pde_fn(outputs, x, ..., t)` | обязательна; словарь тензоров, включая невязки PDE |
-| `output_fn(outputs, x, ..., t)` | необязательна; преобразованные поля |
-| `boundary_values` | необязательный словарь функций заданных граничных значений |
-| `plot_fn(mesh, predictions, train_datasets, val_dataset)` | необязательна; plotting требует собственной реализации |
-
-Если параметры заданы, первые три функции дополнительно принимают
-keyword-only `parameters`; даже если функция его не использует, аргумент должен
-приниматься. `boundary_values` callbacks тоже получают его. При отсутствии
-параметров этот аргумент не передаётся.
-
-`initial_conditions` получает один NumPy-массив `(N, spatial_dimension)`.
-Значения `parameters` здесь — NumPy-столбцы `(N, 1)`. Функция возвращает конечные
-массивы по именам `InitialCondition.solution`; сетевые производные здесь не нужны.
-
-PDE/output callbacks получают физические координаты отдельными PyTorch-тензорами:
-
+<!-- executable-functions -->
 ```python
-# 1D с параметрами:
-def pde_fn(outputs, x, t, *, parameters): ...
-# 2D без параметров:
-def pde_fn(outputs, x, y, t): ...
-# 3D с параметрами:
-def pde_fn(outputs, x, y, z, t, *, parameters): ...
-```
+"""2D heat equation using the public problem language."""
 
-Это шаблоны сигнатур, не готовые реализации. Координаты, время и параметры —
-столбцы `(N, 1)` float32; outputs — dict[str, Tensor]. Для PDE используйте
-PyTorch-операции и `pinnstorch.utils.gradient`: преобразование в NumPy/detach
-разрывает цепочку производных. Возвращайте невязку, например `T_t - c*laplacian`;
-значение правой части уравнения вычитается внутри этой невязки.
-
-`output_fn` вызывается и при предсказании. При её наличии runner разрешает
-вычисление производных входов, например для получения скорости из потенциала.
-`predict` не вычисляет PDE и начальные условия, но обе функции по-прежнему
-обязательны в файле для согласованного описания задачи.
-
-## 7. Обучающие datasets
-
-`train_datasets` — список словарей вида `{имя: конфигурация}`. Имена служат для
-чтения конфига. Runner соединяет datasets с одной mesh и пользовательскими функциями.
-
-### Начальное условие
-
-```yaml
-- initial:
-    _target_: pinnstorch.data.InitialCondition
-    solution: [T]
-    num_sample: 100
-```
-
-Хотя бы одно InitialCondition обязательно. `solution` задаёт контролируемые поля.
-Без `num_sample` берутся все пространственно-параметрические точки при начальном
-времени. С ним выбирается случайная подвыборка без повторений; число должно
-укладываться в размер начальной сетки.
-
-### PDE
-
-```yaml
-- pde:
-    _target_: pinnstorch.data.MeshSampler
-    collection_points: [heat_residual]
-    use_lhs: true
-    num_sample: 2000
-```
-
-Имена `collection_points` должны присутствовать в результате `pde_fn`.
-LHS выбирает точки внутри непрерывной области, включая диапазоны параметров.
-Выборка создаётся при построении dataset и не генерируется заново на каждом шаге.
-Для полной YAML-сетки используйте `use_lhs: false`; в этом режиме `num_sample`
-не ограничивает число collocation points. Несколько невязок можно перечислить
-в одном списке. Штраф — MSE относительно нуля; runner использует mse, не sse.
-
-## 8. Граничные условия
-
-Все явные условия задавайте внутри одного BoundaryConditions. Его нельзя
-смешивать со старым callback API или дублировать несколькими datasets.
-
-```yaml
-- boundary:
-    _target_: pinnstorch.data.BoundaryConditions
-    conditions:
-      - kind: dirichlet
-        field: T
-        axis: x
-        side: lower
-        value: 100
-      - kind: neumann
-        field: T
-        axis: x
-        side: upper
-        value: 0
-        weight: 2
-      - kind: robin
-        field: T
-        axis: y
-        side: both
-        alpha: 2
-        beta: 3
-        value_fn: environment
-```
-
-| kind | Невязка |
-| --- | --- |
-| dirichlet | T - value |
-| neumann | dT/dn - value |
-| robin | alpha*T + beta*dT/dn - value |
-| heat_flux | -conductivity*dT/dn - value |
-
-`axis`: x/y/z, только существующая физическая ось. `side`: lower/upper/both.
-Внешняя нормаль отрицательна на lower и положительна на upper.
-`weight` по умолчанию 1 и должен быть конечным и положительным.
-Для Robin alpha/beta по умолчанию 1; оба нулевыми быть не могут.
-Для heat_flux `conductivity` — положительная константа (по умолчанию 1) или имя
-положительного параметра, например `conductivity: conductivity`.
-Нейман задаёт производную; он не равнозначен тепловому потоку.
-
-`value` по умолчанию 0. Вместо него можно указать `value_fn`, но не оба одновременно:
-
-```python
 import torch
 
-def environment(
-    spatial: list[torch.Tensor], time: torch.Tensor,
-    *, parameters: dict[str, torch.Tensor],
-) -> torch.Tensor:
-    return 2.0 + 0.0 * time
+from pinnstorch.api import Coordinates, Equation, Problem, TensorFields
 
-boundary_values = {"environment": environment}
+
+def heat(eq: Equation) -> torch.Tensor:
+    return eq.dt("T") - eq.parameters["conductivity"] * eq.laplacian("T")
+
+
+def initial(c: Coordinates) -> TensorFields:
+    return {"T": torch.sin(torch.pi * c.x) * torch.sin(torch.pi * c.y)}
+
+
+problem = Problem(fields=("T",), equations={"heat": heat}, initial=initial)
 ```
-
-Для задачи без параметров уберите keyword parameters. Здесь spatial — список
-физических столбцов, а не NumPy-массив. Функция возвращает конечный скаляр или
-столбец `(N,1)`. Значения вычисляются при создании dataset и фиксируются как цели.
-
-### Углы и рёбра
-
-- Дирихле для одного поля объединяется по уникальным точкам. Угол учитывается
-  один раз, а разные значения на пересечении вызывают ошибку (atol/rtol 1e-6).
-  Проверка действует на узлах сетки, времени и параметров, не доказывая равенство
-  произвольных функций между узлами.
-- На общей точке применяется максимальный вес граней, а не сумма весов.
-- Нейман/Робин/тепловой поток исключают физические рёбра и вершины. При смешанных
-  условиях в пересечениях остаётся Дирихле. Границы времени и параметров не
-  являются пространственными углами.
-- Для производных условий нужны внутренние точки грани: минимум три точки
-  на каждой касательной пространственной оси. Пустая выборка вызывает ошибку.
-- Разные поля имеют независимые ограничения. Каждая производная спецификация
-  даёт отдельный weighted MSE; Дирихле группируется по имени поля.
-
-## 9. Валидация, prediction и batching
-
-```yaml
-val_dataset:
-  - data:
-      _target_: pinnstorch.data.MeshSampler
-      collection_points: [residual]
-      use_lhs: false
-pred_dataset:
-  - data:
-      _target_: pinnstorch.data.MeshSampler
-      use_lhs: false
-data:
-  batch_size: 128
-```
-
-Допускается один validation dataset и один prediction dataset.
-Validation измеряет невязку PDE, не ошибку относительно эталонного решения.
-Для validation тоже можно использовать LHS с положительным num_sample.
-`pred_dataset` обязателен в поддерживаемом runner API; он использует полную
-сетку, без `solution` и `collection_points`. Reference datasets здесь не нужны.
-
-`data.batch_size: null` означает один полный пакет. Положительное число включает
-пакеты для обучения, валидации и предсказания. Последний неполный пакет сохраняется.
-Обучающие выборки перемешиваются; предсказания идут в порядке сетки. При нескольких
-обучающих datasets Lightning циклически использует более короткие loaders до
-длины самого длинного. Размер и среднее loss конкретного пакета влияют на
-оптимизацию; batching не гарантирует ту же траекторию обучения, что полный пакет.
-
-## 10. Оптимизатор, trainer и checkpoints
-
-```yaml
-model:
-  optimizer:
-    _target_: torch.optim.Adam
-    lr: 0.001
-  scheduler: null
-  scaler: null
-  jit_compile: false
-  amp: false
-  cudagraph_compile: false
-trainer:
-  accelerator: cpu
-  devices: 1
-  inference_mode: false
-  max_epochs: 100
-  max_steps: 1000
-  check_val_every_n_epoch: 1
-```
-
-Runner подставляет Lightning/PINNModule targets и фабрики optimizer/scheduler;
-не нужно вручную задавать `_partial_`. `inference_mode` должен быть false,
-поскольку PINN использует производные и при validation. Обучение прекращается
-при достижении одного из ограничений эпох/шагов. Seed по умолчанию 1234.
-Для CUDA измените accelerator на gpu и devices на `[0]`; локальные CPU-проверки
-не подтверждают работу CUDA/AMP/JIT. Параметризованные задачи и новый API границ
-сейчас требуют JIT=false и непрерывного времени.
-
-Необязательный scheduler задаётся фабрикой PyTorch, например:
-
-```yaml
-model:
-  scheduler:
-    _target_: torch.optim.lr_scheduler.StepLR
-    step_size: 50
-    gamma: 0.5
-```
-
-Он вызывается один раз в эпоху. Для schedulers, использующих monitor
-(например ReduceLROnPlateau), текущая реализация использует `val/loss`, поэтому
-нужна валидация. Для начала оставляйте `scheduler: null`.
-
-Checkpoint callback по умолчанию следит за val/loss. Если `val_dataset: null`,
-задайте `callbacks.model_checkpoint.monitor: train/loss`. `save_pred: true`
-сохраняет предсказание после обучения в pickle.
-
-| Файл | Смысл |
-| --- | --- |
-| `checkpoints/final.ckpt` | всегда сохраняется после успешного fit; последние веса |
-| `checkpoints/best.ckpt` | имя задаётся callback; лучшая модель по monitor, если callback успел её сохранить |
-| `checkpoints/last.ckpt` | зависит от save_last и вызова checkpoint callback |
-
-При коротком max_steps обучение может завершиться до первой валидации, поэтому
-best/last не гарантированы. Предсказание после train/retrain использует лучший
-checkpoint, если путь существует, иначе final. Для внешнего predict можно
-надёжно указывать final либо реально существующий best.
-
-`retrain` строго загружает веса и проверяет имена/диапазоны входов. Это дообучение
-с новым оптимизатором, не восстановление его состояния и счётчика эпох.
-Он сохраняет исходные диапазоны нормализации checkpoint. Чтобы обучать новый
-диапазон, запускайте отдельное train.
-
-## 11. Результаты и порядок координат
-
-| Артефакт | Когда создаётся |
-| --- | --- |
-| `log.log` | сообщения runner/train |
-| `error.log` | перехваченная ошибка задачи |
-| `config.resolved.yaml` | объединённый конфиг с разрешёнными интерполяциями перед созданием модели |
-| `csv/**/metrics.csv` | метрики при включённом CSV logger |
-| `predictions.pkl` | после train/retrain при save_pred=true |
-| `predictions.mat` | predict: координаты, параметры и поля |
-| `prediction.json` | predict: имена входов, диапазоны checkpoint/запроса, shape, dtype, batch size |
-
-Для MAT обозначим S число комбинаций пространственных узлов и значений
-параметров, Nt число временных точек. x/y/z и каждый параметр имеют форму `(S,1)`;
-это согласованные строки координат, а не независимые векторы осей. t имеет
-форму `(Nt,1)`. Каждое поле имеет форму `(S,Nt)`.
-
-Порядок: `meshgrid(indexing="ij")`, затем C-order. Последний параметр меняется
-быстрее других пространственных/параметрических осей. Во входных пакетах
-время меняется быстрее всех. При отсутствии параметров быстрее меняется
-последняя физическая ось.
-
-```python
-from scipy.io import loadmat
-
-result = loadmat("prediction/predictions.mat")
-# Все пространственные строки при коэффициенте 0.25:
-mask = result["conductivity"][:, 0] == 0.25
-temperature = result["T"][mask, :]
-xy = (result["x"][mask, :], result["y"][mask, :])
-```
-
-config.resolved.yaml служит для аудита запуска; он содержит конкретные пути
-текущего окружения. Для новой переносимой задачи используйте исходный config.yaml.
-
-Сеть вычисляет float32, а координаты сетки создаются как float64. Для десятичных
-значений при фильтрации лучше использовать np.isclose. Pickle содержит словарь
-тензоров с плоскими строками, без отдельных координат; для обмена результатами
-используйте MAT и prediction.json.
-
-## 12. Проверка разработки и ограничения
 
 ```sh
-python scripts/check.py
+python run.py --mode train --input-dir ./task --output-dir /tmp/pinn-result
+python run.py --mode predict --input-dir ./task --output-dir /tmp/pinn-prediction --checkpoint /tmp/pinn-result/checkpoints/final.ckpt
+python run.py --mode retrain --input-dir ./task --output-dir /tmp/pinn-continued --checkpoint /tmp/pinn-result/checkpoints/final.ckpt
 ```
 
-Команда проверяет Ruff, форматирование, строгие типы в мигрированных модулях
-и поддерживаемые CPU-тесты. Полный пример из этого документа выполняется
-интеграционным тестом. Проверки охватывают вычисления и файловый pipeline;
-точность решения и достаточное обучение нужно оценивать отдельно.
+Относительный путь checkpoint считается относительно **input-dir**. Команды выше
+используют абсолютный путь. По умолчанию директории `/task_data`
+и `/task_output`, имя checkpoint внутри input-dir — `checkpoint.ckpt`.
+`retrain` загружает веса и запускает новый оптимизатор; состояние оптимизатора и
+счётчики прежнего обучения не восстанавливаются.
 
-Сейчас нет произвольной геометрии, импорта полей коэффициента из таблиц,
-обратных задач в этом API и графиков сравнения с эталоном. Старые библиотечные
-примеры и raw boundary callbacks не являются спецификацией runner. Дополнительные
-заметки: [task-inputs.md](task-inputs.md), [development.md](development.md).
+## Конфигурация
+
+В YAML нет Python import paths, `_target_`, классов Lightning и списков внутренних
+sampler-объектов. Неизвестные ключи вызывают ошибку с путём к настройке.
+`version: 1` обязателен. Старый Hydra-формат больше не поддерживается.
+
+### Область и параметры
+
+`domain.space` содержит `x`, опционально `y`, затем `z`; `z` требует `y`.
+`domain.time` задаёт время. Каждая ось имеет возрастающий конечный `interval`
+из двух чисел и целое `points >= 2`. Начальные условия задаются при нижней
+границе временного интервала. `domain.parameters` необязателен.
+
+Имена параметров — ASCII-идентификаторы без начального `_`, отличные от
+`x/y/z/t`, полей и уравнений. Порядок входа сети фиксирован:
+`x[,y,z], параметры в порядке YAML, t`. Пространственные операторы не включают
+параметры. В каждом batch параметр представлен столбцом Tensor `(N, 1)`;
+разные строки могут иметь разные значения.
+
+Полная сетка — декартово произведение пространства, параметров и времени.
+Число точек быстро растёт в 3D и при нескольких параметрах. Для PDE можно
+использовать LHS, но сетки границ и предсказания по-прежнему строятся полностью.
+
+### Сеть
+
+`network.hidden_layers: [32, 32]` — значение по умолчанию. Непустой список
+положительных целых чисел задаёт скрытые слои с tanh. Размер входа берётся
+из области, выходы — из `Problem`. Их не нужно вручную согласовывать с YAML.
+
+### Обучение
+
+| Настройка | По умолчанию | Смысл |
+| --- | --- | --- |
+| `training.epochs` | 100 | Положительное максимальное число эпох |
+| `training.steps` | null | Дополнительное ограничение числа шагов оптимизатора |
+| `training.seed` | 1234 | Неотрицательное целое; 0 допустим, null отключает установку seed |
+| `training.batch_size` | null | Все точки каждого условия; иначе положительный размер batch |
+| `training.initial_points` | null | Все начальные точки; иначе случайная подвыборка без повторений |
+| `training.optimizer.name` | adam | adam или adamw |
+| `training.optimizer.learning_rate` | 0.001 | Положительный learning rate |
+| `training.optimizer.weight_decay` | 0 | Неотрицательный weight decay |
+| `training.collocation.sampling` | grid | grid или lhs |
+| `training.collocation.points` | отсутствует | Обязателен и положителен для lhs; запрещён для grid |
+
+```yaml
+training:
+  epochs: 1000
+  batch_size: 512
+  collocation:
+    sampling: lhs
+    points: 10000
+validation:
+  sampling: lhs
+  points: 2000
+```
+
+`validation` использует те же настройки выборки; по умолчанию grid.
+`validation: false` или `null` отключает проверку. Без эталонных данных `val/loss`
+измеряет невязки PDE, а не ошибку решения. Это не гарантия качества начальных
+и граничных условий. Оптимизируется сумма MSE начальных условий, уравнений и
+граничных ограничений. Короткие наборы условий повторяются, чтобы пройти самый
+длинный набор; размер batch сам по себе не является физическим весом условия.
+
+### Граничные условия
+
+`boundaries` — список, по умолчанию пустой. Общие ключи:
+
+| Ключ | Смысл |
+| --- | --- |
+| `kind` | dirichlet, neumann, robin или heat_flux |
+| `field` | Имя физического поля из `Problem.fields` |
+| `axis` | Существующая пространственная ось x/y/z |
+| `side` | lower, upper или both; по умолчанию both |
+| `value` | Конечное число, по умолчанию 0 |
+| `value_function` | Вместо value: имя функции из `Problem.boundary_values` |
+| `weight` | Положительный вес MSE, по умолчанию 1 |
+
+Операторы при внешней нормали `n`:
+
+| kind | Невязка | Дополнительные ключи |
+| --- | --- | --- |
+| dirichlet | u − g | — |
+| neumann | ∂u/∂n − g | — |
+| robin | αu + β∂u/∂n − g | alpha и beta, оба по умолчанию 1; не оба 0 |
+| heat_flux | −k∂u/∂n − g | conductivity: положительное число либо имя положительного параметра; по умолчанию 1 |
+
+На lower нормаль имеет знак −1, на upper +1. `alpha/beta` разрешены только
+для Robin, `conductivity` — только для heat_flux.
+
+Все границы Дирихле одного поля объединяются. Угол/ребро учитывается один раз,
+значения в пересечении должны совпадать с допуском 1e-6, вес берётся максимальный.
+Производные условия используют внутренность каждой грани, без углов/рёбер:
+там нельзя выбрать единственную нормаль. Это относится и к Robin с beta=0.
+В 1D торцевые точки допустимы. Если в 2D/3D после исключения пересечений точек
+не осталось, runner просит увеличить tangential points. Пересечение грани
+с начальным временным срезом не исключается: начальное и граничное условия —
+разные физические ограничения. Их совместимость остаётся обязанностью автора задачи.
+
+```yaml
+boundaries:
+  - kind: dirichlet
+    field: T
+    axis: x
+    value_function: wall_temperature
+  - kind: neumann
+    field: T
+    axis: y
+    value: 0
+```
+
+Функция значения получает `Coordinates` со всей сеткой, возвращает число
+либо конечный столбец `(N, 1)`. Значения вычисляются перед обучением и становятся
+фиксированными целями, а не частью градиентного графа сети.
+
+```python
+def wall_temperature(c: Coordinates) -> torch.Tensor:
+    return torch.ones_like(c.t) * 10
+
+problem = Problem(
+    fields=("T",), equations={"heat": heat}, initial=initial,
+    boundary_values={"wall_temperature": wall_temperature},
+)
+```
+
+### Предсказание и runtime
+
+`prediction.parameters` задаёт непустой список различных конечных значений для
+каждого нужного параметра. Неуказанные параметры используют сетку domain.
+Этот раздел влияет только на `predict`. Значение 0.25 допустимо, даже если
+обучающая сетка содержала 0.1, 0.3 и 0.5. Нормализация берётся из checkpoint.
+
+Выход за область checkpoint по пространству, времени или параметрам запрещён.
+`prediction.allow_extrapolation: true` явно разрешает его; это не гарантирует
+точность вне обучающей области. Имена и порядок входов должны совпадать всегда.
+Архитектура сети должна соответствовать весам; загрузка строгая.
+
+| Настройка | По умолчанию | Смысл |
+| --- | --- | --- |
+| `runtime.device` | cpu | cpu, cuda, mps или auto |
+| `runtime.devices` | 1 | Положительное число устройств или список неотрицательных индексов |
+| `runtime.precision` | 32-true | 32-true, 16-mixed, bf16-mixed; поддержка зависит от устройства |
+| `runtime.progress` | false | Индикатор прогресса |
+| `runtime.metrics` | true | CSV-метрики Lightning |
+| `runtime.save_training_predictions` | true | Дополнительное предсказание после train/retrain |
+
+Для RTX: `device: cuda`, `devices: [0]`; начните с `precision: 32-true`.
+Для Mac: CPU проверен тестами; MPS можно выбрать явно, но он не проверен этим
+набором. Mixed precision выполняется средствами Lightning, отдельного самописного
+AMP/JIT/CUDA Graph режима больше нет. Высокие производные PDE требуют проверки
+численной устойчивости выбранной точности.
+
+## functions.py: Problem и операторы
+
+Файл экспортирует **один объект `problem = Problem(...)`**. Имена локальных функций
+произвольны. `initial` обязателен: callback возвращает все физические поля.
+Все вычисления пользовательских callbacks выполняются в Torch, без NumPy в PDE.
+Callbacks должны работать поточечно и не менять поля/координаты inplace: это
+сохраняет корректность autograd и кеша производных.
+Скаляры начальных условий записывайте через `torch.full_like(c.t, value)`.
+
+`Coordinates` содержит `.x/.y/.z` для существующих осей, `.t`, `.spatial` и
+`.parameters`. Все значения — Tensor `(N, 1)`. `.variable(name)` возвращает
+координату/параметр по имени. Отсутствующая ось не создаётся автоматически.
+
+Каждое уравнение возвращает **невязку**, которая должна быть нулём: Tensor `(N, 1)`
+на том же устройстве. Система не вычисляет правую часть автоматически.
+Например, с источником `Q`: `e.dt("T") - k * e.laplacian("T") - Q`.
+Можно задать несколько уравнений и полей через словарь и tuple.
+
+| Оператор | Результат |
+| --- | --- |
+| `e.field("T")` | Значение поля |
+| `e.dt("T")` | Первая производная по времени |
+| `e.diff("T", "x", order=2)` | Производная заданного порядка по оси |
+| `e.gradient("T")` | Словарь первых производных по физическим осям |
+| `e.laplacian("T")` | Сумма вторых пространственных производных |
+| `e.divergence({"x": fx, "y": fy})` | Дивергенция вектора со всеми физическими компонентами |
+| `e.diff(tensor, "x")` | Производная произвольного выражения |
+
+Смешанная производная: `e.diff(e.diff("T", "x"), "y")`. Чувствительность по
+входному параметру: `e.diff("T", "conductivity")`. Эти производные не входят в
+laplacian. Производные именованного поля кешируются внутри одного вызова PDE
+для batch; между шагами кеш не сохраняется.
+
+### Пространственно меняющийся коэффициент
+
+Формула c(x,y) уже может возвращать Tensor. Для консервативной теплопроводности
+нужна дивергенция потока, которая учитывает производные коэффициента:
+
+```python
+def heat(e: Equation) -> torch.Tensor:
+    c = 1 + e.coordinates.x
+    flux = {axis: c * derivative for axis, derivative in e.gradient("T").items()}
+    return e.dt("T") - e.divergence(flux)
+```
+
+Это отличается от `c * laplacian(T)` при пространственно меняющемся c.
+Произвольное табличное поле коэффициента или целый Tensor как независимый вход
+семейства задач пока не поддерживается. Для него понадобится отдельный контракт
+полевого входа и интерполяции; скалярные параметры не маскируют эту задачу.
+
+### Поля из потенциала
+
+Если сеть должна возвращать потенциал, укажите `network_fields` и `transform`.
+Transform получает Equation с сырыми выходами сети, возвращает все физические
+поля. После преобразования PDE работает с физическими полями. Производные
+разрешены и в predict, поэтому градиентный режим здесь сохраняется.
+
+```python
+def from_potential(e: Equation) -> TensorFields:
+    return {"u": e.diff("psi", "y"), "v": -e.diff("psi", "x")}
+```
+
+Тогда `fields=("u", "v")`, `network_fields=("psi",)`,
+`transform=from_potential`; initial возвращает u и v, equations задают их PDE.
+Имена уравнений не должны совпадать с физическими/сетевыми полями.
+
+## Результаты и ошибки
+
+Train/retrain сохраняют `checkpoints/best.ckpt`, `last.ckpt` и `final.ckpt`.
+Best выбирается по val/loss, либо train/loss без validation. Final содержит
+последние веса до дополнительной проверки/предсказания. `predictions.pkl`, если
+включён, использует best; это может быть другой шаг, чем final.
+
+Predict сохраняет `predictions.mat` и `prediction.json`. В MAT координаты и
+параметры — столбцы `(S, 1)`, время `(Nt, 1)`, поля `(S, Nt)`.
+S — число комбинаций пространства и запрошенных параметров. Порядок — ij/C,
+параметры после пространства, время меняется быстрее всего при flatten.
+Поля MAT и тензоры pickle сохраняются в float32 на CPU, чтобы результаты можно
+было читать и без CUDA. JSON содержит имена входов, размер поля, batch_size, обучающие и запрошенные
+границы. Помимо физических полей transform может сохранять сетевые потенциалы.
+
+Все режимы сохраняют `config.resolved.yaml` без внутренних классов и `problem.json`
+с именами полей/уравнений, плюс `log.log`; при включённых метриках — `csv/`.
+При ошибке процесс возвращает 1 и записывает traceback в `error.log`, при успехе 0.
+functions.py — исполняемый Python-код; изоляцию задачи обеспечивает внешний Docker.
+
+## Переход со старого API
+
+Перенесите x_interval/x_points в `domain.space.x`, t_interval/t_points в
+`domain.time`. Вместо net.layers задайте только network.hidden_layers.
+Удалите train_datasets, model, callbacks, trainer и все `_target_`.
+Перенесите epochs/steps/batch_size/seed в training, устройство — в runtime,
+границы — в boundaries. Вместо pde_fn/initial_conditions/output_fn экспортируйте
+Problem с equations/initial/transform. Примеры в examples уже используют новый API.
+Старые checkpoints могут потребовать нового обучения, если прежняя архитектура
+или служебное состояние не соответствует текущей строгой загрузке.

@@ -91,7 +91,7 @@ def test_runner_parameter_queries(tmp_path: Path) -> None:
     for name in ("config.yaml", "functions.py"):
         shutil.copyfile(ROOT / "examples/heat_parameterized" / name, input_dir / name)
     cfg = yaml.safe_load((input_dir / "config.yaml").read_text())
-    cfg["data"] = {"batch_size": 16}
+    cfg["training"]["batch_size"] = 16
     cfg["prediction"] = {"parameters": {"conductivity": [0.25]}}
     config_path = input_dir / "config.yaml"
     config_path.write_text(yaml.safe_dump(cfg))
@@ -116,14 +116,14 @@ def test_runner_parameter_queries(tmp_path: Path) -> None:
     assert metadata["field_shape"] == [48, 3]
     assert metadata["batch_size"] == 16
     assert (
-        yaml.safe_load((directory / "config.resolved.yaml").read_text())["data"]["batch_size"]
+        yaml.safe_load((directory / "config.resolved.yaml").read_text())["training"]["batch_size"]
         == 16
     )
     assert metadata["training_bounds"][2] == [0.1, 0.5]
     assert metadata["requested_bounds"][2] == [0.25, 0.25]
 
     # Compare unbatched output and a deliberately non-sorted query grid.
-    cfg["data"]["batch_size"] = None
+    cfg["training"]["batch_size"] = None
     cfg["prediction"]["parameters"]["conductivity"] = [0.4, 0.25, 0.2]
     config_path.write_text(yaml.safe_dump(cfg))
     result, directory = predict("multiple")
@@ -153,8 +153,7 @@ def test_training_without_validation(tmp_path: Path) -> None:
     for name in ("config.yaml", "functions.py"):
         shutil.copyfile(ROOT / "examples/heat2d" / name, input_dir / name)
     cfg = yaml.safe_load((input_dir / "config.yaml").read_text())
-    cfg["val_dataset"] = None
-    cfg["callbacks"]["model_checkpoint"]["monitor"] = "train/loss"
+    cfg["validation"] = None
     (input_dir / "config.yaml").write_text(yaml.safe_dump(cfg))
     output_dir = tmp_path / "train"
     result = launch(input_dir, output_dir)

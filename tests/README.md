@@ -1,75 +1,25 @@
-## CPU checks on macOS
-
-Use Python 3.10 and an isolated environment:
+# Проверки решателя
 
 ```sh
 python3.10 -m venv .venv
-.venv/bin/python -m pip install -r requirements-test-cpu.txt
-.venv/bin/python -m pytest tests/runner tests/numerics
-.venv/bin/ruff check run.py pinnstorch/utils/pylogger.py tests/runner tests/numerics
-```
-
-Legacy upstream tests and their fixtures are preserved in `tests/legacy`; they
-are excluded from default collection because they need separate API migration.
-These checks use CPU tensors and do not require CUDA or Lightning.
-
-The numerical tests load the actual derivative helper and FCN directly because importing
-`pinnstorch` also imports the training stack. They verify analytic derivatives,
-backpropagation through second derivatives, multiple output components, and the
-heat equation residual in one, two, and three spatial dimensions. They also check
-FCN outputs and derivatives in these dimensions, and ten Adam steps with PDE and
-initial-condition losses on CPU. This short optimization checks finite gradients,
-weight updates, and loss reduction. These tests do not
-verify model convergence or the complete training pipeline.
-
-## Lightning integration checks
-
-Install the additional dependencies in the same Python 3.10 environment:
-
-```sh
 .venv/bin/python -m pip install -r requirements-test-integration.txt
-.venv/bin/python -m pytest
-.venv/bin/ruff check tests/integration
+.venv/bin/python scripts/check.py
 ```
 
-These tests import the actual package and use its PointCloud, samplers, FCN,
-PINNModule, and PINNDataModule with a real Lightning Trainer. They check loss
-accumulation in both condition orders, three CPU training steps, validation, and
-prediction. Test data are generated locally; no datasets are downloaded.
-CUDA, compilation, and mixed precision are disabled.
+Все поддерживаемые тесты используют CPU и локальные данные. Numerics проверяет
+аналитические производные, высшие производные и обучение FCN. Integration
+использует настоящие samplers, модель и Lightning, запускает файловый runner
+отдельными процессами, проверяет конфиги, 1D/2D/3D, параметры, границы, углы,
+checkpoints, вывод MAT и примеры документации. Mocks контролируют число вызовов
+autograd, CLI dispatch и отсутствие вызовов уравнений/initial во время inference.
 
-The file-based tests also launch `run.py` as a separate process, compose its YAML
-configuration, load `functions.py`, generate coordinates, and inspect predictions,
-checkpoints, and metrics. A failing task must return exit code 1 and write an
-error report. This checks the runner without building its Docker image.
-
-To run a task locally with the integration dependencies installed:
+Для только численных тестов достаточно requirements-test-cpu.txt:
 
 ```sh
-.venv/bin/python run.py --mode train --input-dir ./task_data --output-dir ./task_output
+.venv/bin/python -m pytest tests/numerics
 ```
 
-Set `trainer.accelerator: cpu` and `trainer.devices: 1` in `config.yaml` for CPU
-development. Directory arguments default to `/task_data` and `/task_output` for
-the existing container workflow.
-
-For prediction, supply the same input files plus a checkpoint:
-
-```sh
-.venv/bin/python run.py --mode predict --input-dir ./task_data --output-dir ./prediction --checkpoint trained.ckpt
-```
-
-A relative checkpoint path is resolved inside the input directory; absolute
-paths are also accepted. The default filename is `checkpoint.ckpt`.
-The runner requires `pde_fn`, `initial_conditions`, and a `domain` configuration;
-see [the input contract](../docs/task-inputs.md). Training and prediction work
-without `data.mat`. Prediction writes `predictions.mat` with `x`, `t`, and solution arrays. Integration
-tests compare this output with predictions from the training checkpoint and
-verify rejection of missing initial conditions and incomplete model weights.
-They also check that inference does not call PDE or initial-condition functions,
-including when output transforms need spatial derivatives. Validation without
-reference values reports PDE residual, not error against an exact solution.
-
-For all maintained checks (lint, formatting, types, and tests), install the
-integration dependencies and run `python scripts/check.py`. See
-[development instructions](../docs/development.md).
+CLI и функции уравнений не используют data.mat. Начальные условия задаёт
+Problem.initial в functions.py. Подробнее — [API](../docs/API.md).
+Короткие CPU-обучения проверяют работоспособность pipeline, не сходимость решения.
+CUDA, MPS и mixed precision этим набором не проверяются.

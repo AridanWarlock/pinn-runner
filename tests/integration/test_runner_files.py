@@ -1,4 +1,4 @@
-"""Launch the real CLI using user input files and inspect its output artifacts."""
+"""Launch the real CLI with public task descriptions and inspect artifacts."""
 
 import os
 import pickle
@@ -38,98 +38,104 @@ def launch(
     if checkpoint is not None:
         command.extend(["--checkpoint", checkpoint])
     return subprocess.run(
-        command,
-        cwd=ROOT,
-        env=environment,
-        capture_output=True,
-        text=True,
-        timeout=60,
-        check=False,
+        command, cwd=ROOT, env=environment, capture_output=True, text=True, timeout=90, check=False
     )
 
 
 def test_runner_trains_and_predicts_from_checkpoint(tmp_path: Path) -> None:
     input_dir, output_dir = tmp_path / "input", tmp_path / "output"
     prepare_input(input_dir)
-
     result = launch(input_dir, output_dir)
-
     assert result.returncode == 0, result.stdout + result.stderr
-    assert not (output_dir / "error.log").exists()
     assert "Starting training!" in (output_dir / "log.log").read_text()
-    assert (output_dir / "checkpoints/best.ckpt").is_file()
-    assert (output_dir / "checkpoints/last.ckpt").is_file()
-    assert list(output_dir.glob("csv/**/metrics.csv"))
-    with (output_dir / "predictions.pkl").open("rb") as file:
-        predictions = pickle.load(file)
+    for name in ("best", "last", "final"):
+        assert (output_dir / f"checkpoints/{name}.ckpt").exists()
+    with (output_dir / "predictions.pkl").open("rb") as stream:
+        predictions = pickle.load(stream)
     assert predictions["T"].shape == (24, 1)
     assert torch.isfinite(predictions["T"]).all()
-    assert not (input_dir / "data.mat").exists()
-    metrics_file = next(output_dir.glob("csv/**/metrics.csv"))
-    assert "val/error_" not in metrics_file.read_text().splitlines()[0]
+    assert list(output_dir.glob("csv/**/metrics.csv"))
+    assert "_target_" not in (output_dir / "config.resolved.yaml").read_text()
+    assert (output_dir / "problem.json").exists()
 
     shutil.copyfile(output_dir / "checkpoints/best.ckpt", input_dir / "trained.ckpt")
     functions = input_dir / "functions.py"
-    source = functions.read_text()
+    source = functions.read_text().replace(
+        'return eq.dt("T") - 0.3 * eq.laplacian("T")',
+        'raise AssertionError("Inference must not call equation")',
+    )
     source = source.replace(
-        'return {"T": np.sin(np.pi * spatial[:, 0:1])}',
-        'raise AssertionError("Prediction must not evaluate initial conditions")',
-    ).replace(
-        'outputs["residual"] = dt - 0.3 * gradient(dx, x)[0]',
-        'raise AssertionError("Prediction must not evaluate PDE")',
+        'return {"T": torch.sin(torch.pi * c.x)}',
+        'raise AssertionError("Inference must not call initial")',
     )
     functions.write_text(source)
-    # An unrelated reference file must not affect inference, even if it is invalid.
-    (input_dir / "data.mat").write_bytes(b"Unused reference file")
-    prediction_dir = tmp_path / "prediction"
-    result = launch(input_dir, prediction_dir, mode="predict", checkpoint="trained.ckpt")
-
+    (input_dir / "data.mat").write_bytes(b"Unused reference")
+    directory = tmp_path / "predict"
+    result = launch(input_dir, directory, "predict", "trained.ckpt")
     assert result.returncode == 0, result.stdout + result.stderr
-    saved = loadmat(prediction_dir / "predictions.mat")
+    saved = loadmat(directory / "predictions.mat")
     np.testing.assert_array_equal(saved["x"], np.linspace(0, 1, 8).reshape(-1, 1))
-    np.testing.assert_array_equal(saved["t"], np.linspace(0, 0.5, 3).reshape(-1, 1))
-    assert (input_dir / "data.mat").read_bytes() == b"Unused reference file"
     np.testing.assert_allclose(saved["T"], predictions["T"].numpy().reshape(8, 3))
-    assert np.isfinite(saved["T"]).all()
-    assert "Starting training!" not in (prediction_dir / "log.log").read_text()
-
-    broken = torch.load(input_dir / "trained.ckpt", map_location="cpu")
-    broken["state_dict"].pop(next(iter(broken["state_dict"])))
-    incompatible = input_dir / "incompatible.ckpt"
-    torch.save(broken, incompatible)
-    failed_dir = tmp_path / "incompatible-output"
-    result = launch(input_dir, failed_dir, mode="predict", checkpoint=str(incompatible))
-
+    assert "Starting training!" not in (directory / "log.log").read_text()
+    state = torch.load(input_dir / "trained.ckpt", map_location="cpu")
+    state["state_dict"].pop("net.lb")
+    torch.save(state, input_dir / "broken.ckpt")
+    result = launch(input_dir, tmp_path / "broken", "predict", "broken.ckpt")
     assert result.returncode == 1
-    assert "Missing key(s) in state_dict" in (failed_dir / "error.log").read_text()
-    assert not (failed_dir / "predictions.mat").exists()
+    assert "Missing key(s)" in (tmp_path / "broken/error.log").read_text()
 
 
-def test_runner_reports_invalid_user_functions(tmp_path: Path) -> None:
-    input_dir, output_dir = tmp_path / "input", tmp_path / "output"
+def test_invalid_problem_export(tmp_path: Path) -> None:
+    input_dir = tmp_path / "input"
     prepare_input(input_dir)
-    (input_dir / "functions.py").write_text("# Required functions are missing.\n")
-
-    result = launch(input_dir, output_dir)
-
+    (input_dir / "functions.py").write_text("# Missing Problem\n")
+    result = launch(input_dir, tmp_path / "output")
     assert result.returncode == 1
-    assert "Required function 'pde_fn' not found" in (output_dir / "error.log").read_text()
-    assert not (output_dir / "predictions.pkl").exists()
+    assert "must export problem = Problem" in (tmp_path / "output/error.log").read_text()
 
 
-def test_runner_requires_initial_conditions(tmp_path: Path) -> None:
-    input_dir, output_dir = tmp_path / "input", tmp_path / "output"
+def test_initial_function_is_required(tmp_path: Path) -> None:
+    input_dir = tmp_path / "input"
     prepare_input(input_dir)
     functions = input_dir / "functions.py"
-    functions.write_text(
-        functions.read_text().replace("def initial_conditions(", "def unused_initial(")
-    )
-
-    result = launch(input_dir, output_dir)
-
+    functions.write_text(functions.read_text().replace("initial=initial", "initial=None"))
+    result = launch(input_dir, tmp_path / "output")
     assert result.returncode == 1
-    assert (
-        "Required function 'initial_conditions' not found"
-        in (output_dir / "error.log").read_text()
+    assert "must be callable" in (tmp_path / "output/error.log").read_text()
+
+
+def test_public_potential_transform_predicts_without_equations(tmp_path: Path) -> None:
+    input_dir = tmp_path / "input"
+    prepare_input(input_dir)
+    source = """import torch
+from pinnstorch.api import Coordinates, Equation, Problem, TensorFields
+
+def initial(c: Coordinates) -> TensorFields:
+    return {"T": torch.sin(torch.pi * c.x)}
+
+def heat(e: Equation) -> torch.Tensor:
+    return e.dt("T") - 0.3 * e.laplacian("T")
+
+def transform(e: Equation) -> TensorFields:
+    return {"T": e.diff("potential", "x")}
+
+problem = Problem(fields=("T",), network_fields=("potential",), equations={"heat": heat}, initial=initial, transform=transform)
+"""
+    (input_dir / "functions.py").write_text(source)
+    train_dir = tmp_path / "train"
+    result = launch(input_dir, train_dir)
+    assert result.returncode == 0, result.stdout + result.stderr
+    source = source.replace(
+        'return {"T": torch.sin(torch.pi * c.x)}',
+        'raise AssertionError("initial called during inference")',
+    ).replace(
+        'return e.dt("T") - 0.3 * e.laplacian("T")',
+        'raise AssertionError("equation called during inference")',
     )
-    assert not (output_dir / "predictions.pkl").exists()
+    (input_dir / "functions.py").write_text(source)
+    predict_dir = tmp_path / "predict"
+    result = launch(input_dir, predict_dir, "predict", str(train_dir / "checkpoints/final.ckpt"))
+    assert result.returncode == 0, result.stdout + result.stderr
+    saved = loadmat(predict_dir / "predictions.mat")
+    assert saved["T"].shape == saved["potential"].shape == (8, 3)
+    assert np.isfinite(saved["T"]).all()

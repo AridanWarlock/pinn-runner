@@ -1,7 +1,6 @@
 from typing import List, Optional, Union
 
 import torch
-import torch._dynamo
 
 
 @torch.jit.script
