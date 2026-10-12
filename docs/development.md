@@ -9,7 +9,22 @@ python3.10 -m venv .venv
 ```
 
 Команда запускает Ruff lint/format, strict mypy и CPU-тесты, останавливаясь на
-первой ошибке. Она не меняет исходники. Для форматирования:
+первой ошибке. По умолчанию pytest показывает компактный прогресс и итог; при
+падении остаются короткий traceback и захваченные сообщения теста. Подробный
+режим включает имена тестов, live logs, полный traceback и десять самых медленных
+тестов:
+
+```sh
+.venv/bin/python scripts/check.py --verbose
+```
+
+Для отдельного запуска pytest эквивалентный диагностический режим:
+
+```sh
+.venv/bin/python -m pytest -o 'addopts=--strict-markers --color=auto' -o log_cli=true -vv --tb=long --durations=10
+```
+
+Проверки не меняют исходники. Для форматирования:
 
 ```sh
 .venv/bin/python -m ruff format run.py pinnstorch scripts tests/runner tests/numerics tests/integration examples/heat2d examples/heat_parameterized

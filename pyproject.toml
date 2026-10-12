@@ -32,15 +32,16 @@ files = [
 
 [tool.pytest.ini_options]
 addopts = [
-  "--color=yes",
-  "--durations=0",
+  "-q",
+  "--color=auto",
+  "--tb=short",
   "--strict-markers",
 ]
 filterwarnings = [
   "ignore::DeprecationWarning",
   "ignore::UserWarning",
 ]
-log_cli = "True"
+log_cli = false
 markers = [
   "slow: slow tests",
 ]
