@@ -90,3 +90,11 @@ Hydra/discrete/inverse pipeline, удалены.
 ручного autograd и Equation. Тесты и этот замер не доказывают сходимость физической
 задачи, CUDA/MPS корректность или устойчивость mixed precision. Production проверка
 на RTX остаётся отдельным этапом.
+
+## GPU acceptance
+
+Отдельный набор `tests/hardware` не входит в стандартный pytest collection.
+Он проверяется линтером и strict mypy; запускайте его через
+`python scripts/check_backend.py`. На Mac используйте `--device cpu`.
+Инструкции Windows и состав проверок: [cuda-testing.md](cuda-testing.md).
+Порядок дальнейшей работы: [roadmap.md](roadmap.md).

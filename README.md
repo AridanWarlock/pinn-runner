@@ -14,6 +14,8 @@ Runner создаёт сеть, обучает её по PDE/начальным/
 - [Пространственные коэффициенты: формулы и таблицы](docs/coefficients.md)
 - [Архитектура и расширение](docs/architecture.md)
 - [Проверки разработки](docs/development.md)
+- [План развития и критерии готовности](docs/roadmap.md)
+- [Windows и CUDA: подготовка и проверки](docs/cuda-testing.md)
 - [CPU-тесты](tests/README.md)
 - [2D теплопроводность](examples/heat2d)
 - [2D теплопроводность с табличным полем](examples/heat_spatial_coefficient)

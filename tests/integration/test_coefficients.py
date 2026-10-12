@@ -241,7 +241,11 @@ def test_table_buffers_follow_module_dtype() -> None:
 
 @pytest.mark.parametrize(
     "specification",
-    [{"file": "/tmp/field.npz"}, {"file": "field.mat"}, {"file": "field.npz", "other": 1}],
+    [
+        {"file": str(Path.cwd() / "field.npz")},
+        {"file": "field.mat"},
+        {"file": "field.npz", "other": 1},
+    ],
 )
 def test_invalid_coefficient_config(specification: dict[str, object]) -> None:
     source = {

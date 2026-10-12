@@ -12,6 +12,7 @@ TARGETS = [
     "scripts",
     "tests/runner",
     "tests/numerics",
+    "tests/hardware",
     "tests/integration",
     "examples/heat2d",
     "examples/heat_parameterized",
