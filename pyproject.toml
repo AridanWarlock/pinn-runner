@@ -44,6 +44,7 @@ filterwarnings = [
 log_cli = false
 markers = [
   "slow: slow tests",
+  "e2e: file-based runner tests that launch training/prediction subprocesses",
 ]
 minversion = "6.0"
 testpaths = ["tests/runner", "tests/numerics", "tests/integration"]

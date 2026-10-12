@@ -54,6 +54,7 @@ def test_parameter_sampling_and_callbacks() -> None:
 
 
 @pytest.mark.parametrize("dimension", [1, 2, 3])
+@pytest.mark.e2e
 def test_parameterized_runner(tmp_path: Path, dimension: int) -> None:
     input_dir = tmp_path / "input"
     prepare_input(input_dir)

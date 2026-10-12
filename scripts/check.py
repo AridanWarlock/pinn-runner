@@ -21,6 +21,7 @@ TARGETS = [
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verbose", action="store_true", help="Show detailed pytest diagnostics")
+    parser.add_argument("--full", action="store_true", help="Include file-based end-to-end tests")
     arguments = parser.parse_args()
     pytest_options: list[str] = (
         [
@@ -35,11 +36,14 @@ def main() -> int:
         if arguments.verbose
         else []
     )
+    if not arguments.full:
+        pytest_options.extend(["-m", "not e2e"])
+    test_label = "pytest (full)" if arguments.full else "pytest (fast; excludes e2e)"
     checks: list[tuple[str, list[str]]] = [
         ("Ruff lint", [sys.executable, "-m", "ruff", "check", *TARGETS]),
         ("Ruff format", [sys.executable, "-m", "ruff", "format", "--check", *TARGETS]),
         ("mypy", [sys.executable, "-m", "mypy"]),
-        ("pytest", [sys.executable, "-m", "pytest", *pytest_options]),
+        (test_label, [sys.executable, "-m", "pytest", *pytest_options]),
     ]
     for label, command in checks:
         print(f"Running: {label}", flush=True)

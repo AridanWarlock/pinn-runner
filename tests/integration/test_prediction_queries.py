@@ -85,6 +85,7 @@ def test_checkpoint_buffer_fallback() -> None:
     validate_checkpoint_domain(checkpoint, ("x", "k", "t"), [(0, 1), (0.1, 0.5), (0, 1)])
 
 
+@pytest.mark.e2e
 def test_runner_parameter_queries(tmp_path: Path) -> None:
     input_dir = tmp_path / "input"
     input_dir.mkdir()
@@ -147,6 +148,7 @@ def test_runner_parameter_queries(tmp_path: Path) -> None:
     np.testing.assert_allclose(loadmat(directory / "predictions.mat")["conductivity"], 0.8)
 
 
+@pytest.mark.e2e
 def test_training_without_validation(tmp_path: Path) -> None:
     input_dir = tmp_path / "input"
     input_dir.mkdir()

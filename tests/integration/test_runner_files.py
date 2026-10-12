@@ -8,11 +8,14 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
 from scipy.io import loadmat
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = Path(__file__).parent / "fixtures/heat"
+
+pytestmark = pytest.mark.e2e
 
 
 def prepare_input(directory: Path) -> None:

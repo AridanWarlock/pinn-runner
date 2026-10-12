@@ -137,6 +137,7 @@ def test_shared_dirichlet_weights_use_maximum() -> None:
 
 
 @pytest.mark.parametrize("parameterized", [False, True])
+@pytest.mark.e2e
 def test_runner_explicit_conditions(tmp_path: Path, parameterized: bool) -> None:
     input_dir = tmp_path / "input"
     prepare_input(input_dir)

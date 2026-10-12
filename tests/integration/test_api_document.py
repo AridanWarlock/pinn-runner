@@ -5,9 +5,12 @@ import re
 from pathlib import Path
 
 import numpy as np
+import pytest
 from scipy.io import loadmat
 
 from tests.integration.test_runner_files import ROOT, launch
+
+pytestmark = pytest.mark.e2e
 
 
 def test_api_example(tmp_path: Path) -> None:

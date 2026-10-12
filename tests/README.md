@@ -6,6 +6,11 @@ python3.10 -m venv .venv
 .venv/bin/python scripts/check.py
 ```
 
+`scripts/check.py` по умолчанию исключает медленные файловые тесты с marker `e2e`.
+Для полного прогона: `python scripts/check.py --full`; отдельно файловый pipeline:
+`python -m pytest -m e2e`. Обычный `python -m pytest` запускает все тесты.
+Правила выбора проверок — в [development.md](../docs/development.md).
+
 Все поддерживаемые тесты используют CPU и локальные данные. Numerics проверяет
 аналитические производные, высшие производные и обучение FCN. Integration
 использует настоящие samplers, модель и Lightning, запускает файловый runner

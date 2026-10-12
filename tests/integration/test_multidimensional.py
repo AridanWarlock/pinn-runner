@@ -38,6 +38,7 @@ def test_full_faces(dimension: int) -> None:
 
 
 @pytest.mark.parametrize("dimension", [2, 3])
+@pytest.mark.e2e
 def test_multidimensional_runner(tmp_path: Path, dimension: int) -> None:
     input_dir = tmp_path / "input"
     prepare_input(input_dir)
