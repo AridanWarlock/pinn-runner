@@ -22,6 +22,7 @@ from pinnstorch.data import (
 from pinnstorch.data.sampler.sampler_base import SamplerBase
 from pinnstorch.models import FCN, PINNModule
 
+from .coefficients import CoefficientBank
 from .problem import ProblemAdapter
 from .settings import Sampling, TaskSettings
 
@@ -38,13 +39,33 @@ class ExecutionObjects:
 class SolverFactory:
     """Translate domain choices to vectorized samplers and a Lightning backend."""
 
-    def __init__(self, settings: TaskSettings, problem: Problem, output: Path) -> None:
+    def __init__(
+        self,
+        settings: TaskSettings,
+        problem: Problem,
+        output: Path,
+        input_directory: Path | None = None,
+    ) -> None:
         self.settings, self.problem, self.output = settings, problem, output
-        self.adapter = ProblemAdapter(problem, settings.domain)
+        directory = input_directory if input_directory is not None else output
+        bank = CoefficientBank.build(
+            problem.coefficients, settings.coefficients, directory, settings.domain
+        )
+        source = (directory / "functions.py").read_bytes() if bank.formulas else None
+        self.coefficient_signature = bank.signature(source)
+        self.adapter = ProblemAdapter(problem, settings.domain, bank)
         self._validate_boundaries()
 
     def _validate_boundaries(self) -> None:
         for boundary in self.settings.boundaries:
+            coefficient = boundary.conductivity
+            if (
+                boundary.kind == "heat_flux"
+                and isinstance(coefficient, str)
+                and coefficient
+                not in {*self.settings.domain.parameters, *self.adapter.coefficients.names}
+            ):
+                raise ValueError(f"Unknown conductivity parameter/coefficient '{coefficient}'")
             if boundary.field not in self.problem.fields:
                 raise ValueError(f"Unknown boundary field '{boundary.field}'")
             if (
@@ -93,7 +114,13 @@ class SolverFactory:
             }
             datasets.append(
                 BoundaryConditions(
-                    mesh, [boundary.compile() for boundary in self.settings.boundaries], values
+                    mesh,
+                    [boundary.compile() for boundary in self.settings.boundaries],
+                    values,
+                    {
+                        name: partial(self.adapter.coefficient_value, name)
+                        for name in self.adapter.coefficients.names
+                    },
                 )
             )
             names.append("boundaries")
@@ -124,6 +151,8 @@ class SolverFactory:
             optimizer=partial(
                 optimizer_class, lr=optimizer.learning_rate, weight_decay=optimizer.weight_decay
             ),
+            coefficients=self.adapter.coefficients,
+            coefficient_signature=self.coefficient_signature,
             input_names=settings.domain.input_names,
             input_bounds=tuple(
                 (float(lower), float(upper)) for lower, upper in zip(mesh.lb, mesh.ub)

@@ -1,0 +1,21 @@
+version: 1
+domain:
+  space:
+    x: {interval: [0, 1], points: 8}
+    y: {interval: [0, 1], points: 6}
+  time: {interval: [0, 0.5], points: 3}
+coefficients:
+  conductivity: {file: conductivity.npz}
+network:
+  hidden_layers: [16, 16]
+training:
+  epochs: 3
+  steps: 3
+  batch_size: 16
+  optimizer: {learning_rate: 0.01}
+  collocation: {sampling: lhs, points: 100}
+validation: {sampling: grid}
+boundaries:
+  - {kind: dirichlet, field: T, axis: x, value: 0}
+  - {kind: dirichlet, field: T, axis: y, value: 0}
+runtime: {device: cpu}

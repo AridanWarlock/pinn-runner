@@ -30,10 +30,14 @@ class BoundaryPlan:
     """Prepare one vectorized boundary dataset outside the training loop."""
 
     def __init__(
-        self, mesh: MeshBase, boundary_values: Mapping[str, BoundaryValue] | None
+        self,
+        mesh: MeshBase,
+        boundary_values: Mapping[str, BoundaryValue] | None,
+        coefficient_values: Mapping[str, BoundaryValue] | None = None,
     ) -> None:
         self.mesh = mesh
         self.boundary_values = boundary_values or {}
+        self.coefficient_values = coefficient_values or {}
         self.spatial, self.time, _ = mesh.flatten_mesh(None)
         self.columns = [
             torch.as_tensor(self.spatial[:, i : i + 1], dtype=torch.float32)
@@ -51,12 +55,16 @@ class BoundaryPlan:
         self.weights: list[FloatArray] = []
         self.constraints: list[Constraint] = []
         self.dirichlet_groups: dict[str, int] = {}
+        self.conductivities: list[FloatArray | None] = []
 
     def add(self, specification: Mapping[str, object]) -> None:
         constraint, side, weight = self._read_constraint(specification)
         values = self._values(specification)
         mask = self._face_mask(constraint, side)
+        before = len(self.constraints)
         self._merge(constraint, values, mask, weight)
+        if len(self.constraints) != before:
+            self.conductivities.append(self._conductivity_values(constraint))
 
     def _read_constraint(
         self, specification: Mapping[str, object]
@@ -93,21 +101,51 @@ class BoundaryPlan:
         weight = self._number(specification, "weight", 1.0)
         alpha = self._number(specification, "alpha", 1.0)
         beta = self._number(specification, "beta", 1.0)
-        conductivity = specification.get("conductivity", 1.0)
-        if isinstance(conductivity, str):
-            if conductivity not in self.parameter_indices:
-                raise ValueError(f"Unknown conductivity parameter '{conductivity}'")
-            if mesh.lb[self.parameter_indices[conductivity]] <= 0:
-                raise ValueError("Conductivity parameter range must be positive")
-        else:
-            conductivity = self._number(specification, "conductivity", 1.0)
-            if not np.isfinite(conductivity) or conductivity <= 0:
-                raise ValueError("Conductivity must be finite and positive")
+        conductivity = self._read_conductivity(specification)
         if not np.isfinite([weight, alpha, beta]).all() or weight <= 0:
             raise ValueError("Boundary weight must be positive; weight/alpha/beta must be finite")
         if kind == "robin" and alpha == 0 and beta == 0:
             raise ValueError("Robin alpha and beta cannot both be zero")
         return Constraint(field, kind, axis, alpha, beta, conductivity), str(side), weight
+
+    def _read_conductivity(self, specification: Mapping[str, object]) -> float | str:
+        mesh = self.mesh
+        conductivity = specification.get("conductivity", 1.0)
+        if isinstance(conductivity, str):
+            if (
+                conductivity not in self.parameter_indices
+                and conductivity not in self.coefficient_values
+            ):
+                raise ValueError(f"Unknown conductivity parameter/coefficient '{conductivity}'")
+            if (
+                conductivity in self.parameter_indices
+                and mesh.lb[self.parameter_indices[conductivity]] <= 0
+            ):
+                raise ValueError("Conductivity parameter range must be positive")
+        else:
+            conductivity = self._number(specification, "conductivity", 1.0)
+            if not np.isfinite(conductivity) or conductivity <= 0:
+                raise ValueError("Conductivity must be finite and positive")
+        return conductivity
+
+    def _conductivity_values(self, constraint: Constraint) -> FloatArray | None:
+        name = constraint.conductivity
+        if (
+            constraint.kind != "heat_flux"
+            or not isinstance(name, str)
+            or name not in self.coefficient_values
+        ):
+            return None
+        tensor = self.coefficient_values[name](self.columns, self.time_tensor).detach()
+        if (
+            tensor.shape != self.time_tensor.shape
+            or not torch.isfinite(tensor).all()
+            or not torch.all(tensor.gt(0))
+        ):
+            raise ValueError(
+                f"Heat flux coefficient '{name}' must be finite, positive and shaped (N, 1)"
+            )
+        return cast(FloatArray, tensor.cpu().numpy().reshape(-1))
 
     @staticmethod
     def _number(specification: Mapping[str, object], name: str, default: float) -> float:
@@ -195,11 +233,12 @@ class BoundaryConditions(SamplerBase):
         mesh: MeshBase,
         conditions: Sequence[Mapping[str, object]],
         boundary_values: Mapping[str, BoundaryValue] | None = None,
+        coefficient_values: Mapping[str, BoundaryValue] | None = None,
     ) -> None:
         super().__init__()
         if not conditions:
             raise ValueError("BoundaryConditions requires at least one condition")
-        plan = BoundaryPlan(mesh, boundary_values)
+        plan = BoundaryPlan(mesh, boundary_values, coefficient_values)
         for specification in conditions:
             plan.add(specification)
         self.constraints = plan.constraints
@@ -214,7 +253,11 @@ class BoundaryConditions(SamplerBase):
         self.solution_names = []
         self.solution_sampled = []
         for i, (target, weight) in enumerate(zip(plan.targets, plan.weights)):
-            for name, array in ((f"target_{i}", target), (f"weight_{i}", weight)):
+            arrays = [(f"target_{i}", target), (f"weight_{i}", weight)]
+            conductivity = plan.conductivities[i]
+            if conductivity is not None:
+                arrays.append((f"conductivity_{i}", conductivity))
+            for name, array in arrays:
                 self.solution_names.append(name)
                 self.solution_sampled.append(
                     torch.as_tensor(array[union, None], dtype=torch.float32)
@@ -231,7 +274,12 @@ class BoundaryConditions(SamplerBase):
                     f"Boundary field '{constraint.field}' is not returned by the model/output_fn"
                 )
             residual = (
-                self._operator(constraint, outputs[constraint.field], columns)
+                self._operator(
+                    constraint,
+                    outputs[constraint.field],
+                    columns,
+                    targets.get(f"conductivity_{i}"),
+                )
                 - targets[f"target_{i}"]
             )
             weight = targets[f"weight_{i}"]
@@ -240,7 +288,11 @@ class BoundaryConditions(SamplerBase):
         return loss, outputs
 
     def _operator(
-        self, constraint: Constraint, field: torch.Tensor, columns: list[torch.Tensor]
+        self,
+        constraint: Constraint,
+        field: torch.Tensor,
+        columns: list[torch.Tensor],
+        prescribed: torch.Tensor | None = None,
     ) -> torch.Tensor:
         if constraint.kind == "dirichlet":
             return field
@@ -251,6 +303,8 @@ class BoundaryConditions(SamplerBase):
             return derivative
         if constraint.kind == "robin":
             return cast(torch.Tensor, constraint.alpha * field + constraint.beta * derivative)
+        if prescribed is not None:
+            return cast(torch.Tensor, -prescribed * derivative)
         coefficient = constraint.conductivity
         conductivity = (
             columns[self.parameter_indices[coefficient]]

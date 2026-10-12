@@ -15,6 +15,7 @@ files = [
   "pinnstorch/contracts.py",
   "pinnstorch/checkpoint_contract.py",
   "pinnstorch/api.py",
+  "pinnstorch/coefficients.py",
   "pinnstorch/runner",
   "pinnstorch/models/pinn_module.py",
   "pinnstorch/data/pinn_datamodule.py",

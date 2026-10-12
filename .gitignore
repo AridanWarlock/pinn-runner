@@ -167,3 +167,6 @@ outputs
 misc
 /misc
 /misc/
+
+# Generated spatial coefficient example input
+/examples/heat_spatial_coefficient/conductivity.npz

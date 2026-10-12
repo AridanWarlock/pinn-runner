@@ -68,7 +68,6 @@ def test_settings_roundtrip(tmp_path: Path) -> None:
         {"kind": "dirichlet", "axis": "x", "field": "T", "alpha": 2},
         {"kind": "robin", "axis": "x", "field": "T", "alpha": 0, "beta": 0},
         {"kind": "neumann", "axis": "z", "field": "T"},
-        {"kind": "heat_flux", "axis": "x", "field": "T", "conductivity": "unknown"},
         {"kind": "dirichlet", "axis": "x", "field": "T", "value": 1, "value_function": "wall"},
     ],
 )

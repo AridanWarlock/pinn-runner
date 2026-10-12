@@ -373,6 +373,26 @@ class Runtime:
 
 
 @dataclass(frozen=True)
+class TableCoefficient:
+    file: str
+
+    @classmethod
+    def read(cls, value: object, name: str) -> TableCoefficient:
+        identifier(name)
+        reader = Reader(value, f"coefficients.{name}")
+        reader.only("file")
+        path = reader.values.get("file")
+        if (
+            not isinstance(path, str)
+            or not path
+            or Path(path).is_absolute()
+            or Path(path).suffix != ".npz"
+        ):
+            raise ValueError(f"{reader.path}.file must be a relative NPZ path inside input-dir")
+        return cls(path)
+
+
+@dataclass(frozen=True)
 class TaskSettings:
     domain: Domain
     network: Network
@@ -381,6 +401,7 @@ class TaskSettings:
     boundaries: tuple[Boundary, ...]
     prediction: Prediction
     runtime: Runtime
+    coefficients: Mapping[str, TableCoefficient]
     version: int = 1
 
     @classmethod
@@ -399,6 +420,7 @@ class TaskSettings:
             "boundaries",
             "prediction",
             "runtime",
+            "coefficients",
         )
         if type(reader.values.get("version")) is not int or reader.values.get("version") != 1:
             raise ValueError("config.version must be 1; old _target_ configs must be migrated")
@@ -416,11 +438,17 @@ class TaskSettings:
             tuple(Boundary.read(value, index) for index, value in enumerate(boundaries)),
             Prediction.read(reader.section("prediction")),
             Runtime.read(reader.section("runtime")),
+            {
+                name: TableCoefficient.read(value, name)
+                for name, value in reader.section("coefficients").values.items()
+            },
         )
         result._validate_links()
         return result
 
     def _validate_links(self) -> None:
+        if set(self.coefficients) & set(self.domain.input_names):
+            raise ValueError("Coefficient names must differ from coordinates and parameters")
         unknown = set(self.prediction.parameters) - set(self.domain.parameters)
         if unknown:
             raise ValueError(f"Unknown prediction parameters: {sorted(unknown)}")
@@ -429,8 +457,8 @@ class TaskSettings:
                 raise ValueError(f"Boundary axis '{boundary.axis}' is absent from domain.space")
             if boundary.kind == "heat_flux" and isinstance(boundary.conductivity, str):
                 coefficient = self.domain.parameters.get(boundary.conductivity)
-                if coefficient is None or coefficient.interval[0] <= 0:
-                    raise ValueError("Heat flux conductivity must name a positive parameter")
+                if coefficient is not None and coefficient.interval[0] <= 0:
+                    raise ValueError("Heat flux conductivity parameter range must be positive")
 
     def save(self, path: Path) -> None:
         mapping = asdict(self)

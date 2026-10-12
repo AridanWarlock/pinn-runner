@@ -15,6 +15,7 @@ import torch
 from pinnstorch.api import Coordinates, Equation, Problem, TensorFields
 from pinnstorch.contracts import ArrayOutputs, FloatArray
 
+from .coefficients import CoefficientBank
 from .settings import Domain
 
 
@@ -55,13 +56,33 @@ class InputLayout:
 class ProblemAdapter:
     """Convert public contexts once per batch; never copy PDE tensors to NumPy."""
 
-    def __init__(self, problem: Problem, domain: Domain) -> None:
+    def __init__(
+        self, problem: Problem, domain: Domain, coefficients: CoefficientBank | None = None
+    ) -> None:
         self.problem = problem
+        self.coefficients = (
+            coefficients if coefficients is not None else CoefficientBank(problem.coefficients)
+        )
         self.layout = InputLayout.from_domain(domain)
         self.initial_time = domain.time.interval[0]
         reserved = set(domain.input_names)
+        coefficient_names = set(self.coefficients.names)
+        if coefficient_names & (
+            reserved | set(problem.fields) | set(problem.outputs) | set(problem.equations)
+        ):
+            raise ValueError(
+                "Coefficient names must differ from coordinates, parameters, fields and equations"
+            )
         if reserved & (set(problem.fields) | set(problem.outputs) | set(problem.equations)):
             raise ValueError("Field and equation names must differ from coordinates/parameters")
+
+    def context(self, columns: list[torch.Tensor], time: torch.Tensor) -> Coordinates:
+        return self.coefficients.context(self.layout.coordinates(columns, time))
+
+    def coefficient_value(
+        self, name: str, columns: list[torch.Tensor], time: torch.Tensor
+    ) -> torch.Tensor:
+        return self.context(columns, time).coefficients[name]
 
     @staticmethod
     def _column(value: torch.Tensor, reference: torch.Tensor, name: str) -> torch.Tensor:
@@ -74,7 +95,7 @@ class ProblemAdapter:
         return value
 
     def residuals(self, outputs: TensorFields, *columns: torch.Tensor) -> TensorFields:
-        coordinates = self.layout.coordinates(list(columns[:-1]), columns[-1])
+        coordinates = self.context(list(columns[:-1]), columns[-1])
         equation = Equation(outputs, coordinates)
         residuals = {
             name: self._column(function(equation), coordinates.time, name)
@@ -86,7 +107,7 @@ class ProblemAdapter:
         function = self.problem.transform
         if function is None:
             return outputs
-        coordinates = self.layout.coordinates(list(columns[:-1]), columns[-1])
+        coordinates = self.context(list(columns[:-1]), columns[-1])
         derived = function(Equation(outputs, coordinates))
         self._validate_fields(derived, coordinates.time)
         return {**outputs, **derived}
@@ -101,7 +122,7 @@ class ProblemAdapter:
         tensor = torch.as_tensor(spatial, dtype=torch.float32)
         columns = [tensor[:, i : i + 1] for i in range(tensor.shape[1])]
         time = tensor.new_full((len(tensor), 1), self.initial_time)
-        values = self.problem.initial(self.layout.coordinates(columns, time))
+        values = self.problem.initial(self.context(columns, time))
         self._validate_fields(values, time)
         return {
             name: cast(FloatArray, value.detach().cpu().numpy().astype(np.float64))
@@ -113,5 +134,5 @@ class ProblemAdapter:
     ) -> torch.Tensor:
         if name not in self.problem.boundary_values:
             raise ValueError(f"Unknown boundary value function '{name}'")
-        result = self.problem.boundary_values[name](self.layout.coordinates(columns, time))
+        result = self.problem.boundary_values[name](self.context(columns, time))
         return torch.as_tensor(result, device=time.device, dtype=time.dtype)

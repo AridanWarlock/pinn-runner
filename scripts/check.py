@@ -15,6 +15,7 @@ TARGETS = [
     "tests/integration",
     "examples/heat2d",
     "examples/heat_parameterized",
+    "examples/heat_spatial_coefficient",
 ]
 
 

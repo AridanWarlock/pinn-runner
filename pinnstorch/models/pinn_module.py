@@ -38,12 +38,17 @@ class PINNModule(LightningModule):
         loss_fn: str = "mse",
         input_names: tuple[str, ...] = (),
         input_bounds: tuple[tuple[float, float], ...] = (),
+        coefficients: torch.nn.Module | None = None,
+        coefficient_signature: dict[str, str] | None = None,
     ) -> None:
         super().__init__()
         if loss_fn not in ("mse", "sse"):
             raise ValueError("loss_fn must be mse or sse")
-        self.save_hyperparameters(logger=False, ignore=["net", "pde_fn", "output_fn"])
+        self.save_hyperparameters(
+            logger=False, ignore=["net", "pde_fn", "output_fn", "coefficients"]
+        )
         self.net, self.pde_fn, self.output_fn = net, pde_fn, output_fn
+        self.coefficients = coefficients
         self.function_mapping: dict[str, SamplerLoss] = {}
         self.train_loss, self.val_loss, self.val_loss_best = (
             MeanMetric(),

@@ -56,6 +56,12 @@ class SolverExecution:
 
     def _load(self, path: Path, allow_extrapolation: bool) -> InputBounds:
         checkpoint = torch.load(path, map_location="cpu")
+        signature = checkpoint.get("hyper_parameters", {}).get("coefficient_signature") or {}
+        current = self.objects.model.hparams.get("coefficient_signature") or {}
+        if signature != current:
+            raise ValueError(
+                "Checkpoint coefficient definitions differ from this task; train a new model"
+            )
         mesh = self.objects.mesh
         requested = [(float(column.min()), float(column.max())) for column in mesh.spatial_domain]
         requested.append((float(mesh.time_domain.min()), float(mesh.time_domain.max())))

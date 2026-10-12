@@ -24,7 +24,7 @@ repos:
         entry: python -m ruff check
         language: system
         types: [python]
-        files: &maintained '^(run\.py|pinnstorch/|scripts/|examples/(heat2d|heat_parameterized)/|tests/(runner|numerics|integration)/)'
+        files: &maintained '^(run\.py|pinnstorch/|scripts/|examples/(heat2d|heat_parameterized|heat_spatial_coefficient)/|tests/(runner|numerics|integration)/)'
       - id: ruff-format
         name: Ruff format check
         entry: python -m ruff format --check

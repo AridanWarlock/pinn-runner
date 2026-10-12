@@ -19,6 +19,8 @@ class Coordinates:
     time: torch.Tensor
     parameters: Mapping[str, torch.Tensor] = field(default_factory=dict)
 
+    coefficients: Mapping[str, torch.Tensor] = field(default_factory=dict)
+
     @property
     def x(self) -> torch.Tensor:
         return self.spatial["x"]
@@ -52,6 +54,7 @@ class Equation:
         self.fields = fields
         self.coordinates = coordinates
         self.parameters = coordinates.parameters
+        self.coefficients = coordinates.coefficients
         self._derivatives: dict[tuple[str, tuple[str, ...]], torch.Tensor] = {}
 
     def field(self, name: str) -> torch.Tensor:
@@ -158,6 +161,7 @@ class Problem:
     boundary_values: Mapping[str, ValueFunction] = field(default_factory=dict)
     transform: TransformFunction | None = None
     network_fields: Sequence[str] | None = None
+    coefficients: Mapping[str, ValueFunction] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         groups = (
@@ -180,6 +184,14 @@ class Problem:
                 )
         if self.transform is None and not set(self.fields) <= set(self.outputs):
             raise ValueError("Different physical/network fields require Problem.transform")
+        for name, function in self.coefficients.items():
+            if (
+                not name.isascii()
+                or not name.isidentifier()
+                or name.startswith("_")
+                or not callable(function)
+            ):
+                raise ValueError("Problem.coefficients must map ASCII identifiers to callables")
         if any(not callable(function) for function in self.boundary_values.values()):
             raise ValueError("Problem.boundary_values must contain callable functions")
         if set(self.equations) & (set(self.fields) | set(self.outputs)):

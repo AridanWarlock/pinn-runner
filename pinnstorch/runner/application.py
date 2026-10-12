@@ -60,7 +60,10 @@ class TaskApplication:
         problem = load_problem(self.paths.input / "functions.py")
         artifacts = ArtifactWriter(self.paths.output, settings, problem)
         artifacts.save_definition()
-        objects = SolverFactory(settings, problem, self.paths.output).build(mode == "predict")
+        objects = SolverFactory(settings, problem, self.paths.output, self.paths.input).build(
+            mode == "predict"
+        )
+        artifacts.save_coefficient_signature(objects.model.hparams["coefficient_signature"] or {})
         execution = SolverExecution(settings, objects, artifacts, self.log)
         if mode == "predict":
             execution.predict(self.paths.checkpoint)

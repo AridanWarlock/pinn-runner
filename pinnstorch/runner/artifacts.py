@@ -29,8 +29,14 @@ class ArtifactWriter:
             "network_fields": list(self.problem.outputs),
             "equations": list(self.problem.equations),
             "boundary_values": list(self.problem.boundary_values),
+            "coefficients": sorted({*self.problem.coefficients, *self.settings.coefficients}),
         }
         self._json("problem.json", definition)
+
+    def save_coefficient_signature(self, signature: Mapping[str, str]) -> None:
+        self._json(
+            "coefficients.json", {"signatures": dict(signature), "interpolation": "multilinear"}
+        )
 
     def save_training_predictions(self, predictions: TensorOutputs) -> None:
         if self.settings.runtime.save_training_predictions:
