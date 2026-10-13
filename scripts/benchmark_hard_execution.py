@@ -34,6 +34,7 @@ def main() -> None:
     parser.add_argument("--trial", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--cold-runs", type=int, default=0)
+    parser.add_argument("--skip-warm", action="store_true")
     args = parser.parse_args()
     if not torch.cuda.is_available():
         raise RuntimeError("This performance experiment requires the remote CUDA machine")
@@ -45,7 +46,7 @@ def main() -> None:
     torch.backends.cudnn.allow_tf32 = False
     started = time.perf_counter()
     directory: Path = args.trial / "task"
-    checkpoint: Path = args.trial / "training/checkpoints/final.ckpt"
+    checkpoint: Path = (args.trial / "training/checkpoints/final.ckpt").resolve()
     settings = TaskSettings.load(directory / "config.yaml")
     problem = load_problem(directory / "functions.py")
     objects = SolverFactory(settings, problem, directory).build(True)
@@ -71,7 +72,7 @@ def main() -> None:
     random_difference = 0.0
     # Reverse order in each repeat to expose ordering/thermal bias.
     with torch.no_grad():
-        for repetition in range(3):
+        for repetition in range(0 if args.skip_warm else 3):
             for batch_size in [128, 2048]:
                 for enabled in [False, True] if repetition % 2 == 0 else [True, False]:
                     model.output_fn = replace(transform, fused_predict=enabled)
@@ -95,8 +96,8 @@ def main() -> None:
             torch.testing.assert_close(candidate, eager, rtol=2e-6, atol=2e-6)
             max_difference = max(max_difference, float((candidate - eager).abs().max()))
         generator = torch.Generator(device="cuda").manual_seed(20261013)
-        random_columns = [
-            torch.rand(4096, 1, generator=generator, device="cuda") * (right - left) + left
+        random_columns: list[torch.Tensor] = [
+            torch.rand(4096, 1, generator=generator, device="cuda").mul(right - left).add(left)
             for left, right in [*transform.bounds, transform.time_interval]
         ]
         model.output_fn = transform
