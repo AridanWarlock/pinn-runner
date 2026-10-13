@@ -27,10 +27,9 @@ class HardBoxDerivatives:
         lower, upper = transform.time_interval
         self.time_scale = 1 / (upper - lower)
         self.tau = coordinates.time.sub(lower).div(upper - lower)
-        initial = transform.initial(
-            list(coordinates.spatial.values()), torch.full_like(coordinates.time, lower)
-        )
+        initial = transform.background(list(coordinates.spatial.values()), coordinates.time)
         self.initial = Equation(initial, coordinates)
+        self.time_dependent_background = transform.lifting is not None
         self.parts: list[torch.Tensor] = []
         normalized_columns: list[torch.Tensor] = []
         for column, (left, right) in zip(coordinates.spatial.values(), transform.bounds):
@@ -71,6 +70,13 @@ class HardBoxDerivatives:
             raise ValueError("Product-rule prototype supports derivative orders 1 and 2")
         value = self.network.field(name)
         first = self.network.diff(name, axis)
+        if axis == "t" and self.time_dependent_background:
+            correction = self.basis * (
+                value * self.time_scale + self.tau * first
+                if order == 1
+                else 2 * self.time_scale * first + self.tau * self.network.diff(name, axis, 2)
+            )
+            return cast(torch.Tensor, self.initial.diff(name, axis, order) + correction)
         if axis == "t":
             if order == 1:
                 return cast(

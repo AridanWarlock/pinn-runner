@@ -22,6 +22,7 @@ def solution_errors(
         raise ValueError("Relative L2 requires a nonzero reference")
     boundary = case.boundary_mask(spatial)
     return {
+        **case.additional_errors(spatial, time.T, error),
         "relative_l2": float(np.linalg.norm(error) / denominator),
         "rmse": float(np.sqrt(np.mean(error**2))),
         "max_error": float(np.max(np.abs(error))),

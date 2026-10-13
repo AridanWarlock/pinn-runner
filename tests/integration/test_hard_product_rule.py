@@ -14,8 +14,9 @@ from tests.integration.test_runner_files import launch
 
 
 @pytest.mark.e2e
-def test_product_rule_train_refine_and_eager_prediction(tmp_path: Path) -> None:
-    case = CASES["heat2d"]
+@pytest.mark.parametrize("case_name", ["heat2d", "heat_dirichlet2d"])
+def test_product_rule_train_refine_and_eager_prediction(tmp_path: Path, case_name: str) -> None:
+    case = CASES[case_name]
     states = []
     for backend in ("eager", "product_rule"):
         directory = tmp_path / backend

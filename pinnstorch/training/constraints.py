@@ -1,4 +1,4 @@
-"""Exact initial values and zero Dirichlet faces without a solution teacher."""
+"""Exact initial values and compatible Dirichlet faces without a solution teacher."""
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -16,11 +16,21 @@ class HardBoxInitial:
     time_interval: tuple[float, float]
     initial: Callable[[list[torch.Tensor], torch.Tensor], TensorOutputs]
     spatial_names: tuple[str, ...] = ()
+    lifting: Callable[[list[torch.Tensor], torch.Tensor], TensorOutputs] | None = None
+
+    def background(self, spatial: list[torch.Tensor], time: torch.Tensor) -> TensorOutputs:
+        initial_time = torch.full_like(time, self.time_interval[0])
+        values = self.initial(spatial, initial_time)
+        if self.lifting is None:
+            return values
+        current = self.lifting(spatial, time)
+        original = self.lifting(spatial, initial_time)
+        return {name: value + (current[name] - original[name]) for name, value in values.items()}
 
     def __call__(self, outputs: TensorOutputs, *columns: torch.Tensor) -> TensorOutputs:
         spatial, time = list(columns[:-1]), columns[-1]
         lower, upper = self.time_interval
-        initial = self.initial(spatial, torch.full_like(time, lower))
+        initial = self.background(spatial, time)
         factor = torch.ones_like(time)
         for column, (left, right) in zip(spatial, self.bounds):
             normalized = column.sub(left).div(right - left)

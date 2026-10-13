@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 import torch
 
-from benchmarks.cases import CASES
+from benchmarks.cases import CASES, DirichletHeatCase, HeatCase
 from benchmarks.execution import fingerprint, validate_refinement
 from benchmarks.metrics import quality_failures, regression_failures, solution_errors
 from benchmarks.policies import CartesianGrid, FixedQuality, TrainingBudget
@@ -82,16 +82,14 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(name: str) -
     ]
     coordinates = Coordinates(dict(zip(("x", "y", "z"), columns[:-1])), columns[-1])
     x, time = coordinates.x, coordinates.t
-    if name in ("heat2d", "heat3d"):
-        field = (
-            torch.sin(x * torch.pi)
-            * torch.sin(coordinates.y * torch.pi)
-            * torch.exp(-0.2 * torch.pi**2 * time)
-        )
-        if name == "heat3d":
-            field = (
-                field * torch.sin(coordinates.z * torch.pi) * torch.exp(-0.1 * torch.pi**2 * time)
-            )
+    if isinstance(case, HeatCase):
+        field = torch.exp(-0.1 * case.dimensions * torch.pi**2 * time)
+        for column in coordinates.spatial.values():
+            field = field * torch.sin(column * torch.pi)
+        if isinstance(case, DirichletHeatCase):
+            field = field + 1 + 0.2 * case.dimensions * time
+            for column in coordinates.spatial.values():
+                field = field + column.square()
     elif name == "advection":
         field = torch.sin((x - time) * torch.pi)
     else:
@@ -118,7 +116,14 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(name: str) -
         reference = case.reference(boundary_spatial, time.detach().numpy())
         if boundary.value_function:
             observed = (
-                problem.boundary_values[boundary.value_function](coordinates).detach().numpy()
+                problem.boundary_values[boundary.value_function](
+                    Coordinates(
+                        {axis: torch.as_tensor(value) for axis, value in boundary_spatial.items()},
+                        time,
+                    )
+                )
+                .detach()
+                .numpy()
             )
             np.testing.assert_allclose(observed, reference, atol=1e-12)
         else:

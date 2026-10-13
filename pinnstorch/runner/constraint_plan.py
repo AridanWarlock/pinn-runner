@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from pinnstorch.contracts import FieldFunction
 from pinnstorch.training.constraints import HardBoxInitial
 from pinnstorch.training.hard_execution import hard_executor
 
+from .dirichlet import compile_lifting
 from .problem import ProblemAdapter
 from .settings import TaskSettings
 
@@ -22,7 +24,8 @@ class ExactFace:
     field: str
     axis: str
     side: str
-    value: float = 0.0
+    value: float | None = 0.0
+    value_function: str | None = None
 
 
 @dataclass(frozen=True)
@@ -45,19 +48,27 @@ class ConstraintPlan:
                 "soft", (), (), losses, "", None, adapter.transform if problem.transform else None
             )
         validate_box_initial(settings, problem, adapter)
+        lifting = compile_lifting(settings, adapter)
         recipe = HardBoxInitial(
             tuple(axis.interval for axis in settings.domain.space.values()),
             settings.domain.time.interval,
             adapter.initial_tensors,
             spatial_names=tuple(settings.domain.space),
+            lifting=lifting,
         )
         faces = tuple(
-            ExactFace(field, axis, side)
-            for field in problem.fields
-            for axis in settings.domain.space
-            for side in ("lower", "upper")
+            ExactFace(boundary.field, boundary.axis, side, boundary.value, boundary.value_function)
+            for boundary in settings.boundaries
+            for side in (("lower", "upper") if boundary.side == "both" else (boundary.side,))
         )
-        signature = hashlib.sha256((directory / "functions.py").read_bytes()).hexdigest()
+        source = (directory / "functions.py").read_bytes()
+        if lifting is not None:
+            definition = [
+                (face.field, face.axis, face.side, face.value, face.value_function)
+                for face in faces
+            ]
+            source += json.dumps(sorted(definition), sort_keys=True).encode()
+        signature = hashlib.sha256(source).hexdigest()
         return cls(
             settings.training.constraints,
             tuple(problem.fields),
@@ -86,17 +97,17 @@ def validate_box_initial(
     }
     provided: set[tuple[str, str, str]] = set()
     for boundary in settings.boundaries:
-        if (
-            boundary.kind != "dirichlet"
-            or boundary.value != 0
-            or boundary.value_function is not None
-        ):
-            raise ValueError("Hard constraints require homogeneous constant Dirichlet faces")
+        if boundary.kind != "dirichlet":
+            raise ValueError("Hard constraints require Dirichlet faces")
         sides = ("lower", "upper") if boundary.side == "both" else (boundary.side,)
-        provided.update((boundary.field, boundary.axis, side) for side in sides)
+        keys = {(boundary.field, boundary.axis, side) for side in sides}
+        if provided & keys:
+            raise ValueError("Hard constraints require one condition per face")
+        provided.update(keys)
     if provided != required:
         raise ValueError("Hard constraints require all faces for every physical field")
-    validate_initial_trace(settings, adapter)
+    if all(face.value == 0 and face.value_function is None for face in settings.boundaries):
+        validate_initial_trace(settings, adapter)
 
 
 def validate_initial_trace(settings: TaskSettings, adapter: ProblemAdapter) -> None:

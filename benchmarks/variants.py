@@ -101,6 +101,11 @@ class BenchmarkVariant(BenchmarkCase):
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
         return self.base.reference(spatial, time)
 
+    def additional_errors(
+        self, spatial: dict[str, Array], time: Array, error: Array
+    ) -> dict[str, float]:
+        return self.base.additional_errors(spatial, time, error)
+
     def boundary_mask(self, spatial: dict[str, Array]) -> NDArray[np.bool_]:
         return self.base.boundary_mask(spatial)
 

@@ -37,7 +37,7 @@ class FusedPredictHard:
             return self.recipe(outputs, *columns)
         spatial, time = list(columns[:-1]), columns[-1]
         lower, upper = self.recipe.time_interval
-        initial = self.recipe.initial(spatial, torch.full_like(time, lower))
+        initial = self.recipe.background(spatial, time)
         factor = torch.ones_like(time)
         for column, (left, right) in zip(spatial, self.recipe.bounds):
             normalized = column.sub(left).div(right - left)

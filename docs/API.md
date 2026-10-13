@@ -405,7 +405,7 @@ fine-tune, не полным resume optimizer/dataloader position. Validation н
 обновлять точки. Benchmark flags: --resample-every-epochs 1 и
 --collocation-points 4096 для раздельного контроля более плотной fixed выборки.
 
-### Точные IC и нулевые границы прямоугольника
+### Точные IC и Дирихле на прямоугольнике
 
 training.constraints: hard_initial_dirichlet включает преобразование
 u = g(x) + tau * B(x) * N(x,t), где g задано Problem.initial, tau — нормированное
@@ -413,14 +413,19 @@ u = g(x) + tau * B(x) * N(x,t), где g задано Problem.initial, tau — �
 Это использует только начальное условие, не аналитическое решение во времени.
 IC и BC исключаются из train loss: остаётся PDE. Их качество всё равно оценивается.
 
-Поддержаны полные homogeneous constant Dirichlet faces для всех fields,
-совместимое IC, без variable parameters и пользовательского Problem.transform.
-Neumann/Robin, неполные границы и другой network_fields отклоняются. Совместимость
-IC проверяется на сетке; это не доказательство для произвольного Python callback.
-Для математической гарантии g должна быть нулевой на всей непрерывной границе.
-Из-за FP32 тригонометрии на faces возможен машинный остаток; tolerance 1e-6.
+Поддержаны полные Dirichlet faces для всех fields: константы или
+`value_function` из `Problem.boundary_values`, включая зависимость от времени.
+Для нулевых стенок используется прежний fast path. Для остальных автоматически
+строится lifting A граничных данных и применяется
+`u = g + A(x,t) - A(x,t0) + tau*B*N`.
 
-Checkpoint фиксирует constraint kind и SHA функций: predict/fine-tune с другим
+IC должно совпадать с BC при t0; значения соседних граней должны совпадать на
+их пересечениях во все времена. Проверка выполняется на конфигурационной
+сетке, не доказывает тождества между узлами произвольного callback. Neumann/Robin,
+неполные/повторные грани, variable parameters и custom Problem.transform
+отклоняются. Машинный остаток FP32 допустим; это не BC penalty.
+
+Checkpoint фиксирует constraint kind, SHA функций и ненулевые boundary specifications: predict/fine-tune с другим
 преобразованием отклоняется. Soft по умолчанию сохраняет прежний forward.
 Hard transform не требует autograd при predict, но сохраняет производные при train.
 Benchmark flag: --constraints hard_initial_dirichlet.
@@ -549,25 +554,48 @@ Benchmark: `--constraints hard_initial_dirichlet --hard-execution product_rule`.
 до создания backend. Он содержит `kind`, `exact_initial`, `exact_faces`,
 `remaining_losses`, математический `recipe`, callable `output` и checkpoint
 `signature`. Soft сообщает отсутствие гарантированных IC/BC и оставляет
-initial/equations/boundaries loss. Текущий hard сообщает IC всех полей, нулевые
+initial/equations/boundaries loss. Текущий hard сообщает IC всех полей, заданные
 Дирихле на всех гранях и только equations loss.
 
-Гарантия hard математически условна: `g|Γ=0` должно выполняться на всей границе.
+Гарантия hard математически условна: `g|Γ=h(t0)` и совместимость соседних traces должны выполняться на всей границе.
 Текущая проверка совместимости проверяет значения на конфигурационной сетке,
 не доказывает тождество произвольной пользовательской функции между узлами.
 Углы/рёбра входят в эту проверку объединением масок граней; это не отдельные
 штрафы в hard loss. Совместимость производных классического решения в углах
 пока не проверяется.
 
-`HardBoxInitial` задаёт eager-рецепт `u=g+τBN`. `ProductRuleHard` и
+`HardBoxInitial` задаёт eager-рецепт с optional lifting. `ProductRuleHard` и
 `FusedPredictHard` содержат этот же рецепт и выбираются в `hard_executor` один
 раз. В forward нет выбора по строке конфигурации. Предметная гарантия и
 checkpoint signature не зависят от execution adapter: predict/fine-tune могут
 переключать eager/product_rule/fused_predict, сохраняя физическую конструкцию.
 Optimizer state при этом не перепараметризуется.
 
-Это подготовка для расширения heat BC; новые условия, автоматический heat
-profile и hard default здесь не введены. PDE не определяется по имени функции.
-Неймана/Робина, ненулевые Дирихле, variable parameters и custom output transform
+Поддержаны ненулевые Dirichlet BC; автоматический heat profile и hard default
+пока не введены. PDE не определяется по имени функции.
+Неймана/Робина, variable parameters и custom output transform
 для текущего hard явно отклоняются, без soft fallback. Для этих задач по-прежнему
 можно явно выбрать soft.
+
+
+Для временных стенок в `config.yaml`:
+
+```yaml
+training:
+  constraints: hard_initial_dirichlet
+  hard_execution: product_rule
+boundaries:
+  - {kind: dirichlet, field: u, axis: x, value_function: wall}
+  - {kind: dirichlet, field: u, axis: y, value_function: wall}
+```
+
+В `functions.py` объявите `wall(c: Coordinates) -> torch.Tensor` и передайте
+`boundary_values={"wall": wall}` в `Problem`. Callback получает координаты
+именно грани: её нормальная координата зафиксирована на lower/upper. Можно
+указать разные функции на разных сторонах через `side`; их значения на
+пересечениях должны совпадать. Возвращайте Tensor-столбец (или scalar для BC),
+сохраняйте autograd: никакого NumPy/detach в differentiable callback.
+
+Готовые manufactured примеры: `benchmarks/problems/heat_dirichlet2d/functions.py`
+и `heat_dirichlet3d/functions.py`; CLI `--cases heat_dirichlet2d heat_dirichlet3d
+--constraints hard_initial_dirichlet --hard-execution product_rule`.
