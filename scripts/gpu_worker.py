@@ -157,6 +157,37 @@ def job_environment(directory: Path, commit: str) -> dict[str, str]:
     return environment
 
 
+class ProcessTree:
+    """Own a Windows Job Object so child processes can be stopped together."""
+
+    def __init__(self, process: subprocess.Popen[bytes]) -> None:
+        import ctypes
+        from ctypes import wintypes
+
+        self.api = getattr(ctypes, "WinDLL")("kernel32", use_last_error=True)
+        self.api.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+        self.api.CreateJobObjectW.restype = wintypes.HANDLE
+        self.api.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+        self.api.AssignProcessToJobObject.restype = wintypes.BOOL
+        self.api.TerminateJobObject.argtypes = [wintypes.HANDLE, wintypes.UINT]
+        self.api.TerminateJobObject.restype = wintypes.BOOL
+        self.api.CloseHandle.argtypes = [wintypes.HANDLE]
+        self.api.CloseHandle.restype = wintypes.BOOL
+        self.handle = self.api.CreateJobObjectW(None, None)
+        if not self.handle:
+            raise OSError("Windows Job Object operation failed")
+        if not self.api.AssignProcessToJobObject(self.handle, getattr(process, "_handle")):
+            self.close()
+            raise OSError("Windows Job Object operation failed")
+
+    def terminate(self) -> None:
+        if not self.api.TerminateJobObject(self.handle, 1):
+            raise OSError("Windows Job Object operation failed")
+
+    def close(self) -> None:
+        self.api.CloseHandle(self.handle)
+
+
 def execute(directory: Path) -> None:
     request = json.loads((directory / "request.json").read_text(encoding="utf-8"))
     validate_request(request)
@@ -189,6 +220,7 @@ def execute(directory: Path) -> None:
         "--output-dir",
         str(directory / "results"),
     ]
+    tree: ProcessTree | None = None
     try:
         with (directory / "run.log").open("w", encoding="utf-8") as log:
             process = subprocess.Popen(
@@ -198,22 +230,12 @@ def execute(directory: Path) -> None:
                 stdout=log,
                 stderr=subprocess.STDOUT,
             )
+            tree = ProcessTree(process)
             status["child_pid"] = process.pid
             started = time.monotonic()
             while process.poll() is None:
                 if time.monotonic() - started > request["timeout_seconds"]:
-                    stopped = subprocess.run(
-                        ["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                        cwd=ROOT,
-                        stdout=log,
-                        stderr=subprocess.STDOUT,
-                        check=False,
-                    )
-                    if stopped.returncode and process.poll() is None:
-                        try:
-                            process.wait(timeout=1)
-                        except subprocess.TimeoutExpired as error:
-                            raise RuntimeError("Unable to stop GPU process tree") from error
+                    tree.terminate()
                     process.wait(timeout=30)
                     status["state"] = "timed_out"
                     break
@@ -225,10 +247,14 @@ def execute(directory: Path) -> None:
                     exit_code=process.returncode,
                 )
     except Exception as error:
+        if tree is not None:
+            tree.terminate()
         status.update(state="failed", error=str(error))
     finally:
         status.update(finished_at=timestamp(), updated_at=timestamp())
         write_json(directory / "status.json", status)
+        if tree is not None:
+            tree.close()
         lock.close()
 
 
