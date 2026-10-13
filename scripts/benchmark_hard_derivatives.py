@@ -24,8 +24,8 @@ from pinnstorch.runner.execution import SolverExecution  # noqa: E402
 from pinnstorch.runner.factory import SolverFactory  # noqa: E402
 from pinnstorch.runner.problem import load_problem  # noqa: E402
 from pinnstorch.runner.settings import TaskSettings  # noqa: E402
-from pinnstorch.training.constraints import HardBoxInitial  # noqa: E402
 from pinnstorch.training.hard_derivatives import HardBoxDerivatives  # noqa: E402
+from pinnstorch.training.hard_execution import hard_recipe  # noqa: E402
 
 
 def measure(operation: Callable[[], torch.Tensor]) -> dict[str, float | int]:
@@ -75,9 +75,7 @@ def main() -> None:
         logging.getLogger(__name__),
     )._load(checkpoint, False)
     model = objects.model.to("cuda").train()
-    transform = model.output_fn
-    if not isinstance(transform, HardBoxInitial):
-        raise ValueError("Checkpoint must use HardBoxInitial")
+    transform = hard_recipe(model.output_fn)
     generator = torch.Generator(device="cuda").manual_seed(20261013)
     rows: list[dict[str, object]] = []
     for batch_size in (128, 1024, 2048, 17):

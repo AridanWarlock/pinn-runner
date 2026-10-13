@@ -1,5 +1,6 @@
 """Public train/refine/checkpoint/predict roundtrip for the hard derivative backend."""
 
+import os
 from pathlib import Path
 
 import numpy as np
@@ -19,7 +20,7 @@ def test_product_rule_train_refine_and_eager_prediction(tmp_path: Path) -> None:
     for backend in ("eager", "product_rule"):
         directory = tmp_path / backend
         directory.mkdir()
-        config = case.config("cpu", 3, 19)
+        config = case.config(os.environ.get("PINN_TEST_DEVICE", "cpu"), 3, 19)
         config["training"].update(
             constraints="hard_initial_dirichlet",
             hard_execution=backend,
@@ -43,5 +44,15 @@ def test_product_rule_train_refine_and_eager_prediction(tmp_path: Path) -> None:
         result = launch(directory, directory / "predicted", "predict", str(checkpoint))
         assert result.returncode == 0, result.stdout + result.stderr
         assert np.isfinite(loadmat(directory / "predicted/predictions.mat")["u"]).all()
+        if backend == "product_rule":
+            # Fine-tune a product-rule checkpoint through the eager adapter.
+            result = launch(directory, directory / "retrained", "retrain", str(checkpoint))
+            assert result.returncode == 0, result.stdout + result.stderr
+            refined = torch.load(
+                directory / "retrained/checkpoints/final.ckpt", map_location="cpu"
+            )
+            assert refined["hyper_parameters"]["hard_execution"] == "eager"
+            assert all(torch.isfinite(value).all() for value in refined["state_dict"].values())
+
     for name in states[0]:
         torch.testing.assert_close(states[0][name], states[1][name], rtol=2e-4, atol=2e-5)

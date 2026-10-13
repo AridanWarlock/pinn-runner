@@ -11,6 +11,7 @@ from pinnstorch.runner.factory import SolverFactory
 from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import TaskSettings
 from pinnstorch.training.constraints import HardBoxInitial
+from pinnstorch.training.hard_execution import FusedPredictHard
 
 
 def initial(spatial: list[torch.Tensor], time: torch.Tensor) -> TensorOutputs:
@@ -115,7 +116,7 @@ def test_fused_predict_preserves_values_and_training_graph(
         return {"u": field}
 
     eager = HardBoxInitial(bounds, (2, 5), shifted_initial)
-    candidate = HardBoxInitial(bounds, (2, 5), shifted_initial, fused_predict=True)
+    candidate = FusedPredictHard(eager)
     weight = torch.tensor(0.7, dtype=dtype, requires_grad=True)
     outputs = {"u": weight * torch.sin(sum(coordinates) + time)}
     reference = eager(outputs, *coordinates, time)["u"]

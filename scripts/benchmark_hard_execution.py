@@ -9,7 +9,6 @@ import logging
 import shutil
 import sys
 import time
-from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +25,7 @@ from pinnstorch.runner.execution import SolverExecution  # noqa: E402
 from pinnstorch.runner.factory import SolverFactory  # noqa: E402
 from pinnstorch.runner.problem import load_problem  # noqa: E402
 from pinnstorch.runner.settings import TaskSettings  # noqa: E402
-from pinnstorch.training.constraints import HardBoxInitial  # noqa: E402
+from pinnstorch.training.hard_execution import hard_executor, hard_recipe  # noqa: E402
 
 
 def main() -> None:
@@ -57,9 +56,7 @@ def main() -> None:
         logging.getLogger(__name__),
     )._load(checkpoint, False)
     model = objects.model.to("cuda").eval()
-    transform = model.output_fn
-    if not isinstance(transform, HardBoxInitial):
-        raise ValueError("Checkpoint must use HardBoxInitial")
+    transform = hard_recipe(model.output_fn)
     axes = [torch.linspace(*interval, 17, device="cuda") for interval in transform.bounds] + [
         torch.linspace(*transform.time_interval, 31, device="cuda")
     ]
@@ -75,7 +72,9 @@ def main() -> None:
         for repetition in range(0 if args.skip_warm else 3):
             for batch_size in [128, 2048]:
                 for enabled in [False, True] if repetition % 2 == 0 else [True, False]:
-                    model.output_fn = replace(transform, fused_predict=enabled)
+                    model.output_fn = hard_executor(
+                        transform, "fused_predict" if enabled else "eager"
+                    )
                     torch.cuda.reset_peak_memory_stats()
                     metrics = prediction_speed(model, columns[:-1], columns[-1], batch_size)
                     rows.append(
@@ -91,7 +90,7 @@ def main() -> None:
             batch = [column[start : start + 2048] for column in columns]
             model.output_fn = transform
             eager = model.forward(batch[:-1], batch[-1])["u"]
-            model.output_fn = replace(transform, fused_predict=True)
+            model.output_fn = hard_executor(transform, "fused_predict")
             candidate = model.forward(batch[:-1], batch[-1])["u"]
             torch.testing.assert_close(candidate, eager, rtol=2e-6, atol=2e-6)
             max_difference = max(max_difference, float((candidate - eager).abs().max()))
@@ -102,7 +101,7 @@ def main() -> None:
         ]
         model.output_fn = transform
         eager = model.forward(random_columns[:-1], random_columns[-1])["u"]
-        model.output_fn = replace(transform, fused_predict=True)
+        model.output_fn = hard_executor(transform, "fused_predict")
         candidate = model.forward(random_columns[:-1], random_columns[-1])["u"]
         torch.testing.assert_close(candidate, eager, rtol=2e-6, atol=2e-6)
         random_difference = float((candidate - eager).abs().max())

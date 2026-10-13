@@ -542,3 +542,32 @@ Hyperparameters checkpoint записывают backend обучения. При
 Benchmark: `--constraints hard_initial_dirichlet --hard-execution product_rule`.
 Независимый PDE holdout всегда дифференцирует физическое поле обычным autograd,
 обходя training fast path. Аналитическое решение используется только для оценки.
+
+### Внутренний план ограничений
+
+`SolverFactory.constraints` — неизменяемый `ConstraintPlan`, разрешённый один раз
+до создания backend. Он содержит `kind`, `exact_initial`, `exact_faces`,
+`remaining_losses`, математический `recipe`, callable `output` и checkpoint
+`signature`. Soft сообщает отсутствие гарантированных IC/BC и оставляет
+initial/equations/boundaries loss. Текущий hard сообщает IC всех полей, нулевые
+Дирихле на всех гранях и только equations loss.
+
+Гарантия hard математически условна: `g|Γ=0` должно выполняться на всей границе.
+Текущая проверка совместимости проверяет значения на конфигурационной сетке,
+не доказывает тождество произвольной пользовательской функции между узлами.
+Углы/рёбра входят в эту проверку объединением масок граней; это не отдельные
+штрафы в hard loss. Совместимость производных классического решения в углах
+пока не проверяется.
+
+`HardBoxInitial` задаёт eager-рецепт `u=g+τBN`. `ProductRuleHard` и
+`FusedPredictHard` содержат этот же рецепт и выбираются в `hard_executor` один
+раз. В forward нет выбора по строке конфигурации. Предметная гарантия и
+checkpoint signature не зависят от execution adapter: predict/fine-tune могут
+переключать eager/product_rule/fused_predict, сохраняя физическую конструкцию.
+Optimizer state при этом не перепараметризуется.
+
+Это подготовка для расширения heat BC; новые условия, автоматический heat
+profile и hard default здесь не введены. PDE не определяется по имени функции.
+Неймана/Робина, ненулевые Дирихле, variable parameters и custom output transform
+для текущего hard явно отклоняются, без soft fallback. Для этих задач по-прежнему
+можно явно выбрать soft.

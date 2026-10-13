@@ -8,6 +8,7 @@ import torch
 from pinnstorch.api import Coordinates, Equation, TensorFields
 from pinnstorch.training.constraints import HardBoxInitial
 from pinnstorch.training.hard_derivatives import HardBoxDerivatives
+from pinnstorch.training.hard_execution import ProductRuleHard
 
 
 @pytest.mark.parametrize("dimension", [1, 2, 3])
@@ -70,8 +71,8 @@ def test_equation_dispatch_and_higher_order_fallback(order: int) -> None:
         return {"u": spatial[0].square().mul(weight)}
 
     eager = HardBoxInitial([(-2, 1)], (2, 5), initial)
-    prepared = HardBoxInitial(
-        [(-2, 1)], (2, 5), initial, product_rule=True, spatial_names=("radius",)
+    prepared = ProductRuleHard(
+        HardBoxInitial([(-2, 1)], (2, 5), initial, spatial_names=("radius",))
     )
     expected = Equation(eager(fields, x, t), coordinates)
     actual = Equation(prepared(fields, x, t), coordinates)
@@ -99,7 +100,7 @@ def test_constant_fields_and_fresh_graph_after_parameter_update() -> None:
         return {"u": torch.zeros_like(time)}
 
     eager = HardBoxInitial([(0, 1)], (2, 5), initial)
-    prepared = HardBoxInitial([(0, 1)], (2, 5), initial, product_rule=True)
+    prepared = ProductRuleHard(eager)
     for iteration in range(3):
         x = torch.tensor(
             [[0.0], [0.2 + 0.1 * iteration], [1.0]], dtype=torch.float64, requires_grad=True
