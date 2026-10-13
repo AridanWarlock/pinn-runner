@@ -4,6 +4,7 @@ title: Подтвердить комбинацию стратегий и обн�
 status: To Do
 assignee: []
 created_date: '2026-10-13 08:37'
+updated_date: '2026-10-13 09:38'
 labels:
   - acceptance
 milestone: m-0
@@ -32,3 +33,9 @@ ordinal: 14000
 - [ ] #3 Выполнены leave-one-out абляции; resolved standard версионирован и имеет control профиль
 - [ ] #4 Full CPU, Windows CUDA и численные gates пройдены до принятия defaults
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+TASK10 now includes five-seed paired heat3d hard/soft validation. This is partial evidence only:all-PDE5seed composition/leave-one-out and Adam->LBFGS dependency remain pending. Do not mark AC1/AC3 or change defaults.
+<!-- SECTION:NOTES:END -->
