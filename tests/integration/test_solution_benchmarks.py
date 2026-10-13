@@ -3,6 +3,7 @@
 import json
 import subprocess
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -12,10 +13,29 @@ import torch
 from benchmarks.cases import CASES
 from benchmarks.execution import fingerprint
 from benchmarks.metrics import quality_failures, regression_failures, solution_errors
+from benchmarks.policies import CartesianGrid, FixedQuality, TrainingBudget
+from benchmarks.variants import BenchmarkVariant, BoundaryWeight
 from pinnstorch.api import Coordinates, Equation
 from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import TaskSettings
 from scripts.benchmark_solutions import compare
+
+
+def test_variant_preserves_custom_grid_budget_and_acceptance() -> None:
+    case = replace(
+        CASES["heat2d"],
+        grid=CartesianGrid(space_points=(9, 21)),
+        budget=TrainingBudget(layers=(16, 16), learning_rate=0.002),
+        quality=FixedQuality(relative_l2=0.02),
+    )
+    variant = BenchmarkVariant(case.name, case.dimensions, base=case, adapter=BoundaryWeight(3))
+    config = variant.config("cpu", 100, 19)
+    assert config["domain"]["space"]["x"]["points"] == 9
+    assert config["network"]["hidden_layers"] == [16, 16]
+    assert config["training"]["optimizer"]["learning_rate"] == 0.002
+    metrics = dict(relative_l2=0.03, max_error=0, pde_rmse=0, initial_rmse=0, boundary_rmse=0)
+    assert len(quality_failures(variant, metrics)) == 1
+    assert not quality_failures(CASES["heat2d"], metrics)
 
 
 @pytest.mark.parametrize("name", list(CASES))

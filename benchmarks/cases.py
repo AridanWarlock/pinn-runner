@@ -10,6 +10,8 @@ from typing import Any, cast
 import numpy as np
 from numpy.typing import NDArray
 
+from .policies import CartesianGrid, FixedQuality, GridPolicy, QualityPolicy, TrainingBudget
+
 Array = NDArray[np.float64]
 PROBLEMS = Path(__file__).parent / "problems"
 
@@ -18,9 +20,9 @@ PROBLEMS = Path(__file__).parent / "problems"
 class BenchmarkCase(ABC):
     name: str
     dimensions: int
-    relative_l2_limit: float = 0.05
-    max_error_limit: float = 0.15
-    residual_rmse_limit: float = 0.1
+    grid: GridPolicy = CartesianGrid()
+    budget: TrainingBudget = TrainingBudget()
+    quality: QualityPolicy = FixedQuality()
 
     @property
     def source(self) -> Path:
@@ -35,40 +37,22 @@ class BenchmarkCase(ABC):
 
     def boundary_mask(self, spatial: dict[str, Array]) -> NDArray[np.bool_]:
         mask = np.zeros(len(next(iter(spatial.values()))), dtype=bool)
+        lower, upper = self.grid.spatial_bounds()
         for values in spatial.values():
-            mask |= np.isclose(values[:, 0], 0) | np.isclose(values[:, 0], 1)
+            mask |= np.isclose(values[:, 0], lower) | np.isclose(values[:, 0], upper)
         return mask
 
     def config(
         self, device: str, steps: int, seed: int, evaluating: bool = False
     ) -> dict[str, Any]:
-        space = {
-            axis: {
-                "interval": [0, 1],
-                "points": (17 if self.dimensions == 3 else 41)
-                if evaluating
-                else (8 if self.dimensions == 3 else 16),
-            }
-            for axis in ("x", "y", "z")[: self.dimensions]
-        }
-        boundaries = self.boundaries(tuple(space))
+        domain = self.grid.domain(self.dimensions, evaluating)
         return {
             "version": 1,
-            "domain": {
-                "space": space,
-                "time": {"interval": [0, 0.5], "points": 31 if evaluating else 11},
-            },
-            "network": {"hidden_layers": [32, 32, 32]},
-            "training": {
-                "steps": steps,
-                "epochs": steps,
-                "seed": seed,
-                "batch_size": 128 if not evaluating else 2048,
-                "optimizer": {"name": "adam", "learning_rate": 0.001},
-                "collocation": {"sampling": "lhs", "points": 1024},
-            },
+            "domain": domain,
+            "network": self.budget.network(),
+            "training": self.budget.training(steps, seed, evaluating),
             "validation": False,
-            "boundaries": boundaries,
+            "boundaries": self.boundaries(tuple(domain["space"])),
             "runtime": {
                 "device": device,
                 "precision": "32-true",
@@ -103,7 +87,7 @@ class AdvectionCase(BenchmarkCase):
         ]
 
     def boundary_mask(self, spatial: dict[str, Array]) -> NDArray[np.bool_]:
-        return np.isclose(spatial["x"][:, 0], 0)
+        return np.isclose(spatial["x"][:, 0], self.grid.spatial_bounds()[0])
 
 
 class BurgersCase(BenchmarkCase):
@@ -115,7 +99,7 @@ CASES: dict[str, BenchmarkCase] = {
     case.name: case
     for case in (
         HeatCase("heat2d", 2),
-        HeatCase("heat3d", 3),
+        HeatCase("heat3d", 3, grid=CartesianGrid((8, 17))),
         AdvectionCase("advection", 1),
         BurgersCase("burgers", 1),
     )

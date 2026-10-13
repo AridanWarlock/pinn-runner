@@ -73,6 +73,12 @@ class BenchmarkVariant(BenchmarkCase):
     base: BenchmarkCase = field(kw_only=True)
     adapter: TrainingAdapter = field(kw_only=True)
 
+    def __post_init__(self) -> None:
+        # Proxy metadata belongs to the base PDE, not to adapter defaults.
+        object.__setattr__(self, "grid", self.base.grid)
+        object.__setattr__(self, "budget", self.base.budget)
+        object.__setattr__(self, "quality", self.base.quality)
+
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
         return self.base.reference(spatial, time)
 

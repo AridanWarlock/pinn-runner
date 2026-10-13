@@ -32,18 +32,7 @@ def solution_errors(
 
 
 def quality_failures(case: BenchmarkCase, metrics: Mapping[str, float]) -> list[str]:
-    limits = {
-        "relative_l2": case.relative_l2_limit,
-        "max_error": case.max_error_limit,
-        "pde_rmse": case.residual_rmse_limit,
-        "initial_rmse": 0.05,
-        "boundary_rmse": 0.05,
-    }
-    return [
-        f"{name}={metrics[name]:.6g} exceeds {limit}"
-        for name, limit in limits.items()
-        if not math.isfinite(metrics[name]) or metrics[name] > limit
-    ]
+    return case.quality.failures(metrics)
 
 
 def regression_failures(current: Mapping[str, float], baseline: Mapping[str, float]) -> list[str]:
