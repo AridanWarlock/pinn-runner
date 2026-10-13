@@ -296,3 +296,13 @@ CPU283full+262fast/21excluded, Windows12tests. Defaults прежние; это �
 Generic3Dlifting expensive (26terms, warm152k predict795.6ms); оптимизация без
 смены математического смысла остаётся потенциальным следующим блоком. TASK-24
 прямой Нейман/Робин ещё не реализован. TASK-21 kernel profiling открыт.
+
+### 2026-10-13: общий lifting удешевлён
+
+TASK-25 завершена: shared geometry и termwise time difference без persistent
+кеша/detach/API change. Same-checkpoint CUDA residual+backward: −14–15%2D,
+−23%3D; forward −28–36%. Public full-grid3D warm795.6→509.46ms,qualityпрежнее.
+Отчёт [lifting-optimization.md](lifting-optimization.md). CPUfull283passed,
+CUDA12tests+reevaluation2existingcheckpoint passed. Длительное обучение не
+повторялось; новый train-run/time-to-quality выигрыш не измерен. Предложения
+persistentcache/explicitextension остаются нереализованными; TASK-24 ещёToDo.
