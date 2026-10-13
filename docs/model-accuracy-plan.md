@@ -284,3 +284,15 @@ end-to-end с подготовкой/compile/checkpoint/MAT. Сравниват�
 прежними до дальнейших проверок. Истинный time-to-quality и полный kernel
 profile ещё не измерены.
 [Математика, данные и ограничения](hard-derivative-experiments-2026-10-13.md).
+
+### 2026-10-13: совместимые ненулевые Дирихле
+
+TASK-22/23 завершены: ConstraintPlan, разделение math recipe/execution, boolean-sum
+lifting для full Dirichlet1D–3D, включая time-dependent traces. Отчёт и гарантии:
+[nonzero-dirichlet.md](nonzero-dirichlet.md). CUDA2D/3D,seed19,Adam3000+LB100:
+mode L2 .02123%/.09402%; независимый PDE RMSE .001752/.004594. Проверки
+CPU283full+262fast/21excluded, Windows12tests. Defaults прежние; это подтверждение
+новых BC на одном seed, не универсальный accuracy/performance default.
+Generic3Dlifting expensive (26terms, warm152k predict795.6ms); оптимизация без
+смены математического смысла остаётся потенциальным следующим блоком. TASK-24
+прямой Нейман/Робин ещё не реализован. TASK-21 kernel profiling открыт.

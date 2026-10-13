@@ -81,3 +81,60 @@ heat отдельно. На гранях мода нулевая, поэтому
 Relative L2 полного решения здесь зависит от большого background; поэтому
 оценивать вместе с absolute max error, PDE RMSE и отдельно ошибкой относительно
 нормы затухающей моды, а не делать вывод по одному проценту.
+
+## CUDA результат и проверки
+
+Revision `b46801c`, RTX4070Ti, Torch2.1.0+cu118, FP32/TF32 off. Оба case:
+seed19, 3000 Adam+100 внешних L-BFGS шагов, product_rule. Аналитика только при
+послеобучающей оценке; independent PDE holdout через полную AD физических полей,
+2048 случайных точек. Quality gates прежние, не ослаблялись. `mode_relative_l2`
+пока диагностическая метрика, отдельный автоматический порог на неё не вводился.
+
+| Case | Общий L2, % | Mode L2, % | Final L2, % | Max error | PDE RMSE | IC RMSE | BC RMSE |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 2D | 0.003327 | 0.02123 | 0.003607 | 0.0002675 | 0.001752 | 9.65e-8 | 2.44e-7 |
+| 3D | 0.007369 | 0.09402 | 0.008553 | 0.0009315 | 0.004594 | 6.52e-8 | 4.05e-7 |
+
+| Case | Train, s (cold runner) | Warm predict, ms | Points | Points/s (warm) | Cold predict, s | Peak allocated, MiB | LB closures |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 2D | 52.33 | 83.93 | 52111 | 620870 | 2.450 | 23.74 | 192 |
+| 3D | 133.62 | 795.60 | 152303 | 191433 | 3.206 | 27.39 | 202 |
+
+Warm timing: batch2048, inputs already on GPU, 3 warmup+7 measured passes,
+CUDA synchronize, median. Cold predict включает Python/runner/load/write MAT.
+Training — отдельный public runner subprocess, включая запуск/подготовку/fit и
+refinement; breakdown/counters/allocator reserved присутствуют в raw JSON.
+Суммарно два обучения ~186 s, не полная30trial матрица. Один seed не даёт оценки
+разброса или оснований для смены defaults. 1D проверена математическими тестами,
+численные CUDA обучающие benchmark в этом блоке — только 2D/3D.
+
+Общая face-based интерполяция дорогая: 3D background требует двух оценок lifting
+по26 слагаемых на forward. Сравнивать её скорость как прозрачное ускорение zero
+hard нельзя — это новый класс BC. Нулевые constant BC не вызывают lifting.
+Конечные BC RMSE отражают FP32, а не ненулевой boundary penalty. Будущая
+оптимизация может использовать известную smooth extension либо компиляцию
+shared traces, но нельзя считать произвольный face callback определённым
+внутри области и автоматически заменять им lifting.
+
+Полный CPU: **283 passed, 118.89s**, Ruff/format и strict mypy58. После уточнения
+диагностической benchmark метрики и identity-теста: быстрый **262 passed,
+21 e2e deselected**; профильные mathematics/reference **32 passed**, отдельный
+lifting **10 passed**. Первый full выявил2 ошибки старого теста: неизвестный
+case молча использовал Burgers formula, wall callback получал interior вместо
+face coordinates. Они исправлены; повторный full успешен.
+
+Windows `PINN_TEST_DEVICE=cuda`: lifting+publicroundtrip **12 passed,27.63s**.
+Шесть dim/dtype lifting случаев используют CUDA, четыре validation/identity
+случая CPU; два publicroundtrip выполняют CUDA train/refine/predict/fine-tune
+для zero и nonzero heat. Не называть все12 чистыми GPU-тестами.
+Проверены shifted1D–3D, FP32/float64, faces/nearfaces/edges/corners, первые/вторые
+производные всех осей и времени, loss gradients; несовместимые IC/traces и
+повторные faces отвергаются. Checkpoint physical identity не меняется от
+перестановки граней, меняется от другой совместимой wall function; смена executor
+проходит predict/fine-tune.
+
+Windows raw reports/checkpoints: `numerical-reports/dirichlet-001`, pytest log/xml
+`numerical-reports/dirichlet-cuda.*`. Environment dirty вызван старыми untracked
+pytest directories/installer; `git diff --exit-code HEAD -- run.py pinnstorch
+benchmarks scripts` подтвердил неизменность исходников. SSH завершён.
+[Полные сырые метрики](experiments/2026-10-13-nonzero-dirichlet.json).
