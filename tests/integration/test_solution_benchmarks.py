@@ -11,7 +11,7 @@ import pytest
 import torch
 
 from benchmarks.cases import CASES
-from benchmarks.execution import fingerprint
+from benchmarks.execution import fingerprint, validate_refinement
 from benchmarks.metrics import quality_failures, regression_failures, solution_errors
 from benchmarks.policies import CartesianGrid, FixedQuality, TrainingBudget
 from benchmarks.variants import (
@@ -24,6 +24,25 @@ from pinnstorch.api import Coordinates, Equation
 from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import TaskSettings
 from scripts.benchmark_solutions import compare
+
+
+def test_benchmark_rejects_wrong_backend_or_incomplete_refinement() -> None:
+    phase = dict(
+        kind="lbfgs", version=1, completed=True, device="cuda:0", metrics={"lbfgs_steps": 100}
+    )
+    validate_refinement({"refinement_state": phase}, 100, "cuda")
+    validate_refinement({}, 0, "cuda")
+    for change in (
+        {"device": "cpu"},
+        {"device": ""},
+        {"completed": False},
+        {"metrics": {"lbfgs_steps": 99}},
+        {"version": 0},
+    ):
+        with pytest.raises(RuntimeError, match="Refinement stage"):
+            validate_refinement({"refinement_state": {**phase, **change}}, 100, "cuda")
+    with pytest.raises(RuntimeError, match="Unexpected refinement"):
+        validate_refinement({"refinement_state": phase}, 0, "cuda")
 
 
 def test_variant_preserves_custom_grid_budget_and_acceptance() -> None:

@@ -131,6 +131,22 @@ def prepare_task(case: BenchmarkCase, directory: Path, device: str, steps: int, 
     return task
 
 
+def validate_refinement(checkpoint: dict[str, Any], steps: int, device: str) -> None:
+    phase = checkpoint.get("refinement_state") or {}
+    if steps == 0:
+        if phase:
+            raise RuntimeError("Unexpected refinement in Adam-only benchmark")
+        return
+    if (
+        phase.get("kind") != "lbfgs"
+        or phase.get("version") != 1
+        or phase.get("completed") is not True
+        or phase.get("metrics", {}).get("lbfgs_steps") != steps
+        or str(phase.get("device", "")).split(":")[0] != device
+    ):
+        raise RuntimeError("Refinement stage incomplete or executed on the wrong backend")
+
+
 def finish_trial(
     case: BenchmarkCase,
     directory: Path,
@@ -147,6 +163,8 @@ def finish_trial(
     state = torch.load(checkpoint, map_location="cpu")
     if state["global_step"] != steps:
         raise RuntimeError(f"Training performed {state['global_step']} steps, expected {steps}")
+    refinement = case.config(device, steps, seed)["training"].get("refinement", {})
+    validate_refinement(state, int(refinement.get("steps", 0)), device)
     (task / "config.yaml").write_text(
         yaml.safe_dump(case.config(device, steps, seed, evaluating=True)), encoding="utf-8"
     )
