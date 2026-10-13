@@ -273,3 +273,14 @@ end-to-end с подготовкой/compile/checkpoint/MAT. Сравниват�
 - https://github.com/triton-lang/triton-windows
 - https://docs.pytorch.org/tutorials/intermediate/jacobians_hessians.html
 - https://docs.pytorch.org/docs/main/notes/serialization.html
+
+## Hard derivative execution, 2026-10-13
+
+Добавлен opt-in product_rule с сохранением пользовательских PDE callbacks.
+Подтверждены30 CUDA heat2d/heat3d обучений: fixed-budget train −11.5%/−12.9%;
+дополнительный LBFGS в сопоставимом wall budget улучшил global/final/PDE
+ошибки во всех10 парах. По медиане heat3d final L2 0.317%→0.110%.
+При фиксированном числе шагов отдельные seed ухудшились; defaults остаются
+прежними до дальнейших проверок. Истинный time-to-quality и полный kernel
+profile ещё не измерены.
+[Математика, данные и ограничения](hard-derivative-experiments-2026-10-13.md).

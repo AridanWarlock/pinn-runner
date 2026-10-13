@@ -126,3 +126,9 @@ TASK-22 (контракт), TASK-23 (ненулевой Dirichlet), TASK-24 (Neu
 
 Полный heat-план: [hard-heat-plan.md](hard-heat-plan.md). API переключателя:
 [API.md](API.md). Обучение и fallback с градиентами — прежние.
+
+Уточнение backend-проверок:19 тестов выше запускались на Windows без
+PINN_TEST_DEVICE=cuda; hardware suite использовал CPU. Это не CUDA acceptance.
+Сам inference benchmark явно использовал CUDA. Явный CUDA acceptance и
+дальнейшая оптимизация производных описаны в
+[hard-derivative-experiments-2026-10-13.md](hard-derivative-experiments-2026-10-13.md).
