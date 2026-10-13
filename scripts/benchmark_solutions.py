@@ -25,26 +25,22 @@ from benchmarks.metrics import regression_failures  # noqa: E402
 
 
 def environment(device: str) -> dict[str, Any]:
-    if os.environ.get("PINN_PINNED_REVISION"):
-        return {
-            "revision": os.environ["PINN_PINNED_REVISION"],
-            "working_tree_dirty": False,
-            "torch": torch.__version__,
-            "cuda_runtime": torch.version.cuda,
-            "device": device,
-            "gpu": torch.cuda.get_device_name(0) if device == "cuda" else None,
-            "python": sys.version,
-            "platform": platform.platform(),
-        }
-    revision = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=False
-    )
-    dirty = subprocess.run(
-        ["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True, check=False
-    )
+    pinned = os.environ.get("PINN_PINNED_REVISION")
+    if pinned:
+        revision_value = pinned
+        working_tree_dirty = False
+    else:
+        revision = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=False
+        )
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True, check=False
+        )
+        revision_value = revision.stdout.strip()
+        working_tree_dirty = bool(dirty.stdout.strip())
     return {
-        "revision": revision.stdout.strip(),
-        "working_tree_dirty": bool(dirty.stdout.strip()),
+        "revision": revision_value,
+        "working_tree_dirty": working_tree_dirty,
         "python": sys.version,
         "platform": platform.platform(),
         "torch": torch.__version__,

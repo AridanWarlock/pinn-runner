@@ -202,13 +202,18 @@ def execute(directory: Path) -> None:
             started = time.monotonic()
             while process.poll() is None:
                 if time.monotonic() - started > request["timeout_seconds"]:
-                    subprocess.run(
+                    stopped = subprocess.run(
                         ["taskkill", "/PID", str(process.pid), "/T", "/F"],
                         cwd=ROOT,
                         stdout=log,
                         stderr=subprocess.STDOUT,
-                        check=True,
+                        check=False,
                     )
+                    if stopped.returncode and process.poll() is None:
+                        try:
+                            process.wait(timeout=1)
+                        except subprocess.TimeoutExpired as error:
+                            raise RuntimeError("Unable to stop GPU process tree") from error
                     process.wait(timeout=30)
                     status["state"] = "timed_out"
                     break
