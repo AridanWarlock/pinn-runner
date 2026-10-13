@@ -194,3 +194,17 @@ Predict и прогретая сеть измерены заново. Разни
 Windows-набор после CLI-исправления — 188 passed. После добавления таймеров на
 обеих машинах выполнены fast (172 passed, 17 deselected) и профильный набор
 численных бенчмарков (12 passed, включая e2e и повторную оценку без обучения).
+
+### Временная диагностика
+
+Каждый trial содержит temporal_metrics (RMSE, L2, max, boundary/interior RMSE
+на каждом времени) и diagnostics: worst_time_l2/worst_time, undefined_layers,
+pde_time_bins, holdout_seed/points/version. Нулевой reference norm обозначается
+null и учитывается в undefined_layers, без искусственного epsilon.
+
+PDE residual агрегируется по 10 равным временным интервалам на прежних 2048
+holdout-точках seed 20261013. Интервалы слева включительные и справа исключительные;
+конечное время входит в последний. Пустой bin имеет points=0 и null ошибки.
+Это диагностические поля, пока не новые quality gates. Они не участвуют в loss,
+не меняют веса и не меняют training fingerprint. --measure-existing позволяет
+получить их для прежних checkpoint без повторного обучения.

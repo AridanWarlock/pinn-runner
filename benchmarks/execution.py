@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,7 @@ from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import TaskSettings
 
 from .cases import Array, BenchmarkCase
+from .diagnostics import residual_time_bins, worst_time_error
 from .metrics import quality_failures, solution_errors, temporal_errors
 from .performance import prediction_speed
 
@@ -71,9 +73,16 @@ def launch(input_dir: Path, output_dir: Path, log: Path, checkpoint: Path | None
     return time.perf_counter() - started
 
 
+@dataclass(frozen=True)
+class CheckpointEvaluation:
+    residual_rmse: float
+    residual_bins: list[dict[str, float | int | None]]
+    performance: dict[str, float | int]
+
+
 def evaluate_checkpoint(
     case: BenchmarkCase, input_dir: Path, output_dir: Path, checkpoint: Path, device: str
-) -> tuple[float, dict[str, float | int]]:
+) -> CheckpointEvaluation:
     settings = TaskSettings.load(input_dir / "config.yaml")
     problem = load_problem(input_dir / "functions.py")
     factory = SolverFactory(settings, problem, output_dir, input_dir)
@@ -84,7 +93,8 @@ def evaluate_checkpoint(
     model.to(device).eval()
     generator = np.random.default_rng(20261013)
     points = generator.uniform(0.0, 1.0, (2048, case.dimensions + 1))
-    points[:, -1] *= 0.5
+    lower, upper = settings.domain.time.interval
+    points[:, -1] = lower + points[:, -1] * (upper - lower)
     columns = [
         torch.tensor(points[:, i : i + 1], dtype=torch.float32, device=device, requires_grad=True)
         for i in range(points.shape[1])
@@ -93,6 +103,9 @@ def evaluate_checkpoint(
         values = factory.adapter.residuals(model(columns[:-1], columns[-1]), *columns)
         residual = torch.cat([values[name] for name in problem.equations], dim=1)
         error = float(residual.detach().square().mean().sqrt().cpu())
+    bins = residual_time_bins(
+        points[:, -1:], residual.detach().cpu().numpy().astype(np.float64), (lower, upper)
+    )
     del values, residual, columns
     spatial, times, _ = objects.mesh.flatten_mesh(None)
     features = [
@@ -100,8 +113,10 @@ def evaluate_checkpoint(
         for i in range(spatial.shape[1])
     ]
     clock = torch.tensor(times.copy(), dtype=torch.float32, device=device)
-    return error, prediction_speed(
-        model, features, clock, settings.training.batch_size or len(clock)
+    return CheckpointEvaluation(
+        error,
+        bins,
+        prediction_speed(model, features, clock, settings.training.batch_size or len(clock)),
     )
 
 
@@ -144,9 +159,10 @@ def finish_trial(
     }
     values: Array = np.asarray(saved["u"], dtype=np.float64)
     errors = solution_errors(case, spatial, np.asarray(saved["t"], dtype=np.float64), values)
-    errors["pde_rmse"], performance = evaluate_checkpoint(
-        case, task, directory, checkpoint, device
-    )
+    evaluation = evaluate_checkpoint(case, task, directory, checkpoint, device)
+    errors["pde_rmse"] = evaluation.residual_rmse
+    performance = evaluation.performance
+    temporal = temporal_errors(case, spatial, np.asarray(saved["t"], dtype=np.float64), values)
     if not all(math.isfinite(value) for value in errors.values()):
         raise ValueError("Nonfinite benchmark metrics")
     performance.update(
@@ -161,9 +177,14 @@ def finish_trial(
         "steps": steps,
         "fingerprint": fingerprint(case, device, steps, seed),
         "metrics": errors,
-        "temporal_metrics": temporal_errors(
-            case, spatial, np.asarray(saved["t"], dtype=np.float64), values
-        ),
+        "temporal_metrics": temporal,
+        "diagnostics": {
+            **worst_time_error(temporal),
+            "pde_time_bins": evaluation.residual_bins,
+            "holdout_seed": 20261013,
+            "holdout_points": 2048,
+            "version": 1,
+        },
         "training_seconds": duration,
         "performance": performance,
         "quality_failures": [] if smoke else quality_failures(case, errors),
