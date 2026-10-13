@@ -404,3 +404,28 @@ reload_dataloaders_every_n_epochs=1; фиксированный режим эт�
 fine-tune, не полным resume optimizer/dataloader position. Validation не может
 обновлять точки. Benchmark flags: --resample-every-epochs 1 и
 --collocation-points 4096 для раздельного контроля более плотной fixed выборки.
+
+### Точные IC и нулевые границы прямоугольника
+
+training.constraints: hard_initial_dirichlet включает преобразование
+u = g(x) + tau * B(x) * N(x,t), где g задано Problem.initial, tau — нормированное
+время, B — произведение 4*xi*(1-xi) для нормированных пространственных координат.
+Это использует только начальное условие, не аналитическое решение во времени.
+IC и BC исключаются из train loss: остаётся PDE. Их качество всё равно оценивается.
+
+Поддержаны полные homogeneous constant Dirichlet faces для всех fields,
+совместимое IC, без variable parameters и пользовательского Problem.transform.
+Neumann/Robin, неполные границы и другой network_fields отклоняются. Совместимость
+IC проверяется на сетке; это не доказательство для произвольного Python callback.
+Для математической гарантии g должна быть нулевой на всей непрерывной границе.
+Из-за FP32 тригонометрии на faces возможен машинный остаток; tolerance 1e-6.
+
+Checkpoint фиксирует constraint kind и SHA функций: predict/fine-tune с другим
+преобразованием отклоняется. Soft по умолчанию сохраняет прежний forward.
+Hard transform не требует autograd при predict, но сохраняет производные при train.
+Benchmark flag: --constraints hard_initial_dirichlet.
+
+CUDA runner записывает training.performance.json с peak_allocated_bytes и
+peak_reserved_bytes PyTorch allocator, от сброса статистики перед fit до его конца.
+Это не вся память GPU/драйвера. Benchmark переносит эти поля в performance.
+Для старых checkpoint без профиля поле отсутствует — память не считается измеренной.

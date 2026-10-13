@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import asdict, dataclass
 from functools import partial
 from pathlib import Path
 
 import lightning as L
+import numpy as np
 import torch
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import CSVLogger
@@ -21,6 +23,7 @@ from pinnstorch.data import (
 )
 from pinnstorch.data.sampler.sampler_base import SamplerBase
 from pinnstorch.models import FCN, PINNModule
+from pinnstorch.training.constraints import HardBoxInitial
 from pinnstorch.training.sampling import ResampledLHS
 
 from .coefficients import CoefficientBank
@@ -56,6 +59,12 @@ class SolverFactory:
         self.coefficient_signature = bank.signature(source)
         self.adapter = ProblemAdapter(problem, settings.domain, bank)
         self._validate_boundaries()
+        self._validate_constraints()
+        self.constraint_signature = (
+            hashlib.sha256((directory / "functions.py").read_bytes()).hexdigest()
+            if settings.training.constraints != "soft"
+            else ""
+        )
 
     def _validate_boundaries(self) -> None:
         for boundary in self.settings.boundaries:
@@ -74,6 +83,42 @@ class SolverFactory:
                 and boundary.value_function not in self.problem.boundary_values
             ):
                 raise ValueError(f"Unknown boundary value function '{boundary.value_function}'")
+
+    def _validate_constraints(self) -> None:
+        if self.settings.training.constraints == "soft":
+            return
+        if self.problem.transform is not None or tuple(self.problem.outputs) != tuple(
+            self.problem.fields
+        ):
+            raise ValueError("Hard constraints do not support custom transforms/network fields")
+        if self.settings.domain.parameters:
+            raise ValueError("Hard constraints with variable parameters are not yet supported")
+        required = {
+            (field, axis, side)
+            for field in self.problem.fields
+            for axis in self.settings.domain.space
+            for side in ("lower", "upper")
+        }
+        provided: set[tuple[str, str, str]] = set()
+        for boundary in self.settings.boundaries:
+            if (
+                boundary.kind != "dirichlet"
+                or boundary.value != 0
+                or boundary.value_function is not None
+            ):
+                raise ValueError("Hard constraints require homogeneous constant Dirichlet faces")
+            sides = ("lower", "upper") if boundary.side == "both" else (boundary.side,)
+            provided.update((boundary.field, boundary.axis, side) for side in sides)
+        if provided != required:
+            raise ValueError("Hard constraints require all faces for every physical field")
+        grid = self.settings.domain.grid()
+        mask = np.zeros(len(grid.spatial[0]), dtype=bool)
+        for index, axis in enumerate(self.settings.domain.space.values()):
+            column = grid.spatial[index][:, 0]
+            mask |= np.isclose(column, axis.interval[0]) | np.isclose(column, axis.interval[1])
+        values = self.adapter.initial(np.column_stack([column[:, 0] for column in grid.spatial]))
+        if any(not np.allclose(value[mask], 0, atol=1e-6, rtol=0) for value in values.values()):
+            raise ValueError("Initial values incompatible with homogeneous Dirichlet faces")
 
     def build(self, predicting: bool) -> ExecutionObjects:
         seed = self.settings.training.seed
@@ -98,6 +143,8 @@ class SolverFactory:
         return ExecutionObjects(mesh, data, model, trainer, checkpoint)
 
     def _training_datasets(self, mesh: PointCloud) -> tuple[list[str], list[SamplerBase]]:
+        if self.settings.training.constraints != "soft":
+            return ["equations"], [self._sampler(mesh, self.settings.training.collocation)]
         names = ["initial", "equations"]
         datasets: list[SamplerBase] = [
             InitialCondition(
@@ -161,10 +208,19 @@ class SolverFactory:
         net = FCN(layers, mesh.lb, mesh.ub, self.problem.outputs)
         optimizer = settings.training.optimizer
         optimizer_class = torch.optim.AdamW if optimizer.name == "adamw" else torch.optim.Adam
+        output = self.adapter.transform if self.problem.transform else None
+        if settings.training.constraints != "soft":
+            output = HardBoxInitial(
+                [axis.interval for axis in settings.domain.space.values()],
+                settings.domain.time.interval,
+                self.adapter.initial_tensors,
+            )
         return PINNModule(
             net,
             self.adapter.residuals,
-            output_fn=self.adapter.transform if self.problem.transform else None,
+            output_fn=output,
+            constraint_kind=settings.training.constraints,
+            constraint_signature=self.constraint_signature,
             optimizer=partial(
                 optimizer_class, lr=optimizer.learning_rate, weight_decay=optimizer.weight_decay
             ),

@@ -32,7 +32,16 @@ class SolverExecution:
             self._load(checkpoint, allow_extrapolation=False)
         self.log.info("Starting training!")
         objects = self.objects
+        if self.settings.runtime.device == "cuda":
+            torch.cuda.reset_peak_memory_stats()
         objects.trainer.fit(objects.model, datamodule=objects.data)
+        if self.settings.runtime.device == "cuda":
+            self.artifacts.save_training_performance(
+                {
+                    "peak_allocated_bytes": torch.cuda.max_memory_allocated(),
+                    "peak_reserved_bytes": torch.cuda.max_memory_reserved(),
+                }
+            )
         objects.trainer.save_checkpoint(str(self.artifacts.final_checkpoint))
         if self.settings.validation is not None:
             self.log.info("Starting validation!")
@@ -56,6 +65,14 @@ class SolverExecution:
 
     def _load(self, path: Path, allow_extrapolation: bool) -> InputBounds:
         checkpoint = torch.load(path, map_location="cpu")
+        constraint = checkpoint.get("hyper_parameters", {}).get("constraint_kind", "soft")
+        saved_signature = checkpoint.get("hyper_parameters", {}).get("constraint_signature", "")
+        if saved_signature != self.objects.model.hparams.get("constraint_signature", ""):
+            raise ValueError("Checkpoint hard constraint definition differs from task")
+        if constraint != self.settings.training.constraints:
+            raise ValueError(
+                "Checkpoint constraint transform differs from task; preserve physical fields"
+            )
         signature = checkpoint.get("hyper_parameters", {}).get("coefficient_signature") or {}
         current = self.objects.model.hparams.get("coefficient_signature") or {}
         if signature != current:

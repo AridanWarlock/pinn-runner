@@ -233,6 +233,7 @@ class Training:
     collocation: Sampling
     loss: LossSettings = LossSettings()
     schedule: ScheduleSettings = ScheduleSettings()
+    constraints: str = "soft"
 
     @classmethod
     def read(cls, reader: Reader) -> Training:
@@ -246,6 +247,7 @@ class Training:
             "collocation",
             "loss",
             "schedule",
+            "constraints",
         )
         if (
             ScheduleSettings.read(reader.section("schedule")).kind != "constant"
@@ -265,6 +267,7 @@ class Training:
             Sampling.read(reader.section("collocation")),
             LossSettings.read(reader.section("loss")),
             ScheduleSettings.read(reader.section("schedule")),
+            reader.choice("constraints", "soft", ("soft", "hard_initial_dirichlet")),
         )
 
 

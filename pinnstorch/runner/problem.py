@@ -118,6 +118,11 @@ class ProblemAdapter:
                 raise ValueError(f"Problem callback does not provide field '{name}'")
             self._column(fields[name], time, name)
 
+    def initial_tensors(self, columns: list[torch.Tensor], time: torch.Tensor) -> TensorFields:
+        values = self.problem.initial(self.context(columns, time))
+        self._validate_fields(values, time)
+        return dict(values)
+
     def initial(self, spatial: FloatArray) -> ArrayOutputs:
         tensor = torch.as_tensor(spatial, dtype=torch.float32)
         columns = [tensor[:, i : i + 1] for i in range(tensor.shape[1])]

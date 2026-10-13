@@ -26,6 +26,7 @@ from benchmarks.variants import (  # noqa: E402
     BenchmarkVariant,
     BoundaryWeight,
     CollocationRefresh,
+    Constraints,
     RateDecay,
     TrainingComposition,
 )
@@ -143,6 +144,9 @@ def arguments() -> tuple[argparse.Namespace, int]:
     parser.add_argument("--lr-final-ratio", type=float, default=1.0)
     parser.add_argument("--resample-every-epochs", type=int, default=0)
     parser.add_argument("--collocation-points", type=int, default=1024)
+    parser.add_argument(
+        "--constraints", choices=("soft", "hard_initial_dirichlet"), default="soft"
+    )
     args = parser.parse_args()
     if args.resample_every_epochs < 0 or args.collocation_points < 1:
         parser.error("Sampling counts must be positive; refresh interval nonnegative")
@@ -189,6 +193,7 @@ def main() -> int:
                     BoundaryWeight(args.boundary_weight, args.gradient_norm_every),
                     RateDecay(args.lr_final_ratio),
                     CollocationRefresh(args.resample_every_epochs, args.collocation_points),
+                    Constraints(args.constraints),
                 )
             ),
         )

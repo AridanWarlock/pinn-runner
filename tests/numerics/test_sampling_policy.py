@@ -1,5 +1,7 @@
 """Refresh must preserve LHS coverage, random isolation and checkpoint data."""
 
+from pathlib import Path
+
 import numpy as np
 import torch
 
@@ -56,3 +58,24 @@ def test_refresh_cadence_and_datamodule_roundtrip() -> None:
             first.time_domain_sampled, second.time_domain_sampled, rtol=0, atol=0
         )
     assert first.last_sampling_epoch == 4
+
+
+def test_refresh_does_not_change_initial_or_boundary_targets(tmp_path: Path) -> None:
+    from benchmarks.cases import CASES
+    from pinnstorch.runner.factory import SolverFactory
+    from pinnstorch.runner.problem import load_problem
+    from pinnstorch.runner.settings import TaskSettings
+
+    case = CASES["advection"]
+    config = case.config("cpu", 60, 19)
+    config["training"]["collocation"]["resample_every_epochs"] = 1
+    objects = SolverFactory(TaskSettings.read(config), load_problem(case.source), tmp_path).build(
+        False
+    )
+    initial, _, boundary = objects.data.train_datasets
+    initial_time = initial.time_domain_sampled.clone()
+    targets = [value.clone() for value in boundary.solution_sampled]
+    objects.data.refresh_collocation(1)
+    torch.testing.assert_close(initial.time_domain_sampled, initial_time, rtol=0, atol=0)
+    for observed, expected in zip(boundary.solution_sampled, targets):
+        torch.testing.assert_close(observed, expected, rtol=0, atol=0)

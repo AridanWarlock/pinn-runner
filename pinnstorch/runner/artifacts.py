@@ -38,6 +38,9 @@ class ArtifactWriter:
             "coefficients.json", {"signatures": dict(signature), "interpolation": "multilinear"}
         )
 
+    def save_training_performance(self, values: Mapping[str, int]) -> None:
+        self._json("training.performance.json", values)
+
     def save_training_predictions(self, predictions: TensorOutputs) -> None:
         if self.settings.runtime.save_training_predictions:
             with (self.directory / "predictions.pkl").open("wb") as stream:

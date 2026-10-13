@@ -43,6 +43,8 @@ class PINNModule(LightningModule):
         coefficient_signature: dict[str, str] | None = None,
         loss_settings: dict[str, str | float | int] | None = None,
         rate_settings: dict[str, str | float | int] | None = None,
+        constraint_kind: str = "soft",
+        constraint_signature: str = "",
     ) -> None:
         super().__init__()
         if loss_fn not in ("mse", "sse"):
@@ -140,8 +142,11 @@ class PINNModule(LightningModule):
 
     def predict_step(self, batch: SamplerBatch, batch_idx: int) -> TensorOutputs:
         spatial, time, _ = batch
-        with torch.set_grad_enabled(self.output_fn is not None):
-            spatial, time = set_requires_grad(spatial, time, self.output_fn is not None)
+        coordinate_grad = self.output_fn is not None and bool(
+            getattr(self.output_fn, "requires_coordinate_grad", True)
+        )
+        with torch.set_grad_enabled(coordinate_grad):
+            spatial, time = set_requires_grad(spatial, time, coordinate_grad)
             return self.forward(spatial, time)
 
     def configure_optimizers(self) -> OptimizerLRSchedulerConfig:

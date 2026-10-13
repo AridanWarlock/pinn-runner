@@ -171,11 +171,15 @@ def finish_trial(
         prediction_seconds=prediction_duration,
         prediction_points_per_second=values.size / prediction_duration,
     )
+    memory_file = checkpoint.parent.parent / "training.performance.json"
+    if memory_file.exists():
+        performance.update(json.loads(memory_file.read_text(encoding="utf-8")))
     result: dict[str, Any] = {
         "case": case.name,
         "seed": seed,
         "steps": steps,
         "fingerprint": fingerprint(case, device, steps, seed),
+        "constraint_kind": state.get("hyper_parameters", {}).get("constraint_kind", "soft"),
         "sampling_recipe": {
             **case.config(device, steps, seed)["training"]["collocation"],
             "version": 1,

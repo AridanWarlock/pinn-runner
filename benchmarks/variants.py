@@ -51,6 +51,15 @@ class CollocationRefresh:
 
 
 @dataclass(frozen=True)
+class Constraints:
+    kind: str = "soft"
+
+    def apply(self, config: dict[str, Any]) -> None:
+        if self.kind != "soft":
+            config["training"]["constraints"] = self.kind
+
+
+@dataclass(frozen=True)
 class TrainingComposition:
     adapters: tuple[TrainingAdapter, ...]
 
