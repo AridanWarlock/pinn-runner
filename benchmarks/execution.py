@@ -176,6 +176,10 @@ def finish_trial(
         "seed": seed,
         "steps": steps,
         "fingerprint": fingerprint(case, device, steps, seed),
+        "sampling_recipe": {
+            **case.config(device, steps, seed)["training"]["collocation"],
+            "version": 1,
+        },
         "schedule_recipe": state.get("hyper_parameters", {}).get("rate_settings")
         or {"kind": "constant"},
         "training_recipe": state.get("hyper_parameters", {}).get("loss_settings")

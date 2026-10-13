@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pinnstorch.contracts import LossAccumulator, SamplerBatch, TensorOutputs
+from pinnstorch.training.sampling import SamplingPolicy
 
 from ..mesh.mesh import MeshBase
 from .sampler_base import SamplerBase
@@ -17,8 +18,11 @@ class MeshSampler(SamplerBase):
         solution: list[str] | None = None,
         collection_points: list[str] | None = None,
         use_lhs: bool = True,
+        sampling_policy: SamplingPolicy | None = None,
     ) -> None:
         super().__init__()
+        self.sampling_policy = sampling_policy
+        self.last_sampling_epoch = 0
         self.collection_points_names = collection_points or []
         if solution:
             if idx_t is not None:
@@ -29,6 +33,17 @@ class MeshSampler(SamplerBase):
         else:
             spatial, time = mesh.collection_points(num_sample, use_lhs)
             self.store(spatial, time, {})
+
+    def refresh(self, epoch: int) -> None:
+        policy = self.sampling_policy
+        if (
+            policy is not None
+            and epoch > self.last_sampling_epoch
+            and epoch % policy.every_epochs == 0
+        ):
+            points = policy.points(epoch)
+            self.store(points[:, :-1], points[:, -1:], {})
+            self.last_sampling_epoch = epoch
 
     def _loss_fn(
         self, inputs: SamplerBatch, loss: LossAccumulator

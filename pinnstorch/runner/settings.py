@@ -147,17 +147,21 @@ class Domain:
 
 @dataclass(frozen=True)
 class Sampling:
+    resample_every_epochs: int = 0
     sampling: Literal["grid", "lhs"] = "grid"
     points: int | None = None
 
     @classmethod
     def read(cls, reader: Reader) -> Sampling:
-        reader.only("sampling", "points")
+        reader.only("sampling", "points", "resample_every_epochs")
         kind = cast(Literal["grid", "lhs"], reader.choice("sampling", "grid", ("grid", "lhs")))
         points = reader.integer("points", None)
         if (kind == "lhs") != (points is not None):
             raise ValueError(f"{reader.path}: lhs requires points; grid does not accept points")
-        return cls(kind, points)
+        every = reader.integer("resample_every_epochs", 0, 0)
+        if every is None or (every and kind != "lhs"):
+            raise ValueError("resampling requires lhs and a nonnegative interval")
+        return cls(every, kind, points)
 
 
 @dataclass(frozen=True)

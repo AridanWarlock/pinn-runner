@@ -22,7 +22,13 @@ sys.path.insert(0, str(ROOT))
 from benchmarks.cases import CASES  # noqa: E402
 from benchmarks.execution import fingerprint, measure_existing, run_trial  # noqa: E402
 from benchmarks.metrics import regression_failures  # noqa: E402
-from benchmarks.variants import BenchmarkVariant, BoundaryWeight, RateDecay, TrainingComposition  # noqa: E402
+from benchmarks.variants import (  # noqa: E402
+    BenchmarkVariant,
+    BoundaryWeight,
+    CollocationRefresh,
+    RateDecay,
+    TrainingComposition,
+)
 from pinnstorch.runner.settings import LossSettings, Reader, ScheduleSettings  # noqa: E402
 
 
@@ -135,7 +141,11 @@ def arguments() -> tuple[argparse.Namespace, int]:
     parser.add_argument("--boundary-weight", type=float, default=1.0)
     parser.add_argument("--gradient-norm-every", type=int, default=0)
     parser.add_argument("--lr-final-ratio", type=float, default=1.0)
+    parser.add_argument("--resample-every-epochs", type=int, default=0)
+    parser.add_argument("--collocation-points", type=int, default=1024)
     args = parser.parse_args()
+    if args.resample_every_epochs < 0 or args.collocation_points < 1:
+        parser.error("Sampling counts must be positive; refresh interval nonnegative")
     ScheduleSettings.read(
         Reader({"kind": "exponential", "final_ratio": args.lr_final_ratio}, "experiment.schedule")
     )
@@ -178,6 +188,7 @@ def main() -> int:
                 (
                     BoundaryWeight(args.boundary_weight, args.gradient_norm_every),
                     RateDecay(args.lr_final_ratio),
+                    CollocationRefresh(args.resample_every_epochs, args.collocation_points),
                 )
             ),
         )

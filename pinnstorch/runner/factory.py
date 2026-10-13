@@ -21,6 +21,7 @@ from pinnstorch.data import (
 )
 from pinnstorch.data.sampler.sampler_base import SamplerBase
 from pinnstorch.models import FCN, PINNModule
+from pinnstorch.training.sampling import ResampledLHS
 
 from .coefficients import CoefficientBank
 from .problem import ProblemAdapter
@@ -127,11 +128,27 @@ class SolverFactory:
         return names, datasets
 
     def _sampler(self, mesh: PointCloud, sampling: Sampling) -> MeshSampler:
+        policy = None
+        if sampling.resample_every_epochs:
+            if self.settings.training.seed is None or sampling.points is None:
+                raise ValueError(
+                    "Resampling requires explicit training.seed and collocation.points"
+                )
+            if sampling is self.settings.validation:
+                raise ValueError("Validation sampling cannot refresh; keep holdout fixed")
+            policy = ResampledLHS(
+                sampling.points,
+                mesh.lb,
+                mesh.ub,
+                self.settings.training.seed,
+                sampling.resample_every_epochs,
+            )
         return MeshSampler(
             mesh,
             collection_points=list(self.problem.equations),
             use_lhs=sampling.sampling == "lhs",
             num_sample=sampling.points,
+            sampling_policy=policy,
         )
 
     def _model(self, mesh: PointCloud) -> PINNModule:
@@ -185,6 +202,9 @@ class SolverFactory:
             precision=runtime.precision,
             max_epochs=training.epochs,
             max_steps=training.steps if training.steps is not None else -1,
+            reload_dataloaders_every_n_epochs=1
+            if training.collocation.resample_every_epochs
+            else 0,
             num_sanity_val_steps=0,
             inference_mode=False,
             check_val_every_n_epoch=1,

@@ -381,3 +381,26 @@ train/learning_rate показывает эффективное значение
 --checkpoint остаётся fine-tune весов, а не продолжением optimizer state.
 Benchmark: --lr-final-ratio 0.1 включает decay, 1 отключает; --steps 12000
 даёт отдельный контроль увеличения бюджета с constant LR.
+
+### Обновление PDE-точек
+
+```yaml
+training:
+  seed: 1234
+  collocation:
+    sampling: lhs
+    points: 1024
+    resample_every_epochs: 1  # 0: фиксированная прежняя выборка
+```
+
+Обновляются только collocation координаты, IC/BC и holdout не меняются.
+Первая выборка прежняя pyDOE LHS; последующие используют независимый NumPy
+Generator и Latin hypercube strata, seed + generation. Глобальный RNG не меняется.
+Epoch определяется CombinedLoader max_size_cycle, не только PDE-loader.
+Refresh выполняется до создания/предзагрузки epoch iterator. Поэтому включается
+reload_dataloaders_every_n_epochs=1; фиксированный режим этого не делает.
+В состоянии datamodule checkpoint сохраняются текущие точки, seed/частота и epoch;
+восстановление sampling state проверяется отдельно. CLI --checkpoint остаётся
+fine-tune, не полным resume optimizer/dataloader position. Validation не может
+обновлять точки. Benchmark flags: --resample-every-epochs 1 и
+--collocation-points 4096 для раздельного контроля более плотной fixed выборки.
