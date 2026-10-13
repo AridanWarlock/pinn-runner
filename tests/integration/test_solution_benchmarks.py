@@ -141,6 +141,42 @@ def test_benchmark_smoke_exercises_public_runner(tmp_path: Path) -> None:
         assert trial["steps"] == 3
         assert trial["quality_checked"] is False
         assert all(np.isfinite(value) for value in trial["metrics"].values())
+        performance = trial["performance"]
+        assert performance["training_steps_per_second"] == pytest.approx(
+            3 / trial["training_seconds"]
+        )
+        assert performance["prediction_points_per_second"] > 0
+        assert performance["warm_prediction_seconds"] > 0
+    reused = tmp_path / "reused"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "scripts/benchmark_solutions.py",
+            "--device",
+            "cpu",
+            "--profile",
+            "smoke",
+            "--seeds",
+            "1234",
+            "--cases",
+            "advection",
+            "--output-dir",
+            str(reused),
+            "--measure-existing",
+            str(output),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=120,
+        cwd=Path(__file__).resolve().parents[2],
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    measured = json.loads((reused / "report.json").read_text())["trials"][0]
+    original = next(trial for trial in report["trials"] if trial["case"] == "advection")
+    assert measured["training_seconds"] == original["training_seconds"]
+    assert not (reused / "advection-1234/training.log").exists()
+    assert measured["metrics"] == original["metrics"]
 
 
 def test_nonfinite_baseline_is_rejected() -> None:
@@ -216,3 +252,30 @@ def test_summary_keeps_seed_spread() -> None:
     assert summary["relative_l2_median"] == pytest.approx(0.02)
     assert summary["relative_l2_max"] == 0.03
     assert summary["training_seconds_median"] == 11
+
+
+def test_prediction_timing_handles_batches_on_cpu() -> None:
+    from benchmarks.performance import prediction_speed
+    from pinnstorch.contracts import SamplerBatch, TensorOutputs
+
+    class ToyPredictor:
+        points = 0
+
+        def predict_step(self, batch: SamplerBatch, batch_idx: int) -> TensorOutputs:
+            spatial, times, _ = batch
+            self.points += len(times)
+            return {"u": spatial[0] + times}
+
+    model = ToyPredictor()
+    clock = torch.zeros((5, 1))
+    performance = prediction_speed(model, [clock.clone()], clock, batch_size=2)
+    assert performance["prediction_points"] == 5
+    assert model.points == 5 * (
+        performance["prediction_warmup_passes"] + performance["prediction_measurement_passes"]
+    )
+    assert performance["warm_prediction_seconds"] > 0
+    assert performance["warm_prediction_points_per_second"] == pytest.approx(
+        5 / performance["warm_prediction_seconds"]
+    )
+    with pytest.raises(ValueError, match="aligned"):
+        prediction_speed(model, [clock[:2]], clock, batch_size=2)

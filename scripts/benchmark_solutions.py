@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from benchmarks.cases import CASES  # noqa: E402
-from benchmarks.execution import fingerprint, run_trial  # noqa: E402
+from benchmarks.execution import fingerprint, measure_existing, run_trial  # noqa: E402
 from benchmarks.metrics import regression_failures  # noqa: E402
 
 
@@ -37,6 +37,9 @@ def environment(device: str) -> dict[str, Any]:
         "platform": platform.platform(),
         "torch": torch.__version__,
         "cuda_runtime": torch.version.cuda,
+        "cpu_threads": torch.get_num_threads(),
+        "float32_matmul_precision": torch.get_float32_matmul_precision(),
+        "cuda_matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
         "device": device,
         "gpu": torch.cuda.get_device_name(0) if device == "cuda" else None,
         "packages": {name: version(name) for name in ("numpy", "lightning")},
@@ -82,11 +85,16 @@ def summarize(trials: list[dict[str, Any]]) -> dict[str, Any]:
     for name in dict.fromkeys(trial["case"] for trial in trials):
         group = [trial for trial in trials if trial["case"] == name]
         errors = [trial["metrics"]["relative_l2"] for trial in group]
+        performance = {
+            key: statistics.median(trial["performance"][key] for trial in group)
+            for key in group[0].get("performance", {})
+        }
         summary[name] = {
             "seeds": [trial["seed"] for trial in group],
             "relative_l2_median": statistics.median(errors),
             "relative_l2_min": min(errors),
             "relative_l2_max": max(errors),
+            "performance_median": performance,
             "training_seconds_median": statistics.median(
                 trial["training_seconds"] for trial in group
             ),
@@ -107,6 +115,11 @@ def arguments() -> tuple[argparse.Namespace, int]:
         "--output-dir", type=Path, required=True, help="A new directory for this run"
     )
     parser.add_argument("--baseline", type=Path)
+    parser.add_argument(
+        "--measure-existing",
+        type=Path,
+        help="Reevaluate saved checkpoints and add timings without training",
+    )
     args = parser.parse_args()
     steps = (
         args.steps
@@ -138,6 +151,14 @@ def main() -> int:
     }
     failures: list[str] = []
     try:
+        if args.measure_existing:
+            origin = json.loads(
+                (args.measure_existing / "report.json").read_text(encoding="utf-8")
+            )
+            report["training_origin"] = {
+                "directory": str(args.measure_existing.resolve()),
+                "revision": origin["environment"]["revision"],
+            }
         if args.baseline:
             planned = [
                 {
@@ -151,20 +172,33 @@ def main() -> int:
             validate_baseline({**report, "trials": planned}, args.baseline)
         for name in args.cases:
             for seed in args.seeds:
-                print(f"Training {name}, seed={seed}, steps={steps}", flush=True)
-                trial = run_trial(
-                    CASES[name],
-                    output / f"{name}-{seed}",
-                    args.device,
-                    steps,
-                    seed,
-                    args.profile == "smoke",
-                )
+                action = "Reevaluating" if args.measure_existing else "Training"
+                print(f"{action} {name}, seed={seed}, steps={steps}", flush=True)
+                if args.measure_existing:
+                    trial = measure_existing(
+                        CASES[name],
+                        args.measure_existing / f"{name}-{seed}",
+                        output / f"{name}-{seed}",
+                        args.device,
+                        steps,
+                        seed,
+                        args.profile == "smoke",
+                    )
+                else:
+                    trial = run_trial(
+                        CASES[name],
+                        output / f"{name}-{seed}",
+                        args.device,
+                        steps,
+                        seed,
+                        args.profile == "smoke",
+                    )
                 report["trials"].append(trial)
                 failures.extend(
                     f"{name}/{seed}: {message}" for message in trial["quality_failures"]
                 )
                 print(f"{name}/{seed}: {json.dumps(trial['metrics'])}", flush=True)
+                print(f"Performance: {json.dumps(trial['performance'])}", flush=True)
         if args.baseline:
             failures.extend(compare(report, args.baseline))
     except Exception as error:
