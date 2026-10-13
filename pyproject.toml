@@ -17,6 +17,7 @@ files = [
   "scripts/gpu_worker.py",
   "scripts/benchmark_solutions.py",
   "scripts/benchmark_hard_execution.py",
+  "scripts/benchmark_hard_derivatives.py",
   "benchmarks",
   "tests/hardware",
   "pinnstorch/contracts.py",
