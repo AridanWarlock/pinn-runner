@@ -175,3 +175,5 @@ misc
 
 /numerical-reports/
 /.tmp/
+
+/.gpu-jobs/

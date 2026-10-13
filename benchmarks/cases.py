@@ -27,6 +27,14 @@ class BenchmarkCase:
 
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
         x = spatial["x"]
+        if self.name == "heat3d":
+            return cast(
+                Array,
+                np.sin(np.pi * x)
+                * np.sin(np.pi * spatial["y"])
+                * np.sin(np.pi * spatial["z"])
+                * np.exp(-0.3 * np.pi**2 * time),
+            )
         if self.name == "heat2d":
             return cast(
                 Array,
@@ -42,7 +50,12 @@ class BenchmarkCase:
         self, device: str, steps: int, seed: int, evaluating: bool = False
     ) -> dict[str, Any]:
         space = {
-            axis: {"interval": [0, 1], "points": 41 if evaluating else 16}
+            axis: {
+                "interval": [0, 1],
+                "points": (17 if self.dimensions == 3 else 41)
+                if evaluating
+                else (8 if self.dimensions == 3 else 16),
+            }
             for axis in ("x", "y", "z")[: self.dimensions]
         }
         boundaries: list[dict[str, Any]] = [
@@ -89,6 +102,7 @@ CASES = {
     case.name: case
     for case in (
         BenchmarkCase("heat2d", 2),
+        BenchmarkCase("heat3d", 3),
         BenchmarkCase("advection", 1),
         BenchmarkCase("burgers", 1),
     )

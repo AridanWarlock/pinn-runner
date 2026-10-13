@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import shutil
 import subprocess
 import sys
@@ -26,6 +27,7 @@ from .metrics import quality_failures, solution_errors
 from .performance import prediction_speed
 
 ROOT = Path(__file__).resolve().parents[1]
+WORKING_DIRECTORY = Path(os.environ.get("PINN_WORKING_DIRECTORY", str(ROOT)))
 
 
 def fingerprint(case: BenchmarkCase, device: str, steps: int, seed: int) -> str:
@@ -57,7 +59,12 @@ def launch(input_dir: Path, output_dir: Path, log: Path, checkpoint: Path | None
     started = time.perf_counter()
     with log.open("w", encoding="utf-8") as stream:
         result = subprocess.run(
-            command, cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT, timeout=3600, check=False
+            command,
+            cwd=WORKING_DIRECTORY,
+            stdout=stream,
+            stderr=subprocess.STDOUT,
+            timeout=3600,
+            check=False,
         )
     if result.returncode != 0:
         raise RuntimeError(f"Runner failed (exit {result.returncode}); see {log}")

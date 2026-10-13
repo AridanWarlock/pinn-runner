@@ -13,6 +13,8 @@ ignore_missing_imports = true
 files = [
   "run.py",
   "scripts/check_backend.py",
+  "scripts/gpu_jobs.py",
+  "scripts/gpu_worker.py",
   "scripts/benchmark_solutions.py",
   "benchmarks",
   "tests/hardware/test_backend.py",

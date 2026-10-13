@@ -28,12 +28,16 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(name: str) -
     ]
     coordinates = Coordinates(dict(zip(("x", "y", "z"), columns[:-1])), columns[-1])
     x, time = coordinates.x, coordinates.t
-    if name == "heat2d":
+    if name in ("heat2d", "heat3d"):
         field = (
             torch.sin(x * torch.pi)
             * torch.sin(coordinates.y * torch.pi)
             * torch.exp(-0.2 * torch.pi**2 * time)
         )
+        if name == "heat3d":
+            field = (
+                field * torch.sin(coordinates.z * torch.pi) * torch.exp(-0.1 * torch.pi**2 * time)
+            )
     elif name == "advection":
         field = torch.sin((x - time) * torch.pi)
     else:

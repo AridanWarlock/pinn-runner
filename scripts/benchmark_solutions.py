@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import statistics
 import subprocess
@@ -24,6 +25,17 @@ from benchmarks.metrics import regression_failures  # noqa: E402
 
 
 def environment(device: str) -> dict[str, Any]:
+    if os.environ.get("PINN_PINNED_REVISION"):
+        return {
+            "revision": os.environ["PINN_PINNED_REVISION"],
+            "working_tree_dirty": False,
+            "torch": torch.__version__,
+            "cuda_runtime": torch.version.cuda,
+            "device": device,
+            "gpu": torch.cuda.get_device_name(0) if device == "cuda" else None,
+            "python": sys.version,
+            "platform": platform.platform(),
+        }
     revision = subprocess.run(
         ["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=False
     )
@@ -108,7 +120,9 @@ def arguments() -> tuple[argparse.Namespace, int]:
     parser.add_argument(
         "--profile", choices=("smoke", "standard", "reference"), default="standard"
     )
-    parser.add_argument("--cases", nargs="+", choices=tuple(CASES), default=list(CASES))
+    parser.add_argument(
+        "--cases", nargs="+", choices=tuple(CASES), default=["heat2d", "advection", "burgers"]
+    )
     parser.add_argument("--seeds", nargs="+", type=int, default=[1234, 4321])
     parser.add_argument("--steps", type=int, help="Override the fixed profile budget")
     parser.add_argument(
