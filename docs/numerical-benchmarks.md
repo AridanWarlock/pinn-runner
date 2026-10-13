@@ -77,7 +77,7 @@ python scripts/benchmark_solutions.py --device cpu --profile smoke --seeds 1234 
 
 Начальные требования к этим нормированным задачам: общая relative L2 ≤ 5%,
 max_error ≤ 0.15, RMSE PDE ≤ 0.1, RMSE IC и BC ≤ 0.05. Проверяем каждый seed;
-не выбираем лучший результат. Пороговые значения фиксированы в cases/metrics,
+не выбираем лучший результат. Пороговые значения фиксированы в QualityPolicy,
 они не подстраиваются автоматически под текущие ошибки.
 
 Для изменений архитектуры backend, autograd, loss, оптимизаторов и sampling

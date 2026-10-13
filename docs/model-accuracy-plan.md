@@ -1,5 +1,14 @@
 # План улучшения точности PINN
 
+Статус на 2026-10-13: реализованы переключаемые loss weights, step-based
+exponential LR, обновляемый LHS и hard IC + homogeneous box Dirichlet;
+сетки/бюджеты/quality policies бенчмарков разделены. Проведено 36 численных
+обучений на текущем CUDA-стеке. Результаты и ограничения:
+[accuracy-experiments-2026-10-13.md](accuracy-experiments-2026-10-13.md).
+Hard heat3d улучшился на всех пяти заранее выбранных seed; defaults пока
+не меняем. Реальные поддержанные YAML-ключи перечислены в [API.md](API.md):
+общая структура `training.strategies` ниже остаётся проектом будущего API.
+
 Ветка: codex/model-accuracy. Базовый контроль: codex/gpu-jobs / 389d599,
 heat3d-005 (6000 Adam steps, seeds 1234/4321). Ошибка общего L2 4,68/5,76%,
 последнего слоя 12,80/15,81%. Пороги не ослабляем. Прежние результаты не
