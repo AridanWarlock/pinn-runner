@@ -20,11 +20,7 @@ def solution_errors(
     denominator = float(np.linalg.norm(expected))
     if denominator == 0:
         raise ValueError("Relative L2 requires a nonzero reference")
-    boundary = np.zeros(len(prediction), dtype=bool)
-    for name, values in spatial.items():
-        boundary |= np.isclose(values[:, 0], 0)
-        if case.name != "advection":
-            boundary |= np.isclose(values[:, 0], 1)
+    boundary = case.boundary_mask(spatial)
     return {
         "relative_l2": float(np.linalg.norm(error) / denominator),
         "rmse": float(np.sqrt(np.mean(error**2))),
@@ -64,3 +60,35 @@ def regression_failures(current: Mapping[str, float], baseline: Mapping[str, flo
         for name, floor in tolerances.items()
         if current[name] > baseline[name] * 1.5 + floor
     ]
+
+
+def temporal_errors(
+    case: BenchmarkCase, spatial: dict[str, Array], time: Array, prediction: Array
+) -> list[dict[str, float | None]]:
+    """Separate actual error growth from the decay of the reference norm."""
+    expected = case.reference(spatial, time.T)
+    if prediction.shape != expected.shape or not np.isfinite(prediction).all():
+        raise ValueError("Prediction must have the reference shape and finite values")
+    boundary = case.boundary_mask(spatial)
+    error = prediction - expected
+    results: list[dict[str, float | None]] = []
+    for index, instant in enumerate(time.reshape(-1)):
+        reference_norm = float(np.linalg.norm(expected[:, index]))
+        results.append(
+            {
+                "time": float(instant),
+                "reference_l2": reference_norm,
+                "relative_l2": float(np.linalg.norm(error[:, index]) / reference_norm)
+                if reference_norm > 0
+                else None,
+                "rmse": float(np.sqrt(np.mean(error[:, index] ** 2))),
+                "max_error": float(np.max(np.abs(error[:, index]))),
+                "boundary_rmse": float(np.sqrt(np.mean(error[boundary, index] ** 2)))
+                if boundary.any()
+                else None,
+                "interior_rmse": float(np.sqrt(np.mean(error[~boundary, index] ** 2)))
+                if (~boundary).any()
+                else None,
+            }
+        )
+    return results

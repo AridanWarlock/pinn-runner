@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, cast
@@ -14,7 +15,7 @@ PROBLEMS = Path(__file__).parent / "problems"
 
 
 @dataclass(frozen=True)
-class BenchmarkCase:
+class BenchmarkCase(ABC):
     name: str
     dimensions: int
     relative_l2_limit: float = 0.05
@@ -25,26 +26,18 @@ class BenchmarkCase:
     def source(self) -> Path:
         return PROBLEMS / self.name / "functions.py"
 
+    @abstractmethod
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
-        x = spatial["x"]
-        if self.name == "heat3d":
-            return cast(
-                Array,
-                np.sin(np.pi * x)
-                * np.sin(np.pi * spatial["y"])
-                * np.sin(np.pi * spatial["z"])
-                * np.exp(-0.3 * np.pi**2 * time),
-            )
-        if self.name == "heat2d":
-            return cast(
-                Array,
-                np.sin(np.pi * x) * np.sin(np.pi * spatial["y"]) * np.exp(-0.2 * np.pi**2 * time),
-            )
-        if self.name == "advection":
-            return cast(Array, np.sin(np.pi * (x - time)))
-        if self.name == "burgers":
-            return cast(Array, np.exp(-time) * np.sin(np.pi * x))
-        raise ValueError(f"Unknown benchmark {self.name}")
+        """Independent analytical solution, with NumPy broadcasting."""
+
+    def boundaries(self, axes: tuple[str, ...]) -> list[dict[str, Any]]:
+        return [{"kind": "dirichlet", "field": "u", "axis": axis, "value": 0} for axis in axes]
+
+    def boundary_mask(self, spatial: dict[str, Array]) -> NDArray[np.bool_]:
+        mask = np.zeros(len(next(iter(spatial.values()))), dtype=bool)
+        for values in spatial.values():
+            mask |= np.isclose(values[:, 0], 0) | np.isclose(values[:, 0], 1)
+        return mask
 
     def config(
         self, device: str, steps: int, seed: int, evaluating: bool = False
@@ -58,19 +51,7 @@ class BenchmarkCase:
             }
             for axis in ("x", "y", "z")[: self.dimensions]
         }
-        boundaries: list[dict[str, Any]] = [
-            {"kind": "dirichlet", "field": "u", "axis": axis, "value": 0} for axis in space
-        ]
-        if self.name == "advection":
-            boundaries = [
-                {
-                    "kind": "dirichlet",
-                    "field": "u",
-                    "axis": "x",
-                    "side": "lower",
-                    "value_function": "inflow",
-                }
-            ]
+        boundaries = self.boundaries(tuple(space))
         return {
             "version": 1,
             "domain": {
@@ -98,12 +79,44 @@ class BenchmarkCase:
         }
 
 
-CASES = {
+class HeatCase(BenchmarkCase):
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        field = np.ones_like(spatial["x"])
+        for values in spatial.values():
+            field = field * np.sin(np.pi * values)
+        return cast(Array, field * np.exp(-0.1 * self.dimensions * np.pi**2 * time))
+
+
+class AdvectionCase(BenchmarkCase):
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        return cast(Array, np.sin(np.pi * (spatial["x"] - time)))
+
+    def boundaries(self, axes: tuple[str, ...]) -> list[dict[str, Any]]:
+        return [
+            {
+                "kind": "dirichlet",
+                "field": "u",
+                "axis": "x",
+                "side": "lower",
+                "value_function": "inflow",
+            }
+        ]
+
+    def boundary_mask(self, spatial: dict[str, Array]) -> NDArray[np.bool_]:
+        return np.isclose(spatial["x"][:, 0], 0)
+
+
+class BurgersCase(BenchmarkCase):
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        return cast(Array, np.exp(-time) * np.sin(np.pi * spatial["x"]))
+
+
+CASES: dict[str, BenchmarkCase] = {
     case.name: case
     for case in (
-        BenchmarkCase("heat2d", 2),
-        BenchmarkCase("heat3d", 3),
-        BenchmarkCase("advection", 1),
-        BenchmarkCase("burgers", 1),
+        HeatCase("heat2d", 2),
+        HeatCase("heat3d", 3),
+        AdvectionCase("advection", 1),
+        BurgersCase("burgers", 1),
     )
 }

@@ -283,3 +283,30 @@ def test_prediction_timing_handles_batches_on_cpu() -> None:
     )
     with pytest.raises(ValueError, match="aligned"):
         prediction_speed(model, [clock[:2]], clock, batch_size=2)
+
+
+def test_temporal_diagnostics_distinguish_decay_from_absolute_error() -> None:
+    from benchmarks.metrics import temporal_errors
+
+    case = CASES["heat3d"]
+    spatial = {axis: np.array([[0.0], [0.5], [1.0]]) for axis in ("x", "y", "z")}
+    time = np.array([[0.0], [0.5]])
+    exact = case.reference(spatial, time.T)
+    rows = temporal_errors(case, spatial, time, exact + 0.01)
+    assert rows[0]["rmse"] == pytest.approx(rows[1]["rmse"])
+    assert rows[0]["boundary_rmse"] == pytest.approx(0.01)
+    assert rows[0]["interior_rmse"] == pytest.approx(0.01)
+    assert float(rows[1]["relative_l2"] or 0) > float(rows[0]["relative_l2"] or 0) * 4
+    assert [row["time"] for row in rows] == [0, 0.5]
+
+
+def test_temporal_diagnostics_handle_zero_reference_and_missing_boundary() -> None:
+    from benchmarks.metrics import temporal_errors
+
+    case = CASES["advection"]
+    spatial = {"x": np.array([[0.5]])}
+    time = np.array([[0.5]])
+    rows = temporal_errors(case, spatial, time, np.array([[0.1]]))
+    assert rows[0]["relative_l2"] is None
+    assert rows[0]["boundary_rmse"] is None
+    assert rows[0]["interior_rmse"] == pytest.approx(0.1)

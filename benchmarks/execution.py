@@ -23,7 +23,7 @@ from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import TaskSettings
 
 from .cases import Array, BenchmarkCase
-from .metrics import quality_failures, solution_errors
+from .metrics import quality_failures, solution_errors, temporal_errors
 from .performance import prediction_speed
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -161,6 +161,9 @@ def finish_trial(
         "steps": steps,
         "fingerprint": fingerprint(case, device, steps, seed),
         "metrics": errors,
+        "temporal_metrics": temporal_errors(
+            case, spatial, np.asarray(saved["t"], dtype=np.float64), values
+        ),
         "training_seconds": duration,
         "performance": performance,
         "quality_failures": [] if smoke else quality_failures(case, errors),
