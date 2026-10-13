@@ -4,7 +4,7 @@ title: Подтвердить комбинацию стратегий и обн�
 status: To Do
 assignee: []
 created_date: '2026-10-13 08:37'
-updated_date: '2026-10-13 09:38'
+updated_date: '2026-10-13 14:20'
 labels:
   - acceptance
 milestone: m-0
@@ -38,4 +38,6 @@ ordinal: 14000
 
 <!-- SECTION:NOTES:BEGIN -->
 TASK10 now includes five-seed paired heat3d hard/soft validation. This is partial evidence only:all-PDE5seed composition/leave-one-out and Adam->LBFGS dependency remain pending. Do not mark AC1/AC3 or change defaults.
+
+Adam->LBFGS dependency complete. Preliminary hard+LB100 combination2seeds:heat3d global0.086/0.109%,final0.317/0.330%; matchedwall~43s controlsfinal0.952/0.761%. Heat2d/Burgers combinations improve; advectionsoft+LB tested. Memoryhard+49%,no defaultpromotion. Five-seedallPDE andleave-one-out/fullbatchAdam ablation pending.
 <!-- SECTION:NOTES:END -->
