@@ -479,3 +479,11 @@ Benchmark flag --lbfgs-steps 100 добавляет стадию к указан
 --constraints hard_initial_dirichlet. Сравнение по числу внешних шагов не
 считается сравнением вычислительных бюджетов: смотрим closure counts, точки,
 время, память и независимую точность. Report сохраняет refinement_recipe.
+
+refinement_state.device и report.refinement_device фиксируют фактическое
+устройство стадии после fit. Бенчмарк проверяет completed, version, число
+вызовов и backend: CPU-refinement не принимается как CUDA-результат.
+adam_model_evaluations и total_model_evaluations считают вызовы model_step,
+то есть вычисления суммарного objective. Внутри одного такого вызова несколько
+условий могут выполнять отдельные forward; lbfgs_condition_evaluations
+показывает число вычислений этих групп в стадии.
