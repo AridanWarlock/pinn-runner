@@ -76,12 +76,34 @@ $env:TMP = $env:TEMP
 exit $LASTEXITCODE
 """
     worker_encoded = base64.b64encode(worker_script.encode("utf-16le")).decode("ascii")
-    script = f"""$startup = New-CimInstance -ClassName Win32_ProcessStartup -ClientOnly -Property @{{ShowWindow=[uint16]0}}
-$result = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{{CommandLine='powershell.exe -NoProfile -NonInteractive -EncodedCommand {worker_encoded}'; CurrentDirectory='{WINDOWS_ROOT}'; ProcessStartupInformation=$startup}}
-if ($result.ReturnValue -ne 0) {{ throw "Worker launch failed: $($result.ReturnValue)" }}
-@{{job_id='{identifier}'; launcher_pid=$result.ProcessId; state='queued'}} | ConvertTo-Json -Compress
-"""
-    return json_output(remote(script))
+    logs = ROOT / "numerical-reports" / "gpu-connections"
+    logs.mkdir(parents=True, exist_ok=True)
+    with (logs / f"{identifier}.log").open("wb") as log:
+        connection = subprocess.Popen(
+            [
+                "ssh",
+                "-o",
+                "BatchMode=yes",
+                "-o",
+                "ConnectTimeout=15",
+                "-o",
+                "ServerAliveInterval=30",
+                "-o",
+                "ServerAliveCountMax=3",
+                "aridanPC",
+                "powershell.exe",
+                "-NoProfile",
+                "-NonInteractive",
+                "-EncodedCommand",
+                worker_encoded,
+            ],
+            cwd=ROOT,
+            stdin=subprocess.DEVNULL,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
+    return {"job_id": identifier, "connection_pid": connection.pid, "state": "queued"}
 
 
 def main() -> int:
