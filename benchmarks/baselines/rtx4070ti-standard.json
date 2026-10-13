@@ -1,0 +1,130 @@
+{
+  "contract": 1,
+  "profile": "standard",
+  "environment": {
+    "revision": "47e99ac31f6f8bc1e1e70e06805b4570cd879b05",
+    "working_tree_dirty": true,
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti",
+    "packages": {
+      "numpy": "1.26.4",
+      "lightning": "2.1.0"
+    }
+  },
+  "trials": [
+    {
+      "case": "heat2d",
+      "seed": 1234,
+      "steps": 3000,
+      "fingerprint": "f0b9f4f76c7ab12f18dcc15e7d83c9bae29c2c784f619d90c931d87b4cfcb9f8",
+      "metrics": {
+        "relative_l2": 0.020468399319138367,
+        "rmse": 0.006628159224587689,
+        "max_error": 0.04238468408584595,
+        "initial_rmse": 0.008530367456365111,
+        "boundary_rmse": 0.012726250685538476,
+        "final_relative_l2": 0.04125818253869817,
+        "pde_rmse": 0.023343106731772423
+      },
+      "training_seconds": 25.359788300003856,
+      "quality_failures": [],
+      "quality_checked": true
+    },
+    {
+      "case": "heat2d",
+      "seed": 4321,
+      "steps": 3000,
+      "fingerprint": "24fec9c926d2f1e1b2c27e2b67dd18c69419b7648819acebc89798f2621f3f13",
+      "metrics": {
+        "relative_l2": 0.021218784552070945,
+        "rmse": 0.006871151982648939,
+        "max_error": 0.05359046906232834,
+        "initial_rmse": 0.006947533673661287,
+        "boundary_rmse": 0.013773834336876562,
+        "final_relative_l2": 0.048739228349140705,
+        "pde_rmse": 0.0210558008402586
+      },
+      "training_seconds": 24.99428830004763,
+      "quality_failures": [],
+      "quality_checked": true
+    },
+    {
+      "case": "advection",
+      "seed": 1234,
+      "steps": 3000,
+      "fingerprint": "c5d72e18803abb596ebc74ca14dabb3eb6ce5b4030c922dc20e3e9d43f4f8372",
+      "metrics": {
+        "relative_l2": 0.003571787348741693,
+        "rmse": 0.0025256350552515707,
+        "max_error": 0.011082291603088379,
+        "initial_rmse": 0.0019432793817658158,
+        "boundary_rmse": 0.004916590410640243,
+        "final_relative_l2": 0.0055711767228112845,
+        "pde_rmse": 0.005051974672824144
+      },
+      "training_seconds": 17.584495599963702,
+      "quality_failures": [],
+      "quality_checked": true
+    },
+    {
+      "case": "advection",
+      "seed": 4321,
+      "steps": 3000,
+      "fingerprint": "a3b48e0b39f428873b3b22496a222c1061dd3f5d950a9869e650342724ad675d",
+      "metrics": {
+        "relative_l2": 0.004972855053375489,
+        "rmse": 0.0035163395300995986,
+        "max_error": 0.007778501635271939,
+        "initial_rmse": 0.0038553331913699276,
+        "boundary_rmse": 0.004108375346334645,
+        "final_relative_l2": 0.005076426791493875,
+        "pde_rmse": 0.003792138071730733
+      },
+      "training_seconds": 17.230808899970725,
+      "quality_failures": [],
+      "quality_checked": true
+    },
+    {
+      "case": "burgers",
+      "seed": 1234,
+      "steps": 3000,
+      "fingerprint": "6ee8f43fb554d76799d663ede85ada7f020e2a4aa079aecba173cf3592129847",
+      "metrics": {
+        "relative_l2": 0.002868059339884993,
+        "rmse": 0.0015947919442776662,
+        "max_error": 0.0035122185945510864,
+        "initial_rmse": 0.0019224229997001573,
+        "boundary_rmse": 0.001997269263612943,
+        "final_relative_l2": 0.004075464794578492,
+        "pde_rmse": 0.007743159309029579
+      },
+      "training_seconds": 22.788448399980552,
+      "quality_failures": [],
+      "quality_checked": true
+    },
+    {
+      "case": "burgers",
+      "seed": 4321,
+      "steps": 3000,
+      "fingerprint": "10a2bb77a0c653b1d31924fb5f3f393eb5ebe7de6702db2e71ff7b5c79a37b0c",
+      "metrics": {
+        "relative_l2": 0.005472957813684101,
+        "rmse": 0.003043252596365355,
+        "max_error": 0.005816228687763122,
+        "initial_rmse": 0.0026295291595295842,
+        "boundary_rmse": 0.0033640845267366897,
+        "final_relative_l2": 0.007673650932646658,
+        "pde_rmse": 0.010083022527396679
+      },
+      "training_seconds": 22.7930165999569,
+      "quality_failures": [],
+      "quality_checked": true
+    }
+  ],
+  "status": "passed",
+  "failures": []
+}

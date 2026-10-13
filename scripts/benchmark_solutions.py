@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import statistics
 import subprocess
 import sys
 from importlib.metadata import version
@@ -18,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from benchmarks.cases import CASES  # noqa: E402
-from benchmarks.execution import run_trial  # noqa: E402
+from benchmarks.execution import fingerprint, run_trial  # noqa: E402
 from benchmarks.metrics import regression_failures  # noqa: E402
 
 
@@ -42,7 +43,7 @@ def environment(device: str) -> dict[str, Any]:
     }
 
 
-def compare(report: dict[str, Any], path: Path) -> list[str]:
+def validate_baseline(report: dict[str, Any], path: Path) -> dict[tuple[str, int], Any]:
     baseline = json.loads(path.read_text(encoding="utf-8"))
     if (
         baseline.get("contract") != report["contract"]
@@ -55,11 +56,20 @@ def compare(report: dict[str, Any], path: Path) -> list[str]:
     current = {(item["case"], item["seed"]): item for item in report["trials"]}
     if set(current) != set(previous):
         raise ValueError("Baseline cases/seeds differ")
-    failures: list[str] = []
     for key, trial in current.items():
         old = previous[key]
         if trial["fingerprint"] != old["fingerprint"]:
             raise ValueError(f"Baseline task/budget/evaluation differs for {key}")
+        regression_failures(old["metrics"], old["metrics"])
+    return previous
+
+
+def compare(report: dict[str, Any], path: Path) -> list[str]:
+    previous = validate_baseline(report, path)
+    failures: list[str] = []
+    for trial in report["trials"]:
+        key = (trial["case"], trial["seed"])
+        old = previous[key]
         failures.extend(
             f"{key}: {message}"
             for message in regression_failures(trial["metrics"], old["metrics"])
@@ -67,7 +77,24 @@ def compare(report: dict[str, Any], path: Path) -> list[str]:
     return failures
 
 
-def main() -> int:
+def summarize(trials: list[dict[str, Any]]) -> dict[str, Any]:
+    summary: dict[str, Any] = {}
+    for name in dict.fromkeys(trial["case"] for trial in trials):
+        group = [trial for trial in trials if trial["case"] == name]
+        errors = [trial["metrics"]["relative_l2"] for trial in group]
+        summary[name] = {
+            "seeds": [trial["seed"] for trial in group],
+            "relative_l2_median": statistics.median(errors),
+            "relative_l2_min": min(errors),
+            "relative_l2_max": max(errors),
+            "training_seconds_median": statistics.median(
+                trial["training_seconds"] for trial in group
+            ),
+        }
+    return summary
+
+
+def arguments() -> tuple[argparse.Namespace, int]:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
     parser.add_argument(
@@ -96,6 +123,11 @@ def main() -> int:
         parser.error("Smoke does not check quality and cannot compare baselines")
     if args.device == "cuda" and not torch.cuda.is_available():
         parser.error("CUDA unavailable; no CPU fallback")
+    return args, steps
+
+
+def main() -> int:
+    args, steps = arguments()
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=False)
     report: dict[str, Any] = {
@@ -106,6 +138,17 @@ def main() -> int:
     }
     failures: list[str] = []
     try:
+        if args.baseline:
+            planned = [
+                {
+                    "case": name,
+                    "seed": seed,
+                    "fingerprint": fingerprint(CASES[name], args.device, steps, seed),
+                }
+                for name in args.cases
+                for seed in args.seeds
+            ]
+            validate_baseline({**report, "trials": planned}, args.baseline)
         for name in args.cases:
             for seed in args.seeds:
                 print(f"Training {name}, seed={seed}, steps={steps}", flush=True)
@@ -129,6 +172,7 @@ def main() -> int:
     report.update(
         status="failed" if failures else ("smoke_passed" if args.profile == "smoke" else "passed"),
         failures=failures,
+        summary=summarize(report["trials"]),
     )
     (output / "report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(f"{report['status']}; report: {output / 'report.json'}", flush=True)

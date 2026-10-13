@@ -141,3 +141,78 @@ def test_benchmark_smoke_exercises_public_runner(tmp_path: Path) -> None:
         assert trial["steps"] == 3
         assert trial["quality_checked"] is False
         assert all(np.isfinite(value) for value in trial["metrics"].values())
+
+
+def test_nonfinite_baseline_is_rejected() -> None:
+    metrics = {"relative_l2": 0.01, "max_error": 0.03, "pde_rmse": 0.02}
+    with pytest.raises(ValueError, match="finite"):
+        regression_failures(metrics, {**metrics, "relative_l2": float("nan")})
+
+
+def test_incompatible_baseline_stops_before_training(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import scripts.benchmark_solutions as command
+
+    baseline = tmp_path / "baseline.json"
+    baseline.write_text(
+        json.dumps(
+            {
+                "contract": 1,
+                "profile": "standard",
+                "status": "passed",
+                "trials": [{"case": "heat2d", "seed": 1234, "fingerprint": "wrong"}],
+            }
+        )
+    )
+    output = tmp_path / "output"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark",
+            "--cases",
+            "heat2d",
+            "--seeds",
+            "1234",
+            "--output-dir",
+            str(output),
+            "--baseline",
+            str(baseline),
+        ],
+    )
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(command, "environment", lambda device: {"device": device})
+
+    def unexpected_training(*args: object, **kwargs: object) -> None:
+        raise AssertionError("Invalid baseline must not spend GPU time")
+
+    monkeypatch.setattr(command, "run_trial", unexpected_training)
+    assert command.main() == 1
+    report = json.loads((output / "report.json").read_text())
+    assert report["trials"] == []
+    assert "Baseline task/budget/evaluation differs" in report["failures"][0]
+
+
+def test_summary_keeps_seed_spread() -> None:
+    from scripts.benchmark_solutions import summarize
+
+    summary = summarize(
+        [
+            {
+                "case": "heat2d",
+                "seed": 1,
+                "metrics": {"relative_l2": 0.01},
+                "training_seconds": 10,
+            },
+            {
+                "case": "heat2d",
+                "seed": 2,
+                "metrics": {"relative_l2": 0.03},
+                "training_seconds": 12,
+            },
+        ]
+    )["heat2d"]
+    assert summary["relative_l2_median"] == pytest.approx(0.02)
+    assert summary["relative_l2_max"] == 0.03
+    assert summary["training_seconds_median"] == 11

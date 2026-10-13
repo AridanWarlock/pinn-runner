@@ -53,6 +53,12 @@ def quality_failures(case: BenchmarkCase, metrics: Mapping[str, float]) -> list[
 def regression_failures(current: Mapping[str, float], baseline: Mapping[str, float]) -> list[str]:
     # Absolute floors keep rounding/noise near zero from triggering relative alarms.
     tolerances = {"relative_l2": 0.002, "max_error": 0.005, "pde_rmse": 0.005}
+    if any(
+        not math.isfinite(values[name]) or values[name] < 0
+        for values in (current, baseline)
+        for name in tolerances
+    ):
+        raise ValueError("Regression metrics must be finite and nonnegative")
     return [
         f"{name} regressed: {current[name]:.6g} vs {baseline[name]:.6g}"
         for name, floor in tolerances.items()
