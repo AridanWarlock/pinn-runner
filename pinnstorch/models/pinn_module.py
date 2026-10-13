@@ -46,6 +46,7 @@ class PINNModule(LightningModule):
         constraint_kind: str = "soft",
         constraint_signature: str = "",
         refinement_settings: dict[str, int | float] | None = None,
+        hard_execution: str = "eager",
     ) -> None:
         super().__init__()
         if loss_fn not in ("mse", "sse"):

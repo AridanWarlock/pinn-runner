@@ -70,6 +70,15 @@ class Constraints:
 
 
 @dataclass(frozen=True)
+class HardExecution:
+    backend: str = "eager"
+
+    def apply(self, config: dict[str, Any]) -> None:
+        if self.backend != "eager":
+            config["training"]["hard_execution"] = self.backend
+
+
+@dataclass(frozen=True)
 class TrainingComposition:
     adapters: tuple[TrainingAdapter, ...]
 

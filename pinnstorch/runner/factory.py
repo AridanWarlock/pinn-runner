@@ -215,12 +215,15 @@ class SolverFactory:
                 settings.domain.time.interval,
                 self.adapter.initial_tensors,
                 fused_predict=settings.training.hard_execution == "fused_predict",
+                product_rule=settings.training.hard_execution == "product_rule",
+                spatial_names=tuple(settings.domain.space),
             )
         return PINNModule(
             net,
             self.adapter.residuals,
             output_fn=output,
             constraint_kind=settings.training.constraints,
+            hard_execution=settings.training.hard_execution,
             constraint_signature=self.constraint_signature,
             refinement_settings=asdict(settings.training.refinement),
             optimizer=partial(

@@ -27,6 +27,7 @@ from benchmarks.variants import (  # noqa: E402
     BoundaryWeight,
     CollocationRefresh,
     Constraints,
+    HardExecution,
     RateDecay,
     RefinementSteps,
     TrainingComposition,
@@ -151,6 +152,9 @@ def arguments() -> tuple[argparse.Namespace, int]:
     parser.add_argument(
         "--constraints", choices=("soft", "hard_initial_dirichlet"), default="soft"
     )
+    parser.add_argument(
+        "--hard-execution", choices=("eager", "fused_predict", "product_rule"), default="eager"
+    )
     args = parser.parse_args()
     if (
         args.lbfgs_steps < 0
@@ -202,6 +206,7 @@ def main() -> int:
                     RateDecay(args.lr_final_ratio),
                     CollocationRefresh(args.resample_every_epochs, args.collocation_points),
                     Constraints(args.constraints),
+                    HardExecution(args.hard_execution),
                     RefinementSteps(args.lbfgs_steps),
                 )
             ),

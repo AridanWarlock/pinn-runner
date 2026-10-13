@@ -16,8 +16,20 @@ class HardBoxInitial:
     time_interval: tuple[float, float]
     initial: Callable[[list[torch.Tensor], torch.Tensor], TensorOutputs]
     fused_predict: bool = False
+    product_rule: bool = False
+    spatial_names: tuple[str, ...] = ()
 
     def __call__(self, outputs: TensorOutputs, *columns: torch.Tensor) -> TensorOutputs:
+        if self.product_rule and torch.is_grad_enabled():
+            from pinnstorch.api import Coordinates, DerivativeFields
+            from pinnstorch.training.hard_derivatives import HardBoxDerivatives
+
+            names = self.spatial_names or ("x", "y", "z")[: len(self.bounds)]
+            coordinates = Coordinates(dict(zip(names, columns[:-1])), columns[-1])
+            derivatives = HardBoxDerivatives(self, outputs, coordinates)
+            return DerivativeFields(
+                {name: derivatives.field(name) for name in outputs}, derivatives.supported_diff
+            )
         spatial, time = list(columns[:-1]), columns[-1]
         lower, upper = self.time_interval
         initial = self.initial(spatial, torch.full_like(time, lower))

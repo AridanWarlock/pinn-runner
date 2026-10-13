@@ -47,6 +47,18 @@ class Coordinates:
         raise ValueError(f"Unknown coordinate or parameter '{name}'")
 
 
+class DerivativeFields(dict[str, torch.Tensor]):
+    """Internal field mapping with an optional exact derivative execution rule."""
+
+    def __init__(
+        self,
+        fields: Mapping[str, torch.Tensor],
+        derivative: Callable[[str, str, int], torch.Tensor | None],
+    ) -> None:
+        super().__init__(fields)
+        self.derivative = derivative
+
+
 class Equation:
     """Fields and differentiable operators with a per-batch derivative cache."""
 
@@ -67,6 +79,16 @@ class Equation:
         if isinstance(order, bool) or not isinstance(order, int) or order < 1:
             raise ValueError("Derivative order must be a positive integer")
         coordinate = self.coordinates.variable(axis)
+        if isinstance(value, str) and isinstance(self.fields, DerivativeFields):
+            if not coordinate.requires_grad:
+                raise ValueError("Derivatives require coordinates with requires_grad=True")
+            prepared_key = (value, (axis,) * order)
+            if prepared_key in self._derivatives:
+                return self._derivatives[prepared_key]
+            prepared = self.fields.derivative(value, axis, order)
+            if prepared is not None:
+                self._derivatives[prepared_key] = prepared
+                return prepared
         if isinstance(value, str) and (value, (axis,)) not in self._derivatives:
             self._prime_first_derivatives(value)
         result = self.field(value) if isinstance(value, str) else value

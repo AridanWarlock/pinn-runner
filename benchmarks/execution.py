@@ -100,7 +100,10 @@ def evaluate_checkpoint(
         for i in range(points.shape[1])
     ]
     with torch.set_grad_enabled(True):
-        values = factory.adapter.residuals(model(columns[:-1], columns[-1]), *columns)
+        # Independent validation: differentiate the physical field, bypassing
+        # any prepared derivative rule used to accelerate training.
+        physical = dict(model(columns[:-1], columns[-1]))
+        values = factory.adapter.residuals(physical, *columns)
         residual = torch.cat([values[name] for name in problem.equations], dim=1)
         error = float(residual.detach().square().mean().sqrt().cpu())
     bins = residual_time_bins(

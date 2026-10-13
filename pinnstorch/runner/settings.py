@@ -291,7 +291,9 @@ class Training:
         if epochs is None:
             raise ValueError("training.epochs must be a positive integer")
         constraints = reader.choice("constraints", "soft", ("soft", "hard_initial_dirichlet"))
-        hard_execution = reader.choice("hard_execution", "eager", ("eager", "fused_predict"))
+        hard_execution = reader.choice(
+            "hard_execution", "eager", ("eager", "fused_predict", "product_rule")
+        )
         if constraints == "soft" and hard_execution != "eager":
             raise ValueError("training.hard_execution requires hard constraints")
         return cls(

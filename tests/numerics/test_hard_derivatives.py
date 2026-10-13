@@ -56,3 +56,37 @@ def test_product_rule_preserves_derivatives_residual_and_weight_gradients(
     actual_grad = torch.autograd.grad(residual.square().mean(), weight, retain_graph=True)[0]
     expected_grad = torch.autograd.grad(reference.square().mean(), weight)[0]
     torch.testing.assert_close(actual_grad, expected_grad, rtol=tolerance, atol=tolerance)
+
+
+@pytest.mark.parametrize("order", [1, 2, 3])
+def test_equation_dispatch_and_higher_order_fallback(order: int) -> None:
+    x = torch.linspace(-2, 1, 7, dtype=torch.float64).reshape(-1, 1).requires_grad_()
+    t = torch.full_like(x, 2.4, requires_grad=True)
+    coordinates = Coordinates({"radius": x}, t)
+    weight = torch.tensor(0.7, dtype=torch.float64, requires_grad=True)
+    fields = {"u": torch.sin(x * weight + t)}
+
+    def initial(spatial: list[torch.Tensor], time: torch.Tensor) -> TensorFields:
+        return {"u": spatial[0].square().mul(weight)}
+
+    eager = HardBoxInitial([(-2, 1)], (2, 5), initial)
+    prepared = HardBoxInitial(
+        [(-2, 1)], (2, 5), initial, product_rule=True, spatial_names=("radius",)
+    )
+    expected = Equation(eager(fields, x, t), coordinates)
+    actual = Equation(prepared(fields, x, t), coordinates)
+    torch.testing.assert_close(actual.field("u"), expected.field("u"), rtol=0, atol=0)
+    derivative = actual.diff("u", "radius", order)
+    reference = expected.diff("u", "radius", order)
+    torch.testing.assert_close(derivative, reference, rtol=1e-12, atol=1e-12)
+    assert actual.diff("u", "radius", order) is derivative
+    torch.testing.assert_close(
+        torch.autograd.grad(derivative.square().mean(), weight, retain_graph=True)[0],
+        torch.autograd.grad(reference.square().mean(), weight)[0],
+        rtol=1e-12,
+        atol=1e-12,
+    )
+    with torch.no_grad():
+        torch.testing.assert_close(
+            prepared(fields, x, t)["u"], eager(fields, x, t)["u"], rtol=0, atol=0
+        )
