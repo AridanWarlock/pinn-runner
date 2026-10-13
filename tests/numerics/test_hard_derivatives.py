@@ -90,3 +90,30 @@ def test_equation_dispatch_and_higher_order_fallback(order: int) -> None:
         torch.testing.assert_close(
             prepared(fields, x, t)["u"], eager(fields, x, t)["u"], rtol=0, atol=0
         )
+
+
+def test_constant_fields_and_fresh_graph_after_parameter_update() -> None:
+    weight = torch.tensor(0.7, dtype=torch.float64, requires_grad=True)
+
+    def initial(spatial: list[torch.Tensor], time: torch.Tensor) -> TensorFields:
+        return {"u": torch.zeros_like(time)}
+
+    eager = HardBoxInitial([(0, 1)], (2, 5), initial)
+    prepared = HardBoxInitial([(0, 1)], (2, 5), initial, product_rule=True)
+    for iteration in range(3):
+        x = torch.tensor(
+            [[0.0], [0.2 + 0.1 * iteration], [1.0]], dtype=torch.float64, requires_grad=True
+        )
+        t = torch.full_like(x, 2.4 + iteration * 0.1, requires_grad=True)
+        coordinates = Coordinates({"x": x}, t)
+        fields = {"u": torch.ones_like(x) * weight}
+        actual = Equation(prepared(fields, x, t), coordinates)
+        reference = Equation(eager(fields, x, t), coordinates)
+        residual = actual.dt("u") - 0.1 * actual.laplacian("u")
+        expected = reference.dt("u") - 0.1 * reference.laplacian("u")
+        torch.testing.assert_close(residual, expected, rtol=1e-12, atol=1e-12)
+        gradient = torch.autograd.grad(residual.square().mean(), weight, retain_graph=True)[0]
+        expected_gradient = torch.autograd.grad(expected.square().mean(), weight)[0]
+        torch.testing.assert_close(gradient, expected_gradient, rtol=1e-12, atol=1e-12)
+        with torch.no_grad():
+            weight.add_(-0.1 * gradient)

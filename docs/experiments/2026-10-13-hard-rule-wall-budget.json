@@ -1,0 +1,32 @@
+{
+  "heat2d": {
+    "adam_steps": 3000,
+    "lbfgs_steps": 290,
+    "baseline_median_seconds": 33.457451900001615,
+    "product_median_seconds": 29.619543899898417,
+    "product_lbfgs100_median_seconds": 2.0158290000399575,
+    "selection": "Timing only; add floor((baseline-product)/LB100*100) rounded down to 10",
+    "seeds": [
+      1234,
+      4321,
+      19,
+      2026,
+      73
+    ]
+  },
+  "heat3d": {
+    "adam_steps": 3000,
+    "lbfgs_steps": 310,
+    "baseline_median_seconds": 42.64497709996067,
+    "product_median_seconds": 37.14445530006196,
+    "product_lbfgs100_median_seconds": 2.520809100009501,
+    "selection": "Timing only; add floor((baseline-product)/LB100*100) rounded down to 10",
+    "seeds": [
+      1234,
+      4321,
+      19,
+      2026,
+      73
+    ]
+  }
+}

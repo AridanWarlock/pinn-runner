@@ -67,7 +67,7 @@ class HardBoxDerivatives:
         return self.diff(name, axis, order)
 
     def diff(self, name: str, axis: str, order: int = 1) -> torch.Tensor:
-        if isinstance(order, bool) or order not in (1, 2):
+        if isinstance(order, bool) or not isinstance(order, int) or order not in (1, 2):
             raise ValueError("Product-rule prototype supports derivative orders 1 and 2")
         value = self.network.field(name)
         first = self.network.diff(name, axis)
