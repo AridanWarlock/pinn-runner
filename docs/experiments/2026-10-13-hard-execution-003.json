@@ -1,0 +1,46 @@
+{
+  "checkpoint": "C:\\Projects\\pinn-runner\\numerical-reports\\lbfgs-staged-hard-002\\heat3d-1234\\training\\checkpoints\\final.ckpt",
+  "checkpoint_sha256": "b4918c6f9a30d41281a84d2f8daeec7fd26b39fa0b93d2f88cd7753fc1b08dae",
+  "torch": "2.1.0+cu118",
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "tf32": false,
+  "dtype": "float32",
+  "setup_seconds": 0.11744539998471737,
+  "checkpoint_seed": 1234,
+  "max_field_difference": 0.0,
+  "random_holdout_max_difference": 1.7881393432617188e-07,
+  "rows": [],
+  "cold_rows": [
+    {
+      "repeat": 0,
+      "backend": "eager",
+      "seconds": 2.357538599986583
+    },
+    {
+      "repeat": 0,
+      "backend": "fused_predict",
+      "seconds": 2.348996300017461
+    },
+    {
+      "repeat": 1,
+      "backend": "fused_predict",
+      "seconds": 2.341175499954261
+    },
+    {
+      "repeat": 1,
+      "backend": "eager",
+      "seconds": 2.335218199994415
+    },
+    {
+      "repeat": 2,
+      "backend": "eager",
+      "seconds": 2.3399985000723973
+    },
+    {
+      "repeat": 2,
+      "backend": "fused_predict",
+      "seconds": 2.350787700037472
+    }
+  ],
+  "limitations": "Inference experiment only; no training-speedup claim. Cold child runner excludes parent setup."
+}

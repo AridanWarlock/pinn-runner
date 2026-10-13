@@ -509,7 +509,7 @@ checkpoint можно загружать с любым из этих двух ba
 Сравнение на одном сохранённом CUDA checkpoint:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/benchmark_hard_execution.py --trial numerical-reports/lbfgs-staged-hard-002/heat3d-1234 --report numerical-reports/hard-execution-001.json
+.\.venv\Scripts\python.exe scripts/benchmark_hard_execution.py --trial numerical-reports/lbfgs-staged-hard-002/heat3d-1234 --report numerical-reports/hard-execution-001.json --cold-runs 3
 ```
 
 Команду выполнять на Windows после обязательной установки и проверки
