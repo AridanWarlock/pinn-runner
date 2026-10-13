@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import logging
+import shutil
 import sys
 import time
 from dataclasses import replace
@@ -13,10 +14,12 @@ from pathlib import Path
 from typing import Any
 
 import torch
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from benchmarks.execution import launch  # noqa: E402
 from benchmarks.performance import prediction_speed  # noqa: E402
 from pinnstorch.runner.artifacts import ArtifactWriter  # noqa: E402
 from pinnstorch.runner.execution import SolverExecution  # noqa: E402
@@ -30,11 +33,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trial", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)
+    parser.add_argument("--cold-runs", type=int, default=0)
     args = parser.parse_args()
     if not torch.cuda.is_available():
         raise RuntimeError("This performance experiment requires the remote CUDA machine")
     if args.report.exists():
         raise ValueError("Refusing to overwrite an existing report")
+    if args.cold_runs < 0:
+        raise ValueError("cold-runs must be nonnegative")
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
     started = time.perf_counter()
@@ -62,6 +68,7 @@ def main() -> None:
     setup_seconds = time.perf_counter() - started
     rows: list[dict[str, Any]] = []
     max_difference = 0.0
+    random_difference = 0.0
     # Reverse order in each repeat to expose ordering/thermal bias.
     with torch.no_grad():
         for repetition in range(3):
@@ -87,7 +94,32 @@ def main() -> None:
             candidate = model.forward(batch[:-1], batch[-1])["u"]
             torch.testing.assert_close(candidate, eager, rtol=2e-6, atol=2e-6)
             max_difference = max(max_difference, float((candidate - eager).abs().max()))
+        generator = torch.Generator(device="cuda").manual_seed(20261013)
+        random_columns = [
+            torch.rand(4096, 1, generator=generator, device="cuda") * (right - left) + left
+            for left, right in [*transform.bounds, transform.time_interval]
+        ]
+        model.output_fn = transform
+        eager = model.forward(random_columns[:-1], random_columns[-1])["u"]
+        model.output_fn = replace(transform, fused_predict=True)
+        candidate = model.forward(random_columns[:-1], random_columns[-1])["u"]
+        torch.testing.assert_close(candidate, eager, rtol=2e-6, atol=2e-6)
+        random_difference = float((candidate - eager).abs().max())
     model.output_fn = transform
+    cold_rows: list[dict[str, float | str | int]] = []
+    for repetition in range(args.cold_runs):
+        for backend in (
+            ["eager", "fused_predict"] if repetition % 2 == 0 else ["fused_predict", "eager"]
+        ):
+            trial = args.report.parent / (args.report.stem + f"-cold-{repetition}-{backend}")
+            input_dir, output_dir = trial / "task", trial / "prediction"
+            input_dir.mkdir(parents=True, exist_ok=False)
+            shutil.copyfile(directory / "functions.py", input_dir / "functions.py")
+            config = yaml.safe_load((directory / "config.yaml").read_text(encoding="utf-8"))
+            config["training"]["hard_execution"] = backend
+            (input_dir / "config.yaml").write_text(yaml.safe_dump(config), encoding="utf-8")
+            seconds = launch(input_dir, output_dir, trial / "runner.log", checkpoint)
+            cold_rows.append({"repeat": repetition, "backend": backend, "seconds": seconds})
     report = {
         "checkpoint": str(checkpoint),
         "checkpoint_sha256": hashlib.sha256(checkpoint.read_bytes()).hexdigest(),
@@ -96,9 +128,12 @@ def main() -> None:
         "tf32": False,
         "dtype": "float32",
         "setup_seconds": setup_seconds,
+        "checkpoint_seed": settings.training.seed,
         "max_field_difference": max_difference,
+        "random_holdout_max_difference": random_difference,
         "rows": rows,
-        "limitations": "Warm device-resident predict only; not cold runner or training speedup",
+        "cold_rows": cold_rows,
+        "limitations": "Inference experiment only; no training-speedup claim. Cold child runner excludes parent setup.",
     }
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, indent=2), encoding="utf-8")
