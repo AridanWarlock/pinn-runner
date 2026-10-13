@@ -7,6 +7,7 @@ from typing import ClassVar
 import torch
 
 from pinnstorch.contracts import TensorOutputs
+from pinnstorch.training.dirichlet_lifting import DirichletLifting
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,9 @@ class HardBoxInitial:
         values = self.initial(spatial, initial_time)
         if self.lifting is None:
             return values
+        if isinstance(self.lifting, DirichletLifting):
+            delta = self.lifting.difference(spatial, time, initial_time)
+            return {name: value + delta[name] for name, value in values.items()}
         current = self.lifting(spatial, time)
         original = self.lifting(spatial, initial_time)
         return {name: value + (current[name] - original[name]) for name, value in values.items()}

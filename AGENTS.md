@@ -103,3 +103,11 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
 - Prioritize current-stack model accuracy/performance before dependency upgrades.
   Runtime upgrade tasks stay Deferred until their dependencies are complete.
 - See `docs/task-tracking.md` for statuses and experiment evidence requirements.
+
+# Математическая документация
+
+- Записывайте формулы LaTeX в отдельных блоках `$$ ... $$`.
+- Встроенный в предложение синтаксис `$ ... $` не отображается в интерфейсе
+  пользователя. В тексте используйте обычные названия переменных или code spans;
+  выражения выносите в отдельные математические блоки.
+- Объясняйте обозначения и предпосылки формул словами рядом с блоком.

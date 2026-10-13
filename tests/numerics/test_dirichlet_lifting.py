@@ -1,6 +1,7 @@
 """Shifted box lifting, exact traces, physical derivatives and training gradients."""
 
 import os
+from dataclasses import replace
 from functools import partial
 from itertools import product
 from pathlib import Path
@@ -60,12 +61,21 @@ def test_lifting_and_product_rule(dimensions: int, dtype: torch.dtype) -> None:
     time = torch.full_like(columns[0], 3.2, requires_grad=True)
     fields = {"u": torch.sin(sum(columns) * weight + time)}
     coordinates = Coordinates(dict(zip(names, columns)), time)
-    eager = Equation(recipe(fields, *columns, time), coordinates)
+    baseline = replace(recipe, lifting=lifting.__call__)
+    eager = Equation(baseline(fields, *columns, time), coordinates)
+    fused = Equation(recipe(fields, *columns, time), coordinates)
     optimized = Equation(ProductRuleHard(recipe)(fields, *columns, time), coordinates)
     tolerance = 2e-11 if dtype == torch.float64 else 3e-4
+    torch.testing.assert_close(fused.field("u"), eager.field("u"), rtol=tolerance, atol=tolerance)
+    torch.testing.assert_close(
+        optimized.field("u"), eager.field("u"), rtol=tolerance, atol=tolerance
+    )
     for axis in (*names, "t"):
         for order in (1, 2):
             actual, expected = optimized.diff("u", axis, order), eager.diff("u", axis, order)
+            torch.testing.assert_close(
+                fused.diff("u", axis, order), expected, rtol=tolerance, atol=tolerance
+            )
             torch.testing.assert_close(actual, expected, rtol=tolerance, atol=tolerance)
             torch.testing.assert_close(
                 torch.autograd.grad(actual.square().mean(), weight, retain_graph=True)[0],

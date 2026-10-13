@@ -75,3 +75,39 @@ class DirichletLifting:
                 weight.mul(value).mul(term.sign)
             )
         return result
+
+    def difference(
+        self, spatial: list[torch.Tensor], time: torch.Tensor, initial_time: torch.Tensor
+    ) -> TensorOutputs:
+        """One forward's geometry; keep every coordinate/parameter AD dependency."""
+        factors = [
+            (normalized.neg().add(1), normalized)
+            for column, (left, right) in zip(spatial, self.bounds)
+            for normalized in (column.sub(left).div(right - left),)
+        ]
+        fixed = {
+            (axis, side): torch.full_like(column, self.bounds[axis][side])
+            for axis, column in enumerate(spatial)
+            for side in (0, 1)
+        }
+        # Prefixes are available because terms are compiled by increasing degree.
+        geometry: dict[tuple[tuple[int, int], ...], tuple[list[torch.Tensor], torch.Tensor]] = {
+            (): (spatial, torch.ones_like(time))
+        }
+        result = {field: torch.zeros_like(time) for field in self.fields}
+        for term in self.terms:
+            key = term.projections
+            if key not in geometry:
+                parent, parent_weight = geometry[key[:-1]]
+                axis, side = key[-1]
+                projected = list(parent)
+                projected[axis] = fixed[axis, side]
+                geometry[key] = (projected, parent_weight.mul(factors[axis][side]))
+            projected, weight = geometry[key]
+            delta = term.trace.value(projected, time).sub(
+                term.trace.value(projected, initial_time)
+            )
+            result[term.trace.field] = result[term.trace.field].add(
+                weight.mul(delta).mul(term.sign)
+            )
+        return result
