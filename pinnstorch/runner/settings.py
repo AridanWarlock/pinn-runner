@@ -223,6 +223,27 @@ class ScheduleSettings:
 
 
 @dataclass(frozen=True)
+class Refinement:
+    steps: int = 0
+    learning_rate: float = 1.0
+    history_size: int = 50
+    tolerance_grad: float = 1e-7
+    tolerance_change: float = 1e-9
+
+    @classmethod
+    def read(cls, reader: Reader) -> Refinement:
+        reader.only("steps", "learning_rate", "history_size", "tolerance_grad", "tolerance_change")
+        steps = reader.integer("steps", 0, 0)
+        history = reader.integer("history_size", 50)
+        rate = reader.number("learning_rate", 1)
+        grad = reader.number("tolerance_grad", 1e-7)
+        change = reader.number("tolerance_change", 1e-9)
+        if steps is None or history is None or min(rate, grad, change) <= 0:
+            raise ValueError(f"{reader.path}: positive rate/history/tolerances required")
+        return cls(steps, rate, history, grad, change)
+
+
+@dataclass(frozen=True)
 class Training:
     epochs: int
     steps: int | None
@@ -234,6 +255,7 @@ class Training:
     loss: LossSettings = LossSettings()
     schedule: ScheduleSettings = ScheduleSettings()
     constraints: str = "soft"
+    refinement: Refinement = Refinement()
 
     @classmethod
     def read(cls, reader: Reader) -> Training:
@@ -248,6 +270,7 @@ class Training:
             "loss",
             "schedule",
             "constraints",
+            "refinement",
         )
         if (
             ScheduleSettings.read(reader.section("schedule")).kind != "constant"
@@ -255,6 +278,14 @@ class Training:
         ):
             raise ValueError("training.schedule requires explicit training.steps")
         epochs = reader.integer("epochs", 100)
+        refinement = Refinement.read(reader.section("refinement"))
+        if refinement.steps and (
+            reader.integer("steps", None) is None
+            or Optimizer.read(reader.section("optimizer")).weight_decay != 0
+        ):
+            raise ValueError(
+                "training.refinement requires explicit Adam steps and zero weight_decay"
+            )
         if epochs is None:
             raise ValueError("training.epochs must be a positive integer")
         return cls(
@@ -268,6 +299,7 @@ class Training:
             LossSettings.read(reader.section("loss")),
             ScheduleSettings.read(reader.section("schedule")),
             reader.choice("constraints", "soft", ("soft", "hard_initial_dirichlet")),
+            refinement,
         )
 
 

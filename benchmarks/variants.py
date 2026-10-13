@@ -52,6 +52,15 @@ class CollocationRefresh:
 
 
 @dataclass(frozen=True)
+class RefinementSteps:
+    steps: int = 0
+
+    def apply(self, config: dict[str, Any]) -> None:
+        if self.steps:
+            config["training"]["refinement"] = {"steps": self.steps}
+
+
+@dataclass(frozen=True)
 class Constraints:
     kind: str = "soft"
 

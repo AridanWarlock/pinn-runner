@@ -174,12 +174,22 @@ def finish_trial(
     memory_file = checkpoint.parent.parent / "training.performance.json"
     if memory_file.exists():
         performance.update(json.loads(memory_file.read_text(encoding="utf-8")))
+    if performance.get("lbfgs_steps", 0):
+        performance["optimizer_calls_per_second"] = (steps + performance["lbfgs_steps"]) / duration
+        performance["total_model_evaluations"] = (
+            performance["adam_model_evaluations"] + performance["lbfgs_closure_evaluations"]
+        )
+        performance["total_residual_points"] = (
+            performance["adam_residual_points"] + performance["lbfgs_residual_points"]
+        )
     result: dict[str, Any] = {
         "case": case.name,
         "seed": seed,
         "steps": steps,
         "fingerprint": fingerprint(case, device, steps, seed),
         "constraint_kind": state.get("hyper_parameters", {}).get("constraint_kind", "soft"),
+        "refinement_recipe": state.get("hyper_parameters", {}).get("refinement_settings")
+        or {"steps": 0},
         "sampling_recipe": {
             **case.config(device, steps, seed)["training"]["collocation"],
             "version": 1,

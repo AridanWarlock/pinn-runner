@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import torch
 from lightning import LightningModule
@@ -45,6 +45,7 @@ class PINNModule(LightningModule):
         rate_settings: dict[str, str | float | int] | None = None,
         constraint_kind: str = "soft",
         constraint_signature: str = "",
+        refinement_settings: dict[str, int | float] | None = None,
     ) -> None:
         super().__init__()
         if loss_fn not in ("mse", "sse"):
@@ -67,6 +68,9 @@ class PINNModule(LightningModule):
         )
         self.gradient_norm_every = int(recipe.get("gradient_norm_every", 0))
         self.loss_terms: dict[str, torch.Tensor] = {}
+        self.refinement_state: dict[str, Any] | None = None
+        self.adam_evaluations = 0
+        self.adam_residual_points = 0
         self.function_mapping: dict[str, SamplerLoss] = {}
         self.train_loss, self.val_loss, self.val_loss_best = (
             MeanMetric(),
@@ -82,6 +86,10 @@ class PINNModule(LightningModule):
     def forward(self, spatial: list[torch.Tensor], time: torch.Tensor) -> TensorOutputs:
         outputs = cast(TensorOutputs, self.net(spatial, time))
         return self.output_fn(outputs, *spatial, time) if self.output_fn else outputs
+
+    def on_save_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        if self.refinement_state is not None:
+            checkpoint["refinement_state"] = self.refinement_state
 
     def _data_module(self) -> PINNDataModule:
         return cast("PINNDataModule", getattr(self.trainer, "datamodule"))
@@ -101,6 +109,9 @@ class PINNModule(LightningModule):
         return self.loss_policy.combine(terms), outputs
 
     def training_step(self, batch: dict[str, SamplerBatch], batch_idx: int) -> torch.Tensor:
+        self.adam_evaluations += 1
+        if "equations" in batch:
+            self.adam_residual_points += len(batch["equations"][1])
         loss, _ = self.model_step(batch)
         for name, value in self.loss_terms.items():
             self.log(f"train/terms/{name}", value.detach(), on_step=True, on_epoch=False)

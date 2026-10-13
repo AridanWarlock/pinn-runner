@@ -429,3 +429,53 @@ CUDA runner записывает training.performance.json с peak_allocated_byt
 peak_reserved_bytes PyTorch allocator, от сброса статистики перед fit до его конца.
 Это не вся память GPU/драйвера. Benchmark переносит эти поля в performance.
 Для старых checkpoint без профиля поле отсутствует — память не считается измеренной.
+
+### Adam → L-BFGS
+
+```yaml
+training:
+  steps: 3000                  # Adam updates, unchanged meaning
+  optimizer: {learning_rate: 0.001, weight_decay: 0}
+  refinement:
+    steps: 100                 # additional L-BFGS optimizer calls; 0 disables
+    learning_rate: 1.0
+    history_size: 50
+    tolerance_grad: 1.0e-7
+    tolerance_change: 1.0e-9
+```
+
+После Adam запускается отдельная полноразмерная стадия L-BFGS с strong Wolfe
+line search и max_iter=1 на внешний шаг. Один такой шаг может вычислять closure
+несколько раз; при сходимости некоторые вызовы не изменяют веса.
+Все текущие IC/BC/PDE-координаты фиксируются на всю стадию, включая случай,
+когда во время Adam был включён resampling. Начальное условие и граничные
+операторы не заменяются: полноразмерный objective сохраняет их нормализацию.
+Используется полный batch каждой группы, поэтому память может заметно вырасти.
+
+Поддерживаются 32-true и один device, без weight_decay. Стадия совместима с soft
+и применимыми hard constraints. Диагностика градиентов отдельных компонентов
+в closure не запускается. Аналитические ошибки не используются для line search
+или остановки. Финальные веса отражают обе стадии.
+
+checkpoints/adam.ckpt сохраняет окончание Adam; best/last относятся к Adam,
+final.ckpt — к полному запуску. global_step остаётся числом Adam-шагов.
+refinement_state содержит optimizer/history, фиксированные batches, version,
+completed и счётчики стадии. hyper_parameters.refinement_settings фиксирует recipe.
+При сохранённом model state отдельная стадия умеет восстанавливать состояние;
+CLI --checkpoint по-прежнему fine-tune, не автоматическое продолжение Adam/L-BFGS.
+Для полного Lightning resume финального staged checkpoint нельзя полагаться
+только на его Adam optimizer_states: завершённая стадия отмечена отдельно.
+
+training.performance.json и benchmark performance содержат adam_steps,
+adam_seconds (fit), adam_model_evaluations, adam_residual_points, lbfgs_seconds,
+lbfgs_steps, lbfgs_internal_iterations, lbfgs_closure_evaluations,
+lbfgs_condition_evaluations, lbfgs_residual_points. Последний показатель — число
+посещений PDE-точек, не количество скалярных уравнений. CUDA peak охватывает
+обе стадии. Полное training_seconds бенчмарка дополнительно включает запуск
+процесса/подготовку/сохранение: оно не равно только adam_seconds + lbfgs_seconds.
+
+Benchmark flag --lbfgs-steps 100 добавляет стадию к указанному --steps,
+--lbfgs-steps 0 оставляет прежний Adam. Для комбинации используется также
+--constraints hard_initial_dirichlet. Сравнение по числу внешних шагов не
+считается сравнением вычислительных бюджетов: смотрим closure counts, точки,
+время, память и независимую точность. Report сохраняет refinement_recipe.

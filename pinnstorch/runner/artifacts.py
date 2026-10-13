@@ -38,7 +38,7 @@ class ArtifactWriter:
             "coefficients.json", {"signatures": dict(signature), "interpolation": "multilinear"}
         )
 
-    def save_training_performance(self, values: Mapping[str, int]) -> None:
+    def save_training_performance(self, values: Mapping[str, int | float]) -> None:
         self._json("training.performance.json", values)
 
     def save_training_predictions(self, predictions: TensorOutputs) -> None:

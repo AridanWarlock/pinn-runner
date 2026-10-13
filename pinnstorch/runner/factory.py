@@ -221,6 +221,7 @@ class SolverFactory:
             output_fn=output,
             constraint_kind=settings.training.constraints,
             constraint_signature=self.constraint_signature,
+            refinement_settings=asdict(settings.training.refinement),
             optimizer=partial(
                 optimizer_class, lr=optimizer.learning_rate, weight_decay=optimizer.weight_decay
             ),
@@ -250,6 +251,11 @@ class SolverFactory:
 
     def _trainer(self, checkpoint: ModelCheckpoint) -> L.Trainer:
         training, runtime = self.settings.training, self.settings.runtime
+        device_count = (
+            len(runtime.devices) if isinstance(runtime.devices, tuple) else runtime.devices
+        )
+        if training.refinement.steps and (runtime.precision != "32-true" or device_count != 1):
+            raise ValueError("L-BFGS refinement requires 32-true precision and one device")
         logger = CSVLogger(str(self.output / "csv"), name="metrics") if runtime.metrics else False
         devices = list(runtime.devices) if isinstance(runtime.devices, tuple) else runtime.devices
         return L.Trainer(

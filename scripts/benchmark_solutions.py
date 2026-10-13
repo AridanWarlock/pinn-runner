@@ -28,6 +28,7 @@ from benchmarks.variants import (  # noqa: E402
     CollocationRefresh,
     Constraints,
     RateDecay,
+    RefinementSteps,
     TrainingComposition,
 )
 from pinnstorch.runner.settings import LossSettings, Reader, ScheduleSettings  # noqa: E402
@@ -145,11 +146,16 @@ def arguments() -> tuple[argparse.Namespace, int]:
     parser.add_argument("--resample-every-epochs", type=int, default=0)
     parser.add_argument("--collocation-points", type=int, help="Override the case point budget")
     parser.add_argument(
+        "--lbfgs-steps", type=int, default=0, help="Additional full-objective steps"
+    )
+    parser.add_argument(
         "--constraints", choices=("soft", "hard_initial_dirichlet"), default="soft"
     )
     args = parser.parse_args()
-    if args.resample_every_epochs < 0 or (
-        args.collocation_points is not None and args.collocation_points < 1
+    if (
+        args.lbfgs_steps < 0
+        or args.resample_every_epochs < 0
+        or (args.collocation_points is not None and args.collocation_points < 1)
     ):
         parser.error("Sampling counts must be positive; refresh interval nonnegative")
     ScheduleSettings.read(
@@ -196,6 +202,7 @@ def main() -> int:
                     RateDecay(args.lr_final_ratio),
                     CollocationRefresh(args.resample_every_epochs, args.collocation_points),
                     Constraints(args.constraints),
+                    RefinementSteps(args.lbfgs_steps),
                 )
             ),
         )
