@@ -12,11 +12,16 @@
 Область Ω = ∏[aᵢ,bᵢ], время [t₀,t₁], Lᵢ = bᵢ−aᵢ > 0, T = t₁−t₀ > 0.
 Уравнение: u_t − κ Δu = 0, κ = 0.1. Сохраняем тот же класс моделей:
 
-    ξᵢ = (xᵢ−aᵢ)/Lᵢ,
-    βᵢ = 4ξᵢ(1−ξᵢ),
-    B = ∏ βᵢ,
-    τ = (t−t₀)/T,
-    u = g(x) + τ B(x) Nθ(x,t).
+$$
+\xi_i=\frac{x_i-a_i}{L_i},\quad
+\beta_i=4\xi_i(1-\xi_i),\quad
+B=\prod_{i=1}^{d}\beta_i,\quad
+\tau=\frac{t-t_0}{T}.
+$$
+
+$$
+u_\theta(\mathbf{x},t)=g(\mathbf{x})+\tau B(\mathbf{x})N_\theta(\mathbf{x},t).
+$$
 
 При t=t₀ поправка равна нулю: u=g. На любой грани B=0, поэтому u=g=0
 при совместимом начальном поле. Значения g из float32 sin(pi*x) на границах
@@ -27,8 +32,11 @@
 применяем правило произведения явно, сохраняя autograd для g и N.
 Обозначим Qᵢ = ∏ⱼ≠ᵢ βⱼ. Тогда:
 
-    B_i  = Qᵢ · 4(1−2ξᵢ)/Lᵢ,
-    B_ii = Qᵢ · (−8/Lᵢ²).
+$$
+Q_i=\prod_{j\ne i}\beta_j,\qquad
+B_i=Q_i\frac{4(1-2\xi_i)}{L_i},\qquad
+B_{ii}=-\frac{8Q_i}{L_i^2}.
+$$
 
 Индексы i/ii здесь означают производные по физической координате xᵢ,
 а не по нормализованной ξᵢ. Qᵢ считается прямым произведением: никогда не
@@ -38,18 +46,28 @@
 
 Поскольку g не зависит от текущего времени, τ_t=1/T, B_t=0:
 
-    u_t  = B N/T + τ B N_t,
-    u_tt = 2 B N_t/T + τ B N_tt.
+$$
+\begin{aligned}
+u_t&=\frac{B}{T}N+\tau BN_t,\\
+u_{tt}&=\frac{2B}{T}N_t+\tau BN_{tt}.
+\end{aligned}
+$$
 
 По пространственной координате:
 
-    u_i  = g_i + τ(B_i N + B N_i),
-    u_ii = g_ii + τ(B_ii N + 2 B_i N_i + B N_ii).
+$$
+\begin{aligned}
+u_i&=g_i+\tau(B_iN+BN_i),\\
+u_{ii}&=g_{ii}+\tau(B_{ii}N+2B_iN_i+BN_{ii}).
+\end{aligned}
+$$
 
 Следовательно, тот же heat residual:
 
-    r = B N/T + τ B N_t
-        − κ [Δg + τ((ΔB)N + 2∇B·∇N + BΔN)].
+$$
+r=\frac{B}{T}N+\tau BN_t
+-\kappa\left[\Delta g+\tau\left((\Delta B)N+2\nabla B\cdot\nabla N+B\Delta N\right)\right].
+$$
 
 Не делим residual на τB и не меняем его единицы или веса loss. N_i и N_t
 уже получены по физическим координатам через autograd FCN, включая его
@@ -58,8 +76,10 @@
 
 Сохраняется и градиент по весам θ. Например, пространственный член имеет:
 
-    ∂θ u_ii = ∂θ g_ii
-              + τ(B_ii ∂θN + 2 B_i ∂θN_i + B ∂θN_ii).
+$$
+\partial_\theta u_{ii}=\partial_\theta g_{ii}
++\tau\left(B_{ii}\partial_\theta N+2B_i\partial_\theta N_i+B\partial_\theta N_{ii}\right).
+$$
 
 Первые и вторые координатные производные N вычисляются с create_graph=True,
 поэтому ∂θN_ii не теряется. Производные g тоже не отсоединены. Отдельный тест
