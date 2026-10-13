@@ -40,7 +40,7 @@ Windows-файловая блокировка допускает только о
 
 Статусы: queued → running → passed / failed / timed_out. running обновляет
 updated_at примерно раз в три секунды; после завершения сохраняются exit_code
-и finished_at. Timeout останавливает дерево benchmark-процесса через taskkill,
+и finished_at. Timeout останавливает дерево benchmark-процесса через Windows Job Object,
 а логи и частичные результаты сохраняются. ПК должен оставаться включённым;
 сон/перезапуск Windows не поддерживают продолжение optimizer state.
 
