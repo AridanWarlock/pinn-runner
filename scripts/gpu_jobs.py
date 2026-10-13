@@ -76,8 +76,7 @@ $env:TMP = $env:TEMP
 exit $LASTEXITCODE
 """
     worker_encoded = base64.b64encode(worker_script.encode("utf-16le")).decode("ascii")
-    script = f"""$startup = New-CimInstance -ClassName Win32_ProcessStartup -ClientOnly
-$startup.ShowWindow = 0
+    script = f"""$startup = New-CimInstance -ClassName Win32_ProcessStartup -ClientOnly -Property @{{ShowWindow=[uint16]0}}
 $result = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{{CommandLine='powershell.exe -NoProfile -NonInteractive -EncodedCommand {worker_encoded}'; CurrentDirectory='{WINDOWS_ROOT}'; ProcessStartupInformation=$startup}}
 if ($result.ReturnValue -ne 0) {{ throw "Worker launch failed: $($result.ReturnValue)" }}
 @{{job_id='{identifier}'; launcher_pid=$result.ProcessId; state='queued'}} | ConvertTo-Json -Compress
