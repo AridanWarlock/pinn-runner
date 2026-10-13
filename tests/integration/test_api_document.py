@@ -14,7 +14,7 @@ pytestmark = pytest.mark.e2e
 
 
 def test_api_example(tmp_path: Path) -> None:
-    source = (ROOT / "docs/API.md").read_text()
+    source = (ROOT / "docs/API.md").read_text(encoding="utf-8")
     input_dir = tmp_path / "input"
     input_dir.mkdir()
     for marker, language, filename in (
@@ -23,7 +23,7 @@ def test_api_example(tmp_path: Path) -> None:
     ):
         block = re.search(rf"<!-- {marker} -->\s*```{language}\n(.*?)\n```", source, re.DOTALL)
         assert block is not None
-        (input_dir / filename).write_text(block.group(1) + "\n")
+        (input_dir / filename).write_text(block.group(1) + "\n", encoding="utf-8")
     train_dir = tmp_path / "train"
     result = launch(input_dir, train_dir)
     assert result.returncode == 0, result.stdout + result.stderr
