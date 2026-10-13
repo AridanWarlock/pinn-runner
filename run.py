@@ -35,13 +35,13 @@ def parse_args(argv: Sequence[str] | None = None) -> RunnerArguments:
         "--mode",
         required=True,
         choices=[mode.value for mode in Mode],
-        help="Режим работы (train, retrain, predict)",
+        help="Execution mode (train, retrain, predict)",
     )
     parser.add_argument(
         "--checkpoint",
         type=Path,
         default=None,
-        help="Имя файла с весами ранее обученной модели",
+        help="Checkpoint file containing trained model weights",
     )
     parser.add_argument(
         "--input-dir", type=Path, default=INPUT_DIR, help="Directory with task files"

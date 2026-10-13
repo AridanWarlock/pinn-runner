@@ -1,6 +1,7 @@
 """Run independently of training fixtures: pytest --noconftest tests/runner."""
 
 import importlib.util
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -57,9 +58,11 @@ def test_invalid_arguments_do_not_start_training(argv: list[str]) -> None:
     execute.assert_not_called()
 
 
-def test_help_without_training_dependencies() -> None:
+@pytest.mark.parametrize("encoding", ["utf-8", "cp1252", "ascii"])
+def test_help_without_training_dependencies(encoding: str) -> None:
     result = subprocess.run(
         [sys.executable, str(RUNNER_PATH), "--help"],
+        env=dict(os.environ, PYTHONIOENCODING=encoding),
         capture_output=True,
         text=True,
         check=False,
