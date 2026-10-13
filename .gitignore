@@ -172,3 +172,6 @@ misc
 /examples/heat_spatial_coefficient/conductivity.npz
 
 /backend-report/
+
+/numerical-reports/
+/.tmp/

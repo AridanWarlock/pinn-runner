@@ -98,3 +98,8 @@ Hydra/discrete/inverse pipeline, удалены.
 `python scripts/check_backend.py`. На Mac используйте `--device cpu`.
 Инструкции Windows и состав проверок: [cuda-testing.md](cuda-testing.md).
 Порядок дальнейшей работы: [roadmap.md](roadmap.md).
+
+## Numerical acceptance
+
+Долгие CUDA-прогоны против аналитических решений выполняются отдельно от pytest.
+Состав задач, метрики и baseline-сравнение: [numerical-benchmarks.md](numerical-benchmarks.md).

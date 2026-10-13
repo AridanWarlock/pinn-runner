@@ -10,6 +10,7 @@ TARGETS = [
     "run.py",
     "pinnstorch",
     "scripts",
+    "benchmarks",
     "tests/runner",
     "tests/numerics",
     "tests/hardware",

@@ -16,6 +16,7 @@ Runner создаёт сеть, обучает её по PDE/начальным/
 - [Проверки разработки](docs/development.md)
 - [План развития и критерии готовности](docs/roadmap.md)
 - [Windows и CUDA: подготовка и проверки](docs/cuda-testing.md)
+- [Аналитические PDE-бенчмарки и регрессии обучения](docs/numerical-benchmarks.md)
 - [CPU-тесты](tests/README.md)
 - [2D теплопроводность](examples/heat2d)
 - [2D теплопроводность с табличным полем](examples/heat_spatial_coefficient)
