@@ -14,7 +14,12 @@ from benchmarks.cases import CASES
 from benchmarks.execution import fingerprint
 from benchmarks.metrics import quality_failures, regression_failures, solution_errors
 from benchmarks.policies import CartesianGrid, FixedQuality, TrainingBudget
-from benchmarks.variants import BenchmarkVariant, BoundaryWeight
+from benchmarks.variants import (
+    BenchmarkVariant,
+    BoundaryWeight,
+    CollocationRefresh,
+    TrainingComposition,
+)
 from pinnstorch.api import Coordinates, Equation
 from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import TaskSettings
@@ -25,14 +30,24 @@ def test_variant_preserves_custom_grid_budget_and_acceptance() -> None:
     case = replace(
         CASES["heat2d"],
         grid=CartesianGrid(space_points=(9, 21)),
-        budget=TrainingBudget(layers=(16, 16), learning_rate=0.002),
+        budget=TrainingBudget(layers=(16, 16), learning_rate=0.002, collocation_points=512),
         quality=FixedQuality(relative_l2=0.02),
     )
-    variant = BenchmarkVariant(case.name, case.dimensions, base=case, adapter=BoundaryWeight(3))
+    variant = BenchmarkVariant(
+        case.name,
+        case.dimensions,
+        base=case,
+        adapter=TrainingComposition((BoundaryWeight(3), CollocationRefresh(1))),
+    )
     config = variant.config("cpu", 100, 19)
     assert config["domain"]["space"]["x"]["points"] == 9
     assert config["network"]["hidden_layers"] == [16, 16]
     assert config["training"]["optimizer"]["learning_rate"] == 0.002
+    assert config["training"]["collocation"] == {
+        "sampling": "lhs",
+        "points": 512,
+        "resample_every_epochs": 1,
+    }
     metrics = dict(relative_l2=0.03, max_error=0, pde_rmse=0, initial_rmse=0, boundary_rmse=0)
     assert len(quality_failures(variant, metrics)) == 1
     assert not quality_failures(CASES["heat2d"], metrics)

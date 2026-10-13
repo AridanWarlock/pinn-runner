@@ -42,10 +42,11 @@ class RateDecay:
 @dataclass(frozen=True)
 class CollocationRefresh:
     every_epochs: int = 0
-    points: int = 1024
+    points: int | None = None
 
     def apply(self, config: dict[str, Any]) -> None:
-        config["training"]["collocation"]["points"] = self.points
+        if self.points is not None:
+            config["training"]["collocation"]["points"] = self.points
         if self.every_epochs:
             config["training"]["collocation"]["resample_every_epochs"] = self.every_epochs
 
