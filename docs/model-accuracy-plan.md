@@ -126,3 +126,136 @@ Fast check после отдельных блоков; full при измене�
 - https://proceedings.mlr.press/v235/rathore24a.html — Adam + L-BFGS.
 - https://arxiv.org/abs/2203.07404 — causal training.
 - https://arxiv.org/abs/physics/9705023 — точные ограничения.
+
+## Обновление библиотек и ускорение backend (исследовано 2026-10-13)
+
+Сейчас runtime закреплён: torch 2.1.0 / CUDA 11.8, lightning и pytorch-lightning
+2.1.0, torchmetrics 1.2.0, numpy 1.26.4, scipy 1.11.4, pyDOE 0.3.8.
+Официальный релиз PyTorch 2.14 вышел 2 сентября 2026; последний опубликованный
+Lightning release — 2.6.6. Это кандидаты для отдельной среды, не уже проверенный
+новый production stack. Совместимость wheels/Python/CUDA/драйвера и Lightning
+проверить разрешением зависимостей и реальным запуском перед фиксацией lock.
+
+PyTorch 2.14 улучшает eager dispatch/autograd и compiler overhead, вводит
+NVGEMM в Inductor. Большая часть других улучшений (attention, distributed/NCCL,
+низкая точность, новые GPU) не относится к нашей небольшой Tanh MLP на одной
+4070 Ti. MPS улучшения потенциально полезны на Mac, но текущие CPU-тесты они
+не ускоряют; MPS не подменяет CUDA acceptance. CUDA Graphs, torch.compile,
+fused Adam и torch.func появились раньше 2.14: новый релиз не обязателен для
+каждого из этих экспериментов.
+
+### Приоритеты и математический контракт
+
+1. Обновлённый eager FP32: одинаковые уравнения, производные, IC/BC, sampling,
+   optimizer hyperparameters. Только затем включать ускорители по одному.
+   Прирост от версии неизвестен; возможны нулевой эффект и регрессия.
+2. OptimizerExecution: default / foreach / fused Adam. Сохраняет формулы Adam,
+   но порядок операций и округления может отличаться. Это не новая стратегия
+   обучения: не смешивать с decay или LBFGS при первом сравнении. Проверять
+   beta/epsilon/weight_decay/state resume, поддержку CUDA и dtype. На CPU
+   eager/default; явно запрошенный неподдерживаемый режим => понятная ошибка.
+3. GraphExecution: eager / CUDA graph. При статических tensor shapes уменьшает
+   CPU kernel launch overhead. Сначала чистый predict; затем отдельно training
+   residual+backward+optimizer. Постоянные input buffers, копирование новых
+   значений, warmup и capture. Последний неполный batch обрабатывать отдельным
+   путём; padding не должен менять среднее loss или число обучающих примеров.
+   Sampling/resampling обновляет данные buffers, не делает точки постоянными.
+4. CompileExecution: off / predict / residual_training. Сначала predict без
+   производных. PINN training требует производных по координатам, вторых
+   производных и затем градиента loss по весам: compiled forward сам по себе
+   не доказывает поддержку этого пути. AOTAutograd исторически имел ограничения
+   double backward; актуальную поддержку конкретного пути проверять минимальным
+   тестом на выбранной версии, не считать исправленной по номеру релиза.
+5. DerivativeBackend: текущий autograd / functional torch.func (functional_call,
+   vmap, jacrev/jacfwd). Сравнить diagonal Hessian/направленные производные, не
+   строить полный Hessian по всей пачке и не включать parameter inputs в Laplacian.
+   Разные схемы AD могут быть быстрее или медленнее; проверять градиенты по весам,
+   коэффициентам, multi-output и transforms. Это потенциально более полезное
+   изменение, чем простое обновление пакета, но существенно сложнее.
+6. MathPrecision: strict FP32 / TF32 / mixed. Последние меняют численную точность,
+   поэтому отдельная гипотеза, а не прозрачное ускорение. FP16/BF16 могут ухудшать
+   вторые производные и small residual; в default только после numerical gates.
+   Сохранить dtype и матмул-настройки в отчёте, сравнивать с FP64 derivative checks.
+
+Эти execution adapters ортогональны TrainingPlan из раздела выше. Не использовать
+один переключатель «fast», незаметно включающий новую точность/optimizer/sampling.
+Каждый report содержит requested/effective execution mode, graph breaks,
+число recompilations, preparation seconds и причины отказа. Нельзя обозначать
+fallback eager как успешно проверенную compilation.
+
+### Windows, контейнер и совместимость
+
+Официальный tutorial Inductor Windows описывает CPU/XPU, а не NVIDIA CUDA.
+Для Windows CUDA существует triton-lang/triton-windows с собственной матрицей
+PyTorch/Triton/toolchain. Не считать pip install нового torch достаточным для
+GPU compile. Первый этап на Windows — eager/fused/CUDA graphs; compile проверять
+также в целевом Linux CUDA Docker. WSL не требуется включать в текущий план.
+
+Новые CUDA wheels используют новые runtime; это отдельное от установленного
+Toolkit. До выбора cu126/cu130/etc проверить NVIDIA driver, wheels выбранного
+релиза и RTX 4070 Ti; не обновлять driver автоматически. CUDA toolkit/compiler
+может понадобиться для JIT. На Mac нужны совместимые CPU/arm64 wheels.
+
+Создать отдельную .venv-next внутри Windows project; текущую .venv не менять.
+GPU job должен уметь явно выбирать environment id из allowlist и фиксировать
+Python executable + package versions; сейчас он всегда использует .venv, поэтому
+такую возможность надо реализовать до сравнительных запусков. Все пути/caches
+остаются внутри C:\Projects\pinn-runner. Отдельный Docker image для нового stack.
+
+Миграционные проверки:
+- torch.load с 2.6 изменил default weights_only. Централизовать checkpoint I/O,
+  явно выбрать режим для нашего формата, тестировать старый checkpoint/new runtime
+  и resume optimizer/scheduler. Не исправлять глобальной env-переменной молча.
+- torch.compile wrapper может менять state_dict keys: сохранять canonical eager
+  model state, проверять eager/compiled roundtrip.
+- Новые Lightning versions: dictionary loaders, max_size_cycle/restarts, batch
+  counts, max_steps, callbacks, precision/inference_mode и gradient transforms.
+  Это способно изменить train semantics даже при неизменном PDE.
+- Обновлять согласованно lightning/pytorch-lightning/torchmetrics; проверить,
+  нужен ли второй distribution напрямую, прежде чем удалять зависимость.
+- NumPy/SciPy обновлять отдельным шагом, учитывать NumPy 2 ABI и сериализацию MAT.
+  Замена pyDOE на scipy.stats.qmc — отдельная sampling migration: может менять
+  последовательность точек при том же seed, не скрывать её внутри torch upgrade.
+
+### Как оценивать выигрыш
+
+Не обещать проценты из LLM/CNN benchmarks. Для нашей MLP 32x3 исходный heat3d:
+53,77 с / 6000 шагов (~8,96 мс/step с включённым runner overhead), warm predict
+152303 точек 20–21 мс, полный predict 2,32–2,36 с. Измерить profiler вне итогового
+timing: сколько занимают Python/launch, derivatives/backward, optimizer и I/O.
+
+Численные сценарии ниже — расчёт чувствительности, не измеренный прогноз:
+- Если optimizer = 10% времени и fused ускорит его вдвое, весь запуск станет
+  быстрее всего в 1/0,95 = 1,053 раза (~5% экономии времени).
+- Если устранимый launch overhead = 40% и graphs уберут половину, ускорение
+  1/0,8 = 1,25 раза (20% экономии времени). Сначала проверить эту долю profiler.
+- Ускорение warm predict вдвое сэкономит примерно 10 мс на полном predict 2,34 с:
+  меньше 0,5%, если остальной overhead не меняется. Cold compile может ухудшить.
+- Если compile preparation = 10 с, а обучение 54 с станет 36 с, полный запуск
+  46 с: экономия только ~15%, а не 33%. Для 20-секундного обучения при тех же
+  пропорциях compile вообще не окупится. Кеш контейнера по умолчанию холодный.
+
+Matrix: old eager -> new eager -> fused -> graphs -> compile -> derivative backend,
+каждый фактор отдельно; precision отдельно. Два seed для screening, пять для
+подтверждения, все PDE, одинаковые бюджеты и fresh-process wall timing, >=3
+повторов timing. Отдельно warm kernel benchmark без файлов/transfer и cold
+end-to-end с подготовкой/compile/checkpoint/MAT. Сравнивать также time-to-quality
+по заранее заданным gates, точное совпадение траекторий optimizer не требовать.
+
+Критерий для performance default: повторяемая >=10% экономия end-to-end времени
+на значимых задачах без numerical regression и чрезмерного роста памяти;
+иначе оставить opt-in. Обновление ради совместимости/исправлений допустимо без
+прироста, но называть это maintenance, не ускорением. Dependencies меняются
+только после full CPU, CUDA derivatives/train/predict/resume и Docker acceptance.
+
+Источники обновления:
+- https://pytorch.org/blog/pytorch-2-14-release-blog/
+- https://github.com/Lightning-AI/pytorch-lightning/releases
+- https://pytorch.org/get-started/locally/
+- https://pytorch.org/get-started/previous-versions/
+- https://docs.pytorch.org/docs/main/generated/torch.optim.Adam.html
+- https://pytorch.org/blog/accelerating-pytorch-with-cuda-graphs/
+- https://docs.pytorch.org/tutorials/unstable/inductor_windows.html
+- https://github.com/triton-lang/triton-windows
+- https://docs.pytorch.org/tutorials/intermediate/jacobians_hessians.html
+- https://docs.pytorch.org/docs/main/notes/serialization.html
