@@ -177,3 +177,7 @@ misc
 /.tmp/
 
 /.gpu-jobs/
+
+# Shared task board checkout and branch-independent link
+/.project-board/
+/backlog
