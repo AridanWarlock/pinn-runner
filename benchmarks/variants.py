@@ -28,6 +28,27 @@ class BoundaryWeight:
 
 
 @dataclass(frozen=True)
+class RateDecay:
+    final_ratio: float = 1.0
+
+    def apply(self, config: dict[str, Any]) -> None:
+        if self.final_ratio != 1:
+            config["training"]["schedule"] = {
+                "kind": "exponential",
+                "final_ratio": self.final_ratio,
+            }
+
+
+@dataclass(frozen=True)
+class TrainingComposition:
+    adapters: tuple[TrainingAdapter, ...]
+
+    def apply(self, config: dict[str, Any]) -> None:
+        for adapter in self.adapters:
+            adapter.apply(config)
+
+
+@dataclass(frozen=True)
 class BenchmarkVariant(BenchmarkCase):
     base: BenchmarkCase = field(kw_only=True)
     adapter: TrainingAdapter = field(kw_only=True)

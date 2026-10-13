@@ -204,6 +204,21 @@ class LossSettings:
 
 
 @dataclass(frozen=True)
+class ScheduleSettings:
+    kind: str = "constant"
+    final_ratio: float = 1.0
+
+    @classmethod
+    def read(cls, reader: Reader) -> ScheduleSettings:
+        reader.only("kind", "final_ratio")
+        kind = reader.choice("kind", "constant", ("constant", "exponential"))
+        ratio = reader.number("final_ratio", 1.0)
+        if not 0 < ratio <= 1 or (kind == "constant" and ratio != 1):
+            raise ValueError(f"{reader.path}: final_ratio must be in (0,1]; constant requires 1")
+        return cls(kind, ratio)
+
+
+@dataclass(frozen=True)
 class Training:
     epochs: int
     steps: int | None
@@ -213,6 +228,7 @@ class Training:
     optimizer: Optimizer
     collocation: Sampling
     loss: LossSettings = LossSettings()
+    schedule: ScheduleSettings = ScheduleSettings()
 
     @classmethod
     def read(cls, reader: Reader) -> Training:
@@ -225,7 +241,13 @@ class Training:
             "optimizer",
             "collocation",
             "loss",
+            "schedule",
         )
+        if (
+            ScheduleSettings.read(reader.section("schedule")).kind != "constant"
+            and reader.integer("steps", None) is None
+        ):
+            raise ValueError("training.schedule requires explicit training.steps")
         epochs = reader.integer("epochs", 100)
         if epochs is None:
             raise ValueError("training.epochs must be a positive integer")
@@ -238,6 +260,7 @@ class Training:
             Optimizer.read(reader.section("optimizer")),
             Sampling.read(reader.section("collocation")),
             LossSettings.read(reader.section("loss")),
+            ScheduleSettings.read(reader.section("schedule")),
         )
 
 

@@ -154,6 +154,11 @@ class SolverFactory:
             coefficients=self.adapter.coefficients,
             coefficient_signature=self.coefficient_signature,
             loss_settings=asdict(settings.training.loss),
+            rate_settings={
+                **asdict(settings.training.schedule),
+                "steps": settings.training.steps or 1,
+                "version": 1,
+            },
             input_names=settings.domain.input_names,
             input_bounds=tuple(
                 (float(lower), float(upper)) for lower, upper in zip(mesh.lb, mesh.ub)

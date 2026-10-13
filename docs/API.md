@@ -358,3 +358,26 @@ checkpoint hyper_parameters.loss_settings и benchmark training_recipe.
 При predict веса loss не изменяют forward; при продолжении обучения используется
 явно заданный текущий recipe. Это fine-tune весов, а не автоматический resume
 optimizer state. Старые checkpoints без recipe трактуются как equal.
+
+### Снижение learning rate
+
+```yaml
+training:
+  steps: 6000
+  optimizer:
+    learning_rate: 0.001
+  schedule:
+    kind: exponential   # constant по умолчанию
+    final_ratio: 0.1
+```
+
+Scheduler обновляется после каждого optimizer step, а не после эпохи.
+После 6000 обновлений LR равен 0.0001; последний training step использует
+предыдущее значение. Начальная скорость берётся из optimizer.learning_rate.
+Exponential требует явного steps; constant не меняет прежнее поведение.
+train/learning_rate показывает эффективное значение. Recipe/version сохраняются
+в hyper_parameters.rate_settings, scheduler state — в checkpoint Lightning.
+Состояния optimizer/scheduler можно восстановить совместно; файловый runner
+--checkpoint остаётся fine-tune весов, а не продолжением optimizer state.
+Benchmark: --lr-final-ratio 0.1 включает decay, 1 отключает; --steps 12000
+даёт отдельный контроль увеличения бюджета с constant LR.

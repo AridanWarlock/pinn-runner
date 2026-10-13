@@ -22,8 +22,8 @@ sys.path.insert(0, str(ROOT))
 from benchmarks.cases import CASES  # noqa: E402
 from benchmarks.execution import fingerprint, measure_existing, run_trial  # noqa: E402
 from benchmarks.metrics import regression_failures  # noqa: E402
-from benchmarks.variants import BenchmarkVariant, BoundaryWeight  # noqa: E402
-from pinnstorch.runner.settings import LossSettings, Reader  # noqa: E402
+from benchmarks.variants import BenchmarkVariant, BoundaryWeight, RateDecay, TrainingComposition  # noqa: E402
+from pinnstorch.runner.settings import LossSettings, Reader, ScheduleSettings  # noqa: E402
 
 
 def environment(device: str) -> dict[str, Any]:
@@ -134,7 +134,11 @@ def arguments() -> tuple[argparse.Namespace, int]:
     )
     parser.add_argument("--boundary-weight", type=float, default=1.0)
     parser.add_argument("--gradient-norm-every", type=int, default=0)
+    parser.add_argument("--lr-final-ratio", type=float, default=1.0)
     args = parser.parse_args()
+    ScheduleSettings.read(
+        Reader({"kind": "exponential", "final_ratio": args.lr_final_ratio}, "experiment.schedule")
+    )
     LossSettings.read(
         Reader(
             {
@@ -170,7 +174,12 @@ def main() -> int:
             case.name,
             case.dimensions,
             base=case,
-            adapter=BoundaryWeight(args.boundary_weight, args.gradient_norm_every),
+            adapter=TrainingComposition(
+                (
+                    BoundaryWeight(args.boundary_weight, args.gradient_norm_every),
+                    RateDecay(args.lr_final_ratio),
+                )
+            ),
         )
         for name, case in CASES.items()
     }

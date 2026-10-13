@@ -22,6 +22,7 @@ from pinnstorch.contracts import (
     TensorOutputs,
 )
 from pinnstorch.training.loss import EqualWeights, FixedWeights, LossPolicy, gradient_norms
+from pinnstorch.training.optimization import ConstantRate, ExponentialRate, RatePolicy
 from pinnstorch.utils.module_fn import mse, relative_l2_error, set_requires_grad, sse
 
 
@@ -41,6 +42,7 @@ class PINNModule(LightningModule):
         coefficients: torch.nn.Module | None = None,
         coefficient_signature: dict[str, str] | None = None,
         loss_settings: dict[str, str | float | int] | None = None,
+        rate_settings: dict[str, str | float | int] | None = None,
     ) -> None:
         super().__init__()
         if loss_fn not in ("mse", "sse"):
@@ -103,6 +105,12 @@ class PINNModule(LightningModule):
         if self.gradient_norm_every and (self.global_step + 1) % self.gradient_norm_every == 0:
             for name, value in gradient_norms(self.loss_terms, list(self.parameters())).items():
                 self.log(f"train/gradient_norms/{name}", value, on_step=True, on_epoch=True)
+        self.log(
+            "train/learning_rate",
+            self.trainer.optimizers[0].param_groups[0]["lr"],
+            on_step=True,
+            on_epoch=False,
+        )
         self.train_loss(loss)
         self.log("train/loss", self.train_loss, on_step=True, on_epoch=True)
         return loss
@@ -139,6 +147,20 @@ class PINNModule(LightningModule):
     def configure_optimizers(self) -> OptimizerLRSchedulerConfig:
         factory = cast(OptimizerFactory, self.hparams["optimizer"])
         optimizer = factory(params=self.parameters())
+        recipe = self.hparams.get("rate_settings")
+        if recipe is not None:
+            policy: RatePolicy = (
+                ExponentialRate(int(recipe["steps"]), float(recipe["final_ratio"]))
+                if recipe["kind"] == "exponential"
+                else ConstantRate()
+            )
+            built = policy.build(optimizer)
+            if built is None:
+                return {"optimizer": optimizer}
+            return {
+                "optimizer": optimizer,
+                "lr_scheduler": {"scheduler": built, "interval": "step"},
+            }
         scheduler = cast(SchedulerFactory | None, self.hparams["scheduler"])
         if scheduler is None:
             return {"optimizer": optimizer}
