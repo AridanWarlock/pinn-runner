@@ -487,3 +487,30 @@ adam_model_evaluations и total_model_evaluations считают вызовы mo
 то есть вычисления суммарного objective. Внутри одного такого вызова несколько
 условий могут выполнять отдельные forward; lbfgs_condition_evaluations
 показывает число вычислений этих групп в стадии.
+
+### Экспериментальный backend hard predict
+
+```yaml
+training:
+  constraints: hard_initial_dirichlet
+  hard_execution: fused_predict  # default: eager
+```
+
+`fused_predict` вычисляет каждый пространственный фактор как
+`torch.addcmul(xi, xi, xi, value=-1)` вместо `xi * (1 - xi)` только при
+выключенных градиентах. В вещественной арифметике это одинаковый полином;
+FP32 округления могут отличаться. При обучении и запросе координатных
+производных сохраняется прежний eager graph. Режим не меняет веса,
+оптимизатор, checkpoint или тип математического ограничения. Старый hard
+checkpoint можно загружать с любым из этих двух backend. Для soft выбор
+`fused_predict` отклоняется. Это opt-in для измерений; ускорение всего
+файлового runner не гарантируется.
+
+Сравнение на одном сохранённом CUDA checkpoint:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/benchmark_hard_execution.py --trial numerical-reports/lbfgs-staged-hard-002/heat3d-1234 --report numerical-reports/hard-execution-001.json
+```
+
+Команду выполнять на Windows после обязательной установки и проверки
+рабочей директории из AGENTS.md. Report должен быть новым файлом.

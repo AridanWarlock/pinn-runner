@@ -214,6 +214,7 @@ class SolverFactory:
                 [axis.interval for axis in settings.domain.space.values()],
                 settings.domain.time.interval,
                 self.adapter.initial_tensors,
+                fused_predict=settings.training.hard_execution == "fused_predict",
             )
         return PINNModule(
             net,

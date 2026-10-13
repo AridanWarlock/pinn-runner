@@ -256,6 +256,7 @@ class Training:
     schedule: ScheduleSettings = ScheduleSettings()
     constraints: str = "soft"
     refinement: Refinement = Refinement()
+    hard_execution: str = "eager"
 
     @classmethod
     def read(cls, reader: Reader) -> Training:
@@ -271,6 +272,7 @@ class Training:
             "schedule",
             "constraints",
             "refinement",
+            "hard_execution",
         )
         if (
             ScheduleSettings.read(reader.section("schedule")).kind != "constant"
@@ -288,6 +290,10 @@ class Training:
             )
         if epochs is None:
             raise ValueError("training.epochs must be a positive integer")
+        constraints = reader.choice("constraints", "soft", ("soft", "hard_initial_dirichlet"))
+        hard_execution = reader.choice("hard_execution", "eager", ("eager", "fused_predict"))
+        if constraints == "soft" and hard_execution != "eager":
+            raise ValueError("training.hard_execution requires hard constraints")
         return cls(
             epochs,
             reader.integer("steps", None),
@@ -298,8 +304,9 @@ class Training:
             Sampling.read(reader.section("collocation")),
             LossSettings.read(reader.section("loss")),
             ScheduleSettings.read(reader.section("schedule")),
-            reader.choice("constraints", "soft", ("soft", "hard_initial_dirichlet")),
+            constraints,
             refinement,
+            hard_execution,
         )
 
 
