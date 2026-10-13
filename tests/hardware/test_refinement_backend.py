@@ -6,7 +6,10 @@ from pathlib import Path
 
 import pytest
 import torch
+import yaml
 
+from benchmarks.cases import CASES
+from tests.integration.test_runner_files import launch
 from tests.numerics.test_refinement import make_stage
 
 
@@ -30,3 +33,19 @@ def test_refinement_checkpoint_transfer_to_cpu(tmp_path: Path, hard: bool) -> No
     observed = restored.run(2)
     assert observed["lbfgs_steps"] == 5
     assert torch.isfinite(restored.closure())
+
+
+def test_public_stage_runs_on_requested_backend(tmp_path: Path) -> None:
+    case = CASES["burgers"]
+    task = tmp_path / "task"
+    task.mkdir()
+    config = case.config(os.environ.get("PINN_TEST_DEVICE", "cpu"), 3, 19)
+    config["training"]["refinement"] = {"steps": 2}
+    config["training"]["constraints"] = "hard_initial_dirichlet"
+    (task / "functions.py").write_bytes(case.source.read_bytes())
+    (task / "config.yaml").write_text(yaml.safe_dump(config))
+    output = tmp_path / "output"
+    result = launch(task, output)
+    assert result.returncode == 0, result.stdout + result.stderr
+    state = torch.load(output / "checkpoints/final.ckpt", map_location="cpu")
+    assert state["refinement_state"]["device"].split(":")[0] == config["runtime"]["device"]

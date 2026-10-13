@@ -47,6 +47,7 @@ def test_staged_runner_saves_both_stages_and_predicts(tmp_path: Path, hard: bool
     assert "refinement_state" not in adam
     stage = final["refinement_state"]
     assert stage["completed"] and stage["optimizer"]["state"]
+    assert stage["device"] == "cpu"
     assert stage["metrics"]["lbfgs_steps"] == 2
     assert stage["metrics"]["lbfgs_closure_evaluations"] >= 2
     assert any(

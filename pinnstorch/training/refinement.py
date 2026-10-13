@@ -110,6 +110,7 @@ class LBFGSRefinement:
         return {
             "kind": "lbfgs",
             "version": 1,
+            "device": str(self.model.device),
             "completed": True,
             "optimizer": self.optimizer.state_dict(),
             "metrics": metrics,

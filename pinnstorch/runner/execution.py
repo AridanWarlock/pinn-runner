@@ -49,6 +49,8 @@ class SolverExecution:
             objects.trainer.save_checkpoint(
                 str(self.artifacts.directory / "checkpoints/adam.ckpt")
             )
+            # Lightning teardown moves the module to CPU after fit.
+            objects.model.to(objects.trainer.strategy.root_device)
             stage = LBFGSRefinement(
                 objects.model,
                 FixedObjective.capture(objects.data, objects.model.device),

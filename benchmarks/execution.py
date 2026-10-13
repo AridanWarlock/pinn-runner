@@ -190,6 +190,7 @@ def finish_trial(
         "constraint_kind": state.get("hyper_parameters", {}).get("constraint_kind", "soft"),
         "refinement_recipe": state.get("hyper_parameters", {}).get("refinement_settings")
         or {"steps": 0},
+        "refinement_device": state.get("refinement_state", {}).get("device"),
         "sampling_recipe": {
             **case.config(device, steps, seed)["training"]["collocation"],
             "version": 1,
