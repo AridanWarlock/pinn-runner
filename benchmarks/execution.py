@@ -176,6 +176,8 @@ def finish_trial(
         "seed": seed,
         "steps": steps,
         "fingerprint": fingerprint(case, device, steps, seed),
+        "training_recipe": state.get("hyper_parameters", {}).get("loss_settings")
+        or {"kind": "equal"},
         "metrics": errors,
         "temporal_metrics": temporal,
         "diagnostics": {

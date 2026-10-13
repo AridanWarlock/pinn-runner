@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from functools import partial
 from pathlib import Path
 
@@ -153,6 +153,7 @@ class SolverFactory:
             ),
             coefficients=self.adapter.coefficients,
             coefficient_signature=self.coefficient_signature,
+            loss_settings=asdict(settings.training.loss),
             input_names=settings.domain.input_names,
             input_bounds=tuple(
                 (float(lower), float(upper)) for lower, upper in zip(mesh.lb, mesh.ub)

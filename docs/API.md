@@ -335,3 +335,26 @@ functions.py — исполняемый Python-код; изоляцию зада
 Problem с equations/initial/transform. Примеры в examples уже используют новый API.
 Старые checkpoints могут потребовать нового обучения, если прежняя архитектура
 или служебное состояние не соответствует текущей строгой загрузке.
+
+### Переключаемые веса loss
+
+```yaml
+training:
+  loss:
+    kind: fixed       # equal: прежние веса 1/1/1
+    initial: 1
+    equations: 1
+    boundaries: 3
+    gradient_norm_every: 200  # 0 выключает диагностику
+```
+
+Веса конечные и положительные. kind: equal допускает только единичные веса.
+train/terms/initial, equations, boundaries — невзвешенные компоненты;
+train/loss — сумма с выбранными весами. train/gradient_norms/* — нормы градиентов
+невзвешенных компонентов по обучаемым параметрам, полученные без изменения
+optimizer .grad. Диагностика требует дополнительных autograd проходов; её
+стоимость входит во время обучения. Recipe сохраняется в config.resolved.yaml,
+checkpoint hyper_parameters.loss_settings и benchmark training_recipe.
+При predict веса loss не изменяют forward; при продолжении обучения используется
+явно заданный текущий recipe. Это fine-tune весов, а не автоматический resume
+optimizer state. Старые checkpoints без recipe трактуются как equal.

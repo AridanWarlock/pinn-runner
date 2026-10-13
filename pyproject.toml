@@ -23,6 +23,7 @@ files = [
   "pinnstorch/api.py",
   "pinnstorch/coefficients.py",
   "pinnstorch/runner",
+  "pinnstorch/training",
   "pinnstorch/models/pinn_module.py",
   "pinnstorch/data/pinn_datamodule.py",
   "pinnstorch/data/domains/point_cloud.py",

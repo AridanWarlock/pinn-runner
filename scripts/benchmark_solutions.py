@@ -22,6 +22,8 @@ sys.path.insert(0, str(ROOT))
 from benchmarks.cases import CASES  # noqa: E402
 from benchmarks.execution import fingerprint, measure_existing, run_trial  # noqa: E402
 from benchmarks.metrics import regression_failures  # noqa: E402
+from benchmarks.variants import BenchmarkVariant, BoundaryWeight  # noqa: E402
+from pinnstorch.runner.settings import LossSettings, Reader  # noqa: E402
 
 
 def environment(device: str) -> dict[str, Any]:
@@ -130,7 +132,19 @@ def arguments() -> tuple[argparse.Namespace, int]:
         type=Path,
         help="Reevaluate saved checkpoints and add timings without training",
     )
+    parser.add_argument("--boundary-weight", type=float, default=1.0)
+    parser.add_argument("--gradient-norm-every", type=int, default=0)
     args = parser.parse_args()
+    LossSettings.read(
+        Reader(
+            {
+                "kind": "fixed",
+                "boundaries": args.boundary_weight,
+                "gradient_norm_every": args.gradient_norm_every,
+            },
+            "experiment.loss",
+        )
+    )
     steps = (
         args.steps
         if args.steps is not None
@@ -151,6 +165,15 @@ def arguments() -> tuple[argparse.Namespace, int]:
 
 def main() -> int:
     args, steps = arguments()
+    cases = {
+        name: BenchmarkVariant(
+            case.name,
+            case.dimensions,
+            base=case,
+            adapter=BoundaryWeight(args.boundary_weight, args.gradient_norm_every),
+        )
+        for name, case in CASES.items()
+    }
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=False)
     report: dict[str, Any] = {
@@ -174,7 +197,7 @@ def main() -> int:
                 {
                     "case": name,
                     "seed": seed,
-                    "fingerprint": fingerprint(CASES[name], args.device, steps, seed),
+                    "fingerprint": fingerprint(cases[name], args.device, steps, seed),
                 }
                 for name in args.cases
                 for seed in args.seeds
@@ -186,7 +209,7 @@ def main() -> int:
                 print(f"{action} {name}, seed={seed}, steps={steps}", flush=True)
                 if args.measure_existing:
                     trial = measure_existing(
-                        CASES[name],
+                        cases[name],
                         args.measure_existing / f"{name}-{seed}",
                         output / f"{name}-{seed}",
                         args.device,
@@ -196,7 +219,7 @@ def main() -> int:
                     )
                 else:
                     trial = run_trial(
-                        CASES[name],
+                        cases[name],
                         output / f"{name}-{seed}",
                         args.device,
                         steps,

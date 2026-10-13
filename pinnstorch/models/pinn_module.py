@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 from pinnstorch.contracts import (
     FieldFunction,
-    LossAccumulator,
     OptimizerFactory,
     SamplerBatch,
     SamplerFunctions,
@@ -22,6 +21,7 @@ from pinnstorch.contracts import (
     SchedulerFactory,
     TensorOutputs,
 )
+from pinnstorch.training.loss import EqualWeights, FixedWeights, LossPolicy, gradient_norms
 from pinnstorch.utils.module_fn import mse, relative_l2_error, set_requires_grad, sse
 
 
@@ -40,6 +40,7 @@ class PINNModule(LightningModule):
         input_bounds: tuple[tuple[float, float], ...] = (),
         coefficients: torch.nn.Module | None = None,
         coefficient_signature: dict[str, str] | None = None,
+        loss_settings: dict[str, str | float | int] | None = None,
     ) -> None:
         super().__init__()
         if loss_fn not in ("mse", "sse"):
@@ -49,6 +50,19 @@ class PINNModule(LightningModule):
         )
         self.net, self.pde_fn, self.output_fn = net, pde_fn, output_fn
         self.coefficients = coefficients
+        recipe = loss_settings or {"kind": "equal"}
+        self.loss_policy: LossPolicy = (
+            FixedWeights(
+                {
+                    name: float(recipe.get(name, 1.0))
+                    for name in ("initial", "equations", "boundaries")
+                }
+            )
+            if recipe["kind"] == "fixed"
+            else EqualWeights()
+        )
+        self.gradient_norm_every = int(recipe.get("gradient_norm_every", 0))
+        self.loss_terms: dict[str, torch.Tensor] = {}
         self.function_mapping: dict[str, SamplerLoss] = {}
         self.train_loss, self.val_loss, self.val_loss_best = (
             MeanMetric(),
@@ -72,16 +86,23 @@ class PINNModule(LightningModule):
         self.function_mapping = self._data_module().function_mapping
 
     def model_step(self, batch: dict[str, SamplerBatch]) -> tuple[torch.Tensor, TensorOutputs]:
-        loss: LossAccumulator = 0.0
+        terms: dict[str, torch.Tensor] = {}
         outputs: TensorOutputs = {}
         for name, inputs in batch.items():
             spatial, time, _ = inputs
             set_requires_grad(spatial, time, True)
-            loss, outputs = self.function_mapping[name](inputs, loss, self.functions)
-        return torch.as_tensor(loss, device=self.device), outputs
+            loss, outputs = self.function_mapping[name](inputs, 0.0, self.functions)
+            terms[name] = torch.as_tensor(loss, device=self.device)
+        self.loss_terms = terms
+        return self.loss_policy.combine(terms), outputs
 
     def training_step(self, batch: dict[str, SamplerBatch], batch_idx: int) -> torch.Tensor:
         loss, _ = self.model_step(batch)
+        for name, value in self.loss_terms.items():
+            self.log(f"train/terms/{name}", value.detach(), on_step=True, on_epoch=False)
+        if self.gradient_norm_every and (self.global_step + 1) % self.gradient_norm_every == 0:
+            for name, value in gradient_norms(self.loss_terms, list(self.parameters())).items():
+                self.log(f"train/gradient_norms/{name}", value, on_step=True, on_epoch=True)
         self.train_loss(loss)
         self.log("train/loss", self.train_loss, on_step=True, on_epoch=True)
         return loss

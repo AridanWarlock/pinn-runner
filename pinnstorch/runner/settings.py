@@ -179,6 +179,31 @@ class Optimizer:
 
 
 @dataclass(frozen=True)
+class LossSettings:
+    kind: str = "equal"
+    initial: float = 1.0
+    equations: float = 1.0
+    boundaries: float = 1.0
+    gradient_norm_every: int = 0
+
+    @classmethod
+    def read(cls, reader: Reader) -> LossSettings:
+        reader.only("kind", "initial", "equations", "boundaries", "gradient_norm_every")
+        kind = reader.choice("kind", "equal", ("equal", "fixed"))
+        weights = {
+            name: reader.number(name, 1.0) for name in ("initial", "equations", "boundaries")
+        }
+        if any(value <= 0 for value in weights.values()):
+            raise ValueError(f"{reader.path}: loss weights must be positive")
+        if kind == "equal" and any(value != 1 for value in weights.values()):
+            raise ValueError(f"{reader.path}: unequal weights require kind: fixed")
+        every = reader.integer("gradient_norm_every", 0, 0)
+        if every is None:
+            raise ValueError(f"{reader.path}.gradient_norm_every must be an integer")
+        return cls(kind, **weights, gradient_norm_every=every)
+
+
+@dataclass(frozen=True)
 class Training:
     epochs: int
     steps: int | None
@@ -187,11 +212,19 @@ class Training:
     seed: int | None
     optimizer: Optimizer
     collocation: Sampling
+    loss: LossSettings = LossSettings()
 
     @classmethod
     def read(cls, reader: Reader) -> Training:
         reader.only(
-            "epochs", "steps", "batch_size", "initial_points", "seed", "optimizer", "collocation"
+            "epochs",
+            "steps",
+            "batch_size",
+            "initial_points",
+            "seed",
+            "optimizer",
+            "collocation",
+            "loss",
         )
         epochs = reader.integer("epochs", 100)
         if epochs is None:
@@ -204,6 +237,7 @@ class Training:
             reader.integer("seed", 1234, 0),
             Optimizer.read(reader.section("optimizer")),
             Sampling.read(reader.section("collocation")),
+            LossSettings.read(reader.section("loss")),
         )
 
 
