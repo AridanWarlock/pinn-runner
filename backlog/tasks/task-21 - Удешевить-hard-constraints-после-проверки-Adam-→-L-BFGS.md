@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-13 13:28'
-updated_date: '2026-10-13 17:04'
+updated_date: '2026-10-13 18:30'
 labels:
   - performance
   - hard-constraints
@@ -66,6 +66,8 @@ Hard constraints улучшили heat3d, но на пяти seed увеличи
 1. Начать с профиля eager hard на текущем FP32 CUDA стеке и закрепить контроль TASK-11. 2. Проверить сокращение kernel launches в B через эквивалентный полином; доказать значения, производные и parameter gradients на shifted 1D–3D. 3. Принять только измеренно полезный opt-in backend с сохранением eager; далее подготовленный predict и ConstraintPlan по docs/hard-heat-plan.md. 4. Отдельно интегрировать расширенные heat BC; не объявлять эти этапы завершёнными в TASK-21.
 
 Следующий блок: отдельный HardBoxDerivatives с точным правилом произведения и AD только для N/g; проверить float64/FP32 derivatives/residual/parameter gradients на shifted 1D–3D и границах. Сначала standalone CUDA comparison на одном checkpoint. Интегрировать в Equation только при подтверждённой пользе; никаких detach train cache или изменений функций пользователя.
+
+Короткий time-to-quality screening: heat3d, два парных seed 1234/19, Adam3000 и LBFGS300 с заранее заданными snapshot 0/25/50/100/150/200/300. Пороги global L2<=0.001, final L2<=0.002 и physical AD PDE RMSE<=0.005; два соседних прохождения. Оценивать после завершения обучения; сохранять overhead snapshot и интервальную цензуру. Это screening, не повтор полной пяти-seed матрицы.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -76,4 +78,8 @@ Hard constraints улучшили heat3d, но на пяти seed увеличи
 Первый блок: opt-in fused_predict (15c3133), warm heat3d checkpoint 3000 Adam+100 LBFGS, batch2048 46.72→43.25 ms (−7.43%), batch128 740.95→678.50 ms (−8.43%). Cold public runner 49a1650: median2.340→2.349 s, выигрыш отсутствует; все6 MAT совпали. Random4096 max field delta1.788e−7; training сохраняет прежний graph. Синтетический addcmul backward на3–4% медленнее, поэтому не используется при train. Полный CPU251, последующий быстрый232/19excluded, профильныйCPU12, Windows hard+hardware19passed. Полный profiler/heat derivative fast path ещё не завершены; task остаётся In Progress. Подробности docs/hard-execution-experiments-2026-10-13.md. Дальнейшая heat-интеграция отдельно TASK-22/23/24.
 
 Интегрирован product_rule (9d1c98d): u_t=BN/T+tau BN_t; u_ii=g_ii+tau(B_ii N+2B_iN_i+BN_ii). Геометрия без деления на B, g/N остаются в AD; Equation callbacks пользователя не переписаны. 30 CUDA обучений:90k Adam calls,5000 LB calls,9576 closures,21,325,824 PDE visits. Fixed budget: train median2D33.46→29.62s (−11.47%),3D42.64→37.14s (−12.90%); отдельных seed точность хуже. Timing-only budget заранее зафиксирован a4f9be2: LB290/310; med3D finalL2 .317%→.110% при42.64→42.57s, global/final/PDE лучше10/10pairs. Full CPU262passed,mypy52; явный CUDA hardware8passed плюсderivatives6/9/10 и30train/predict/holdout. ПредыдущиеWindows19 безenv=cuda былиCPU, не CUDA acceptance. Отчёт docs/hard-derivative-experiments-2026-10-13.md. Task остаётся In Progress: CUDA kernel decomposition и true time-to-quality snapshots ещё не выполнены; defaults не изменены.
+
+Добавлен изолированный scripts/benchmark_time_to_quality.py (4bcd54c), без изменений solver: заранее заданные LB snapshot, evaluation только после обучения, интервальная/left-censored оценка crossing и подтверждение двумя точками. Быстрый CPU244passed/20e2e excluded; explicit strict mypy benchmark1file passed. Короткий CUDA screening four trials heat3d, seed1234/19 запущен; полная30trial matrix не повторяется.
+
+Короткий CUDA time-to-quality screening завершён:4trials heat3d,seed1234/19,eager/product_rule,Adam3000+LB300. Наблюдаемые upper crossing43.617→42.053s и43.051→36.130s; подтверждения46.659→44.754 и46.100→37.475. Snapshot8.27–10.03ms/trial. Первую пару разделяет всего.030s между интервалами, нельзя считать robust timing gain. Второй seed fast LB150 против eager200. Финальная точность fast немного хуже обеихпар; defaults unchanged. Отчёт docs/time-to-quality-screening.md и raw JSON;CPU244passed/20excluded. Task не завершена: kernel profile и полноценный5seed TTO остаются.
 <!-- SECTION:NOTES:END -->
