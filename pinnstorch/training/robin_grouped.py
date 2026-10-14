@@ -19,6 +19,10 @@ class BoundaryGroup:
 @dataclass(frozen=True)
 class GroupedBoxRobinProjection(BoxRobinProjection):
     groups: tuple[BoundaryGroup, ...] = field(init=False)
+    _constants: dict[
+        tuple[tuple[int, ...], int, torch.device, torch.dtype],
+        tuple[torch.Tensor | None, torch.Tensor],
+    ] = field(default_factory=dict, init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -48,6 +52,33 @@ class GroupedBoxRobinProjection(BoxRobinProjection):
         ]
         return columns, torch.cat([time] * len(group.sides))
 
+    def _coefficients(
+        self,
+        group: BoundaryGroup,
+        index: int,
+        value: torch.Tensor,
+    ) -> tuple[torch.Tensor | None, torch.Tensor]:
+        key = (group.axes, index, value.device, value.dtype)
+        if key not in self._constants:
+            axis = group.axes[index]
+            operators = [
+                (self.axes[axis].lower, self.axes[axis].upper)[sides[index]]
+                for sides in group.sides
+            ]
+            beta = value.new_tensor(
+                [
+                    operator.beta * (-1 if sides[index] == 0 else 1)
+                    for operator, sides in zip(operators, group.sides)
+                ]
+            ).reshape(-1, 1, 1)
+            alpha = (
+                None
+                if all(operator.alpha == 0 for operator in operators)
+                else value.new_tensor([operator.alpha for operator in operators]).reshape(-1, 1, 1)
+            )
+            self._constants[key] = (alpha, beta)
+        return self._constants[key]
+
     def _trace(
         self,
         group: BoundaryGroup,
@@ -70,21 +101,15 @@ class GroupedBoxRobinProjection(BoxRobinProjection):
                 else None
             )
             derivative = columns[axis].mul(0) if derivative is None else derivative
-            operators = [
-                (self.axes[axis].lower, self.axes[axis].upper)[sides[index]]
-                for sides in group.sides
-            ]
-            alpha = value.new_tensor([operator.alpha for operator in operators]).reshape(-1, 1, 1)
-            beta = value.new_tensor(
-                [
-                    operator.beta * (-1 if sides[index] == 0 else 1)
-                    for operator, sides in zip(operators, group.sides)
-                ]
-            ).reshape(-1, 1, 1)
-            value = (
-                value.reshape(len(group.sides), count, 1) * alpha
-                + derivative.reshape(len(group.sides), count, 1) * beta
-            ).reshape(-1, 1)
+            alpha, beta = self._coefficients(group, index, value)
+            derivative_term = derivative.reshape(len(group.sides), count, 1) * beta
+            if alpha is None:
+                # Fixed mathematical zero, not a threshold inferred from samples.
+                value = derivative_term.reshape(-1, 1)
+            else:
+                value = (
+                    value.reshape(len(group.sides), count, 1) * alpha + derivative_term
+                ).reshape(-1, 1)
         return value if differentiable else value.detach()
 
     def apply(

@@ -13,17 +13,20 @@ from pinnstorch.training.robin_grouped import GroupedBoxRobinProjection
 from pinnstorch.training.robin_projection import IntervalRobinProjection, RobinOperator
 
 
+@pytest.mark.parametrize("neumann", [False, True])
 @pytest.mark.parametrize("grouped", [False, True])
 @pytest.mark.parametrize("dimensions", [1, 2, 3])
 @pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
 def test_batched_projection_matches_eager_nonlinear_field_and_gradients(
-    dimensions: int, dtype: torch.dtype, grouped: bool
+    dimensions: int, dtype: torch.dtype, grouped: bool, neumann: bool
 ) -> None:
     device = os.environ.get("PINN_TEST_DEVICE", "cpu")
     torch.manual_seed(19)
     axes = tuple(
         IntervalRobinProjection(
-            (-0.5 + 0.2 * i, 0.7 + 0.5 * i), RobinOperator(i, 0.8), RobinOperator(2, -1.1)
+            (-0.5 + 0.2 * i, 0.7 + 0.5 * i),
+            RobinOperator(0 if neumann else i, 0.8),
+            RobinOperator(0 if neumann else 2, -1.1),
         )
         for i in range(dimensions)
     )
@@ -71,13 +74,25 @@ def test_batched_projection_matches_eager_nonlinear_field_and_gradients(
     residual = equation.dt("u") - 0.1 * equation.laplacian("u")
     reference_residual = expected.dt("u") - 0.1 * expected.laplacian("u")
     gradients = torch.autograd.grad(
-        residual.square().mean(), tuple(network.parameters()), retain_graph=True
+        residual.square().mean(), tuple(network.parameters()), retain_graph=True, allow_unused=True
     )
     reference_gradients = torch.autograd.grad(
-        reference_residual.square().mean(), tuple(network.parameters()), retain_graph=True
+        reference_residual.square().mean(),
+        tuple(network.parameters()),
+        retain_graph=True,
+        allow_unused=True,
     )
-    for gradient, reference_gradient in zip(gradients, reference_gradients):
-        torch.testing.assert_close(gradient, reference_gradient, atol=tolerance, rtol=tolerance)
+    for parameter, gradient, reference_gradient in zip(
+        network.parameters(), gradients, reference_gradients
+    ):
+        # A removed zero path may be absent instead of returning a zero Tensor.
+        actual_gradient = torch.zeros_like(parameter) if gradient is None else gradient
+        expected_gradient = (
+            torch.zeros_like(parameter) if reference_gradient is None else reference_gradient
+        )
+        torch.testing.assert_close(
+            actual_gradient, expected_gradient, atol=tolerance, rtol=tolerance
+        )
     with torch.no_grad():
         prediction = batched.apply(
             field([x.detach() for x in spatial], time.detach()),
