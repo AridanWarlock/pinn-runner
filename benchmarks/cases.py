@@ -132,6 +132,65 @@ class RobinHeatCase(NeumannHeatCase):
         ]
 
 
+class BoxNeumannHeatCase(BenchmarkCase):
+    @property
+    def alpha(self) -> float:
+        return 0.0
+
+    @property
+    def frequency(self) -> float:
+        return float(np.pi)
+
+    @property
+    def shift(self) -> float:
+        return 0.0
+
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        mode = np.ones_like(spatial["x"])
+        background = np.ones_like(spatial["x"]) * np.ones_like(time)
+        for column in spatial.values():
+            mode = mode * np.cos(self.frequency * (column - self.shift))
+            background = background + time * column
+        return cast(
+            Array, background + np.exp(-0.1 * self.dimensions * self.frequency**2 * time) * mode
+        )
+
+    def additional_errors(
+        self, spatial: dict[str, Array], time: Array, error: Array
+    ) -> dict[str, float]:
+        mode = np.ones_like(spatial["x"])
+        for column in spatial.values():
+            mode = mode * np.cos(self.frequency * (column - self.shift))
+        mode = mode * np.exp(-0.1 * self.dimensions * self.frequency**2 * time)
+        return {"mode_relative_l2": float(np.linalg.norm(error) / np.linalg.norm(mode))}
+
+    def boundaries(self, axes: tuple[str, ...]) -> list[dict[str, Any]]:
+        return [
+            dict(
+                kind="neumann" if self.alpha == 0 else "robin",
+                field="u",
+                axis=axis,
+                value_function=f"wall_{axis}",
+                **({"alpha": self.alpha, "beta": 1} if self.alpha else {}),
+            )
+            for axis in axes
+        ]
+
+
+class BoxRobinHeatCase(BoxNeumannHeatCase):
+    @property
+    def alpha(self) -> float:
+        return float(np.pi / 2)
+
+    @property
+    def frequency(self) -> float:
+        return float(np.pi / 2)
+
+    @property
+    def shift(self) -> float:
+        return 0.5
+
+
 class AdvectionCase(BenchmarkCase):
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
         return cast(Array, np.sin(np.pi * (spatial["x"] - time)))
@@ -165,6 +224,10 @@ CASES: dict[str, BenchmarkCase] = {
         DirichletHeatCase("heat_dirichlet3d", 3, grid=CartesianGrid((8, 17))),
         NeumannHeatCase("heat_neumann", 1),
         RobinHeatCase("heat_robin", 1),
+        BoxNeumannHeatCase("heat_neumann2d", 2, grid=CartesianGrid((8, 17))),
+        BoxNeumannHeatCase("heat_neumann3d", 3, grid=CartesianGrid((6, 9))),
+        BoxRobinHeatCase("heat_robin2d", 2, grid=CartesianGrid((8, 17))),
+        BoxRobinHeatCase("heat_robin3d", 3, grid=CartesianGrid((6, 9))),
         AdvectionCase("advection", 1),
         BurgersCase("burgers", 1),
     )

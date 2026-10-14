@@ -14,7 +14,7 @@ from tests.integration.test_runner_files import launch
 
 
 @pytest.mark.e2e
-@pytest.mark.parametrize("name", ["heat_neumann", "heat_robin"])
+@pytest.mark.parametrize("name", ["heat_neumann", "heat_robin", "heat_neumann2d", "heat_robin3d"])
 def test_robin_file_roundtrip(tmp_path: Path, name: str) -> None:
     case = CASES[name]
     config = case.config(os.environ.get("PINN_TEST_DEVICE", "cpu"), 3, 19)
@@ -24,6 +24,11 @@ def test_robin_file_roundtrip(tmp_path: Path, name: str) -> None:
         batch_size=17,
         collocation={"sampling": "lhs", "points": 17},
     )
+    if case.dimensions > 1:
+        config["network"]["hidden_layers"] = [8, 8]
+        for axis in config["domain"]["space"].values():
+            axis["points"] = 3
+        config["domain"]["time"]["points"] = 3
     (tmp_path / "functions.py").write_bytes(case.source.read_bytes())
     (tmp_path / "config.yaml").write_text(yaml.safe_dump(config))
     for mode in ("train", "predict", "retrain"):

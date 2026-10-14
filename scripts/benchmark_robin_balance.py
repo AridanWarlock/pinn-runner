@@ -7,6 +7,7 @@ import json
 import logging
 import math
 import sys
+import time
 from pathlib import Path
 
 import torch
@@ -14,6 +15,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from benchmarks.box_heat_balance import box_heat_balance  # noqa: E402
 from benchmarks.cases import CASES  # noqa: E402
 from benchmarks.heat_balance import heat_balance  # noqa: E402
 from pinnstorch.runner.artifacts import ArtifactWriter  # noqa: E402
@@ -37,15 +39,26 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trial", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)
+    parser.add_argument("--space-points", type=int)
+    parser.add_argument("--time-points", type=int)
     args = parser.parse_args()
+    if any(value is not None and value < 2 for value in (args.space_points, args.time_points)):
+        parser.error("Quadrature counts must exceed one")
     if not torch.cuda.is_available():
         raise RuntimeError("This numerical benchmark requires remote CUDA")
     if args.report.exists():
         raise ValueError("Report already exists")
     result = json.loads((args.trial / "result.json").read_text())
     name = result["case"]
-    if name not in ("heat_neumann", "heat_robin"):
-        raise ValueError("Balance benchmark only supports the documented interval cases")
+    if name not in (
+        "heat_neumann",
+        "heat_robin",
+        "heat_neumann2d",
+        "heat_neumann3d",
+        "heat_robin2d",
+        "heat_robin3d",
+    ):
+        raise ValueError("Balance benchmark only supports the documented Robin/Neumann cases")
     task = args.trial / "task"
     if (task / "functions.py").read_bytes() != CASES[name].source.read_bytes():
         raise ValueError(
@@ -72,34 +85,81 @@ def main() -> None:
     def source(x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         return x
 
-    metrics = heat_balance(
-        field,
-        settings.domain.space["x"].interval,
-        settings.domain.time.interval,
-        "cuda",
-        math.pi / 2 if name == "heat_robin" else 0,
-        1,
-        target,
-        source,
-    )
+    space_points = args.space_points or (257 if CASES[name].dimensions == 1 else 17)
+    time_points = args.time_points or (31 if CASES[name].dimensions == 1 else 21)
+    torch.cuda.synchronize()
+    started = time.perf_counter()
+    if CASES[name].dimensions == 1:
+        metrics = heat_balance(
+            field,
+            settings.domain.space["x"].interval,
+            settings.domain.time.interval,
+            "cuda",
+            math.pi / 2 if name == "heat_robin" else 0,
+            1,
+            target,
+            source,
+            space_points=space_points,
+            time_points=time_points,
+        )
+    else:
+
+        def box_field(spatial: list[torch.Tensor], clock: torch.Tensor) -> torch.Tensor:
+            return model.forward(spatial, clock)["u"]
+
+        def box_source(spatial: list[torch.Tensor], clock: torch.Tensor) -> torch.Tensor:
+            value = torch.zeros_like(clock)
+            for column in spatial:
+                value = value + column
+            return value
+
+        names = tuple(settings.domain.space)
+        lookup = {boundary.axis: boundary for boundary in settings.boundaries}
+
+        def data(spatial: list[torch.Tensor], clock: torch.Tensor, axis: str) -> torch.Tensor:
+            return factory.adapter.boundary_value(f"wall_{axis}", spatial, clock)
+
+        from functools import partial
+
+        targets = tuple((partial(data, axis=axis), partial(data, axis=axis)) for axis in names)
+        operators = tuple(
+            ((lookup[axis].alpha if lookup[axis].kind == "robin" else 0, 1),) * 2 for axis in names
+        )
+        metrics = box_heat_balance(
+            box_field,
+            targets,
+            box_source,
+            tuple(axis.interval for axis in settings.domain.space.values()),
+            settings.domain.time.interval,
+            operators,
+            "cuda",
+            space_points=space_points,
+            time_points=time_points,
+        )
+    torch.cuda.synchronize()
+    diagnostic_seconds = time.perf_counter() - started
+    limits = dict(LIMITS)
+    if CASES[name].dimensions > 1:
+        limits["mode_relative_l2"] = 0.02
     combined = {**result["metrics"], **metrics}
     failures = [
         f"{key}={combined[key]:.6g} exceeds {limit}"
-        for key, limit in LIMITS.items()
+        for key, limit in limits.items()
         if not math.isfinite(combined[key]) or combined[key] > limit
     ]
     report = {
         "case": name,
         "seed": result["seed"],
         "constraint_kind": result["constraint_kind"],
-        "limits": LIMITS,
+        "limits": limits,
         "metrics": combined,
         "status": "failed" if failures else "passed",
         "failures": failures,
-        "space_points": 257,
-        "time_points": 31,
+        "space_points": space_points,
+        "time_points": time_points,
         "conductivity": 0.1,
-        "source": "x",
+        "source": "sum of spatial coordinates",
+        "diagnostic_seconds": diagnostic_seconds,
         "limitations": "Quadrature error included; physical autograd on a grid independent of training points",
     }
     args.report.parent.mkdir(parents=True, exist_ok=True)
