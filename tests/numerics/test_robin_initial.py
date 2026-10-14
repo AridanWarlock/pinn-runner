@@ -203,3 +203,14 @@ def test_box_rejects_incompatible_operator_data(tmp_path: Path, defect: str) -> 
     (tmp_path / "functions.py").write_text(source)
     with pytest.raises(ValueError):
         SolverFactory(TaskSettings.read(config), load_problem(tmp_path / "functions.py"), tmp_path)
+
+
+def test_confirmed_robin_execution_default_and_explicit_control() -> None:
+    config = CASES["heat_robin3d"].config("cpu", 1, 19)
+    config["training"]["constraints"] = "hard_initial_robin"
+    assert TaskSettings.read(config).training.hard_execution == "robin_grouped"
+    config["training"]["hard_execution"] = "eager"
+    assert TaskSettings.read(config).training.hard_execution == "eager"
+    config["training"]["constraints"] = "soft"
+    config["training"].pop("hard_execution")
+    assert TaskSettings.read(config).training.hard_execution == "eager"

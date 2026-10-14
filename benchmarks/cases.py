@@ -161,10 +161,16 @@ class BoxNeumannHeatCase(BenchmarkCase):
     def additional_errors(
         self, spatial: dict[str, Array], time: Array, error: Array
     ) -> dict[str, float]:
+        mode = self.mode(spatial, time)
+        norm_squared = float(np.sum(mode**2))
+        if norm_squared == 0:
+            raise ValueError("Modal diagnostics require a nonzero mode")
+        coefficient_error = float(np.sum(error * mode) / norm_squared)
+        orthogonal = error - coefficient_error * mode
         return {
-            "mode_relative_l2": float(
-                np.linalg.norm(error) / np.linalg.norm(self.mode(spatial, time))
-            )
+            "mode_relative_l2": float(np.linalg.norm(error) / np.sqrt(norm_squared)),
+            "mode_projection_relative_error": abs(coefficient_error),
+            "mode_orthogonal_rmse": float(np.sqrt(np.mean(orthogonal**2))),
         }
 
     def boundaries(self, axes: tuple[str, ...]) -> list[dict[str, Any]]:

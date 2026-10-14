@@ -401,3 +401,24 @@ def test_temporal_diagnostics_handle_zero_reference_and_missing_boundary() -> No
     assert rows[0]["relative_l2"] is None
     assert rows[0]["boundary_rmse"] is None
     assert rows[0]["interior_rmse"] == pytest.approx(0.1)
+
+
+def test_temporal_mode_error_exposes_decay_hidden_by_background() -> None:
+    from benchmarks.metrics import temporal_errors
+
+    case = replace(CASES["heat_neumann3d"], grid=CartesianGrid((4, 4), (2, 2)))
+    settings = TaskSettings.read(case.config("cpu", 1, 19, evaluating=True))
+    grid = settings.domain.grid()
+    spatial = {axis: grid.spatial[i] for i, axis in enumerate(settings.domain.space)}
+    prediction = case.reference(spatial, grid.time.T) + 0.01
+    rows = temporal_errors(case, spatial, grid.time, prediction)
+    first, last = rows[0], rows[-1]
+    assert first["relative_l2"] is not None and last["relative_l2"] is not None
+    assert last["relative_l2"] < first["relative_l2"]
+    assert first["mode_relative_l2"] is not None and last["mode_relative_l2"] is not None
+    assert last["mode_relative_l2"] / first["mode_relative_l2"] == pytest.approx(
+        np.exp(0.1 * 3 * np.pi**2 * 0.5)
+    )
+    assert last["mode_projection_relative_error"] is not None
+    assert last["mode_projection_relative_error"] < 1e-12
+    assert last["mode_orthogonal_rmse"] == pytest.approx(0.01)

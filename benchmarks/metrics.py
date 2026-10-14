@@ -66,6 +66,9 @@ def temporal_errors(
         reference_norm = float(np.linalg.norm(expected[:, index]))
         results.append(
             {
+                **case.additional_errors(
+                    spatial, time[index : index + 1].T, error[:, index : index + 1]
+                ),
                 "time": float(instant),
                 "reference_l2": reference_norm,
                 "relative_l2": float(np.linalg.norm(error[:, index]) / reference_norm)

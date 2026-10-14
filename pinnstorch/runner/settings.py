@@ -295,7 +295,7 @@ class Training:
         )
         hard_execution = reader.choice(
             "hard_execution",
-            "eager",
+            "robin_grouped" if constraints == "hard_initial_robin" else "eager",
             ("eager", "fused_predict", "product_rule", "robin_batch", "robin_grouped"),
         )
         if constraints == "hard_initial_robin" and hard_execution not in (

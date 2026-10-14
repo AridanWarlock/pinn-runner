@@ -176,3 +176,20 @@ def test_box_initial_time_lifting_and_every_edge_operator(dimensions: int) -> No
         rtol=0,
         atol=0,
     )
+
+    # Completeness: lifting supplies (I-Q)g and the free network supplies Qg.
+    # Together they recover the manufactured field, without extra restrictions.
+    exact_bound = recipe.bind(initial)
+    recovered = exact_bound(initial(spatial, time), *spatial, time)
+    reference = initial(spatial, time)["u"] * (1 + time)
+    torch.testing.assert_close(recovered["u"], reference, rtol=1e-11, atol=1e-11)
+    recovered_equation = Equation(recovered, coordinates)
+    reference_equation = Equation({"u": reference}, coordinates)
+    for name in (*"xyz"[:dimensions], "t"):
+        for order in (1, 2):
+            torch.testing.assert_close(
+                recovered_equation.diff("u", name, order),
+                reference_equation.diff("u", name, order),
+                rtol=1e-10,
+                atol=1e-10,
+            )
