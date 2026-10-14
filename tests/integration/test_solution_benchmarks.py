@@ -91,12 +91,15 @@ def analytical_tensor(case: BenchmarkCase, coordinates: Coordinates) -> torch.Te
             for column in coordinates.spatial.values():
                 field = field + column.square()
     elif isinstance(case, BoxNeumannHeatCase):
-        mode = torch.exp(-0.1 * case.dimensions * case.frequency**2 * time)
+        mode = torch.ones_like(time)
         background = torch.ones_like(time)
-        for column in coordinates.spatial.values():
-            mode = mode * torch.cos(case.frequency * (column - case.shift))
+        decay = 0.0
+        for axis, column in coordinates.spatial.items():
+            definition = case.mode_for(axis)
+            mode = mode * torch.cos(definition.frequency * (column - definition.shift))
             background = background + time * column
-        field = background + mode
+            decay += definition.frequency**2
+        field = background + mode * torch.exp(-0.1 * decay * time)
     elif isinstance(case, RobinHeatCase):
         mu = torch.pi / 2
         field = 1 + x * time + torch.exp(-0.1 * mu**2 * time) * torch.cos(mu * (x - 0.5))

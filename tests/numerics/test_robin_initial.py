@@ -128,7 +128,7 @@ def test_robin_checkpoint_rejects_reinterpreted_time_interval(tmp_path: Path) ->
 
 @pytest.mark.parametrize("backend", ["eager", "robin_batch", "robin_grouped"])
 @pytest.mark.parametrize(
-    "name", ["heat_neumann2d", "heat_neumann3d", "heat_robin2d", "heat_robin3d"]
+    "name", ["heat_neumann2d", "heat_neumann3d", "heat_robin2d", "heat_robin3d", "heat_mixed3d"]
 )
 def test_factory_box_initial_faces_edges_and_training(
     name: str, backend: str, tmp_path: Path
@@ -155,8 +155,12 @@ def test_factory_box_initial_faces_edges_and_training(
     time = torch.full_like(spatial[0], 0.3, requires_grad=True)
     physical = model(spatial, time)
     equation = Equation(physical, Coordinates(dict(zip("xyz", spatial)), time))
-    alpha = math.pi / 2 if "robin" in name else 0
     for axis, column in zip("xyz", spatial):
+        alpha = next(
+            boundary.get("alpha", 0)
+            for boundary in config["boundaries"]
+            if boundary["axis"] == axis
+        )
         target = problem.boundary_values[f"wall_{axis}"](equation.coordinates)
         for side, normal in ((0, -1), (1, 1)):
             mask = column[:, 0] == side

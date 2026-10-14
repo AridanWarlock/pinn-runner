@@ -19,6 +19,7 @@ from benchmarks.box_heat_balance import box_heat_balance  # noqa: E402
 from benchmarks.cases import CASES  # noqa: E402
 from benchmarks.heat_balance import heat_balance  # noqa: E402
 from pinnstorch.runner.artifacts import ArtifactWriter  # noqa: E402
+from pinnstorch.runner.dirichlet import trace_value  # noqa: E402
 from pinnstorch.runner.execution import SolverExecution  # noqa: E402
 from pinnstorch.runner.factory import SolverFactory  # noqa: E402
 from pinnstorch.runner.problem import load_problem  # noqa: E402
@@ -41,6 +42,9 @@ def main() -> None:
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--space-points", type=int)
     parser.add_argument("--time-points", type=int)
+    parser.add_argument(
+        "--quadrature", choices=("trapezoid", "gauss_legendre"), default="trapezoid"
+    )
     args = parser.parse_args()
     if any(value is not None and value < 2 for value in (args.space_points, args.time_points)):
         parser.error("Quadrature counts must exceed one")
@@ -57,6 +61,7 @@ def main() -> None:
         "heat_neumann3d",
         "heat_robin2d",
         "heat_robin3d",
+        "heat_mixed3d",
     ):
         raise ValueError("Balance benchmark only supports the documented Robin/Neumann cases")
     task = args.trial / "task"
@@ -89,7 +94,7 @@ def main() -> None:
     time_points = args.time_points or (31 if CASES[name].dimensions == 1 else 21)
     torch.cuda.synchronize()
     started = time.perf_counter()
-    if CASES[name].dimensions == 1:
+    if CASES[name].dimensions == 1 and args.quadrature == "trapezoid":
         metrics = heat_balance(
             field,
             settings.domain.space["x"].interval,
@@ -116,12 +121,11 @@ def main() -> None:
         names = tuple(settings.domain.space)
         lookup = {boundary.axis: boundary for boundary in settings.boundaries}
 
-        def data(spatial: list[torch.Tensor], clock: torch.Tensor, axis: str) -> torch.Tensor:
-            return factory.adapter.boundary_value(f"wall_{axis}", spatial, clock)
-
         from functools import partial
 
-        targets = tuple((partial(data, axis=axis), partial(data, axis=axis)) for axis in names)
+        targets = tuple(
+            (partial(trace_value, lookup[axis], factory.adapter),) * 2 for axis in names
+        )
         operators = tuple(
             ((lookup[axis].alpha if lookup[axis].kind == "robin" else 0, 1),) * 2 for axis in names
         )
@@ -135,6 +139,7 @@ def main() -> None:
             "cuda",
             space_points=space_points,
             time_points=time_points,
+            quadrature=args.quadrature,
         )
     torch.cuda.synchronize()
     diagnostic_seconds = time.perf_counter() - started
@@ -156,6 +161,7 @@ def main() -> None:
         "status": "failed" if failures else "passed",
         "failures": failures,
         "space_points": space_points,
+        "quadrature": args.quadrature,
         "time_points": time_points,
         "conductivity": 0.1,
         "source": "sum of spatial coordinates",

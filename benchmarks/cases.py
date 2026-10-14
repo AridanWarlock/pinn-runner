@@ -132,63 +132,67 @@ class RobinHeatCase(NeumannHeatCase):
         ]
 
 
+@dataclass(frozen=True)
+class HeatAxisMode:
+    frequency: float
+    shift: float
+    alpha: float
+
+
 class BoxNeumannHeatCase(BenchmarkCase):
-    @property
-    def alpha(self) -> float:
-        return 0.0
+    def mode_for(self, axis: str) -> HeatAxisMode:
+        return HeatAxisMode(float(np.pi), 0, 0)
 
-    @property
-    def frequency(self) -> float:
-        return float(np.pi)
-
-    @property
-    def shift(self) -> float:
-        return 0.0
+    def mode(self, spatial: dict[str, Array], time: Array) -> Array:
+        field = np.ones_like(spatial["x"])
+        decay = 0.0
+        for axis, column in spatial.items():
+            mode = self.mode_for(axis)
+            field = field * np.cos(mode.frequency * (column - mode.shift))
+            decay += mode.frequency**2
+        return cast(Array, field * np.exp(-0.1 * decay * time))
 
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
-        mode = np.ones_like(spatial["x"])
         background = np.ones_like(spatial["x"]) * np.ones_like(time)
         for column in spatial.values():
-            mode = mode * np.cos(self.frequency * (column - self.shift))
             background = background + time * column
-        return cast(
-            Array, background + np.exp(-0.1 * self.dimensions * self.frequency**2 * time) * mode
-        )
+        return cast(Array, background + self.mode(spatial, time))
 
     def additional_errors(
         self, spatial: dict[str, Array], time: Array, error: Array
     ) -> dict[str, float]:
-        mode = np.ones_like(spatial["x"])
-        for column in spatial.values():
-            mode = mode * np.cos(self.frequency * (column - self.shift))
-        mode = mode * np.exp(-0.1 * self.dimensions * self.frequency**2 * time)
-        return {"mode_relative_l2": float(np.linalg.norm(error) / np.linalg.norm(mode))}
+        return {
+            "mode_relative_l2": float(
+                np.linalg.norm(error) / np.linalg.norm(self.mode(spatial, time))
+            )
+        }
 
     def boundaries(self, axes: tuple[str, ...]) -> list[dict[str, Any]]:
         return [
             dict(
-                kind="neumann" if self.alpha == 0 else "robin",
+                kind="neumann" if mode.alpha == 0 else "robin",
                 field="u",
                 axis=axis,
                 value_function=f"wall_{axis}",
-                **({"alpha": self.alpha, "beta": 1} if self.alpha else {}),
+                **({"alpha": mode.alpha, "beta": 1} if mode.alpha else {}),
             )
             for axis in axes
+            for mode in (self.mode_for(axis),)
         ]
 
 
 class BoxRobinHeatCase(BoxNeumannHeatCase):
-    @property
-    def alpha(self) -> float:
-        return float(np.pi / 2)
+    def mode_for(self, axis: str) -> HeatAxisMode:
+        return HeatAxisMode(float(np.pi / 2), 0.5, float(np.pi / 2))
 
-    @property
-    def frequency(self) -> float:
-        return float(np.pi / 2)
 
-    @property
-    def shift(self) -> float:
-        return 0.5
+class MixedBoxHeatCase(BoxNeumannHeatCase):
+    def mode_for(self, axis: str) -> HeatAxisMode:
+        return (
+            HeatAxisMode(float(np.pi / 2), 0.5, float(np.pi / 2))
+            if axis == "y"
+            else super().mode_for(axis)
+        )
 
 
 class AdvectionCase(BenchmarkCase):
@@ -228,6 +232,7 @@ CASES: dict[str, BenchmarkCase] = {
         BoxNeumannHeatCase("heat_neumann3d", 3, grid=CartesianGrid((6, 9))),
         BoxRobinHeatCase("heat_robin2d", 2, grid=CartesianGrid((8, 17))),
         BoxRobinHeatCase("heat_robin3d", 3, grid=CartesianGrid((6, 9))),
+        MixedBoxHeatCase("heat_mixed3d", 3, grid=CartesianGrid((6, 9))),
         AdvectionCase("advection", 1),
         BurgersCase("burgers", 1),
     )

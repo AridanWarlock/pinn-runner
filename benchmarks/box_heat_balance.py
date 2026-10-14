@@ -1,6 +1,9 @@
 """Independent volume/face quadrature for Cartesian heat and boundary operators."""
 
+import math
 from collections.abc import Callable
+from dataclasses import dataclass
+from typing import cast
 
 import numpy as np
 import torch
@@ -13,9 +16,43 @@ BoxField = Callable[[list[torch.Tensor], torch.Tensor], torch.Tensor]
 Array = NDArray[np.float64]
 
 
-def _integrate(values: Array, positions: Array, dimensions: int) -> Array:
-    for _ in range(dimensions):
-        values = np.trapz(values, positions, axis=0)
+@dataclass(frozen=True)
+class SpatialQuadrature:
+    nodes: torch.Tensor
+    weights: Array
+
+    @classmethod
+    def build(cls, bounds: tuple[float, float], points: int, kind: str) -> "SpatialQuadrature":
+        lower, upper = bounds
+        if points < 2:
+            raise ValueError("Quadrature requires at least two points")
+        if not math.isfinite(lower) or not math.isfinite(upper) or upper <= lower:
+            raise ValueError("Quadrature requires a finite positive interval")
+        if kind == "gauss_legendre":
+            legendre_rule = cast(
+                Callable[[int], tuple[Array, Array]], np.polynomial.legendre.leggauss
+            )
+            nodes, weights = legendre_rule(points)
+            return cls(
+                torch.tensor(lower + (nodes + 1) * (upper - lower) / 2, dtype=torch.float32),
+                weights * (upper - lower) / 2,
+            )
+        if kind != "trapezoid":
+            raise ValueError("Unknown spatial quadrature")
+        nodes = torch.linspace(lower, upper, points)
+        positions = nodes.numpy().astype(np.float64)
+        weights = np.empty(points, dtype=np.float64)
+        weights[0], weights[-1] = (
+            (positions[1] - positions[0]) / 2,
+            (positions[-1] - positions[-2]) / 2,
+        )
+        weights[1:-1] = (positions[2:] - positions[:-2]) / 2
+        return cls(nodes, weights)
+
+
+def _integrate(values: Array, axes: tuple[SpatialQuadrature, ...]) -> Array:
+    for axis in axes:
+        values = cast(Array, np.tensordot(axis.weights, values, axes=(0, 0)))
     return values
 
 
@@ -54,31 +91,35 @@ def box_heat_balance(
     space_points: int = 17,
     time_points: int = 21,
     batch_size: int = 256,
+    quadrature: str = "trapezoid",
 ) -> dict[str, float]:
-    if not 1 <= len(bounds) <= 3 or any(b != bounds[0] for b in bounds):
-        raise ValueError("Balance diagnostic currently requires equal box intervals")
+    if not 1 <= len(bounds) <= 3 or len(targets) != len(bounds) or len(operators) != len(bounds):
+        raise ValueError(
+            "Balance diagnostic requires one to three axes with matching operator data"
+        )
     if space_points < 2 or time_points < 2 or batch_size < 1:
         raise ValueError("Quadrature counts must exceed one and batch size must be positive")
-    positions = torch.linspace(*bounds[0], space_points)
+    axes = tuple(
+        SpatialQuadrature.build(interval, space_points, quadrature) for interval in bounds
+    )
     instants = torch.linspace(*time_interval, time_points)
     dimensions = len(bounds)
-    mesh = torch.meshgrid(*([positions] * dimensions), instants, indexing="ij")
+    mesh = torch.meshgrid(*(axis.nodes for axis in axes), instants, indexing="ij")
     columns = [x.reshape(-1, 1) for x in mesh]
     values, rates = _sample(field, columns, "t", device, batch_size)
     shape = (space_points,) * dimensions + (time_points,)
-    space = positions.numpy().astype(np.float64)
     clock = instants.numpy().astype(np.float64)
     # Prescribed source/data are evaluated independently on CPU, not teacher values.
     forcing = source(columns[:-1], columns[-1]).detach().numpy().astype(np.float64).reshape(shape)
-    content = _integrate(values.reshape(shape), space, dimensions)
-    rate = _integrate(rates.reshape(shape), space, dimensions)
-    supply = _integrate(forcing, space, dimensions)
+    content = _integrate(values.reshape(shape), axes)
+    rate = _integrate(rates.reshape(shape), axes)
+    supply = _integrate(forcing, axes)
     wall_errors = []
     for axis, axis_name in enumerate("xyz"[:dimensions]):
         for side in (0, 1):
-            axes = [positions] * dimensions
-            axes[axis] = torch.tensor([bounds[axis][side]], dtype=positions.dtype)
-            face_mesh = torch.meshgrid(*axes, instants, indexing="ij")
+            face_nodes = [rule.nodes for rule in axes]
+            face_nodes[axis] = torch.tensor([bounds[axis][side]], dtype=torch.float32)
+            face_mesh = torch.meshgrid(*face_nodes, instants, indexing="ij")
             face_columns = [x.reshape(-1, 1) for x in face_mesh]
             face_values, derivative = _sample(field, face_columns, axis_name, device, batch_size)
             normal = derivative * (-1 if side == 0 else 1)
@@ -92,7 +133,8 @@ def box_heat_balance(
             wall_errors.append(alpha * face_values + beta * normal - prescribed)
             face_shape = (space_points,) * (dimensions - 1) + (time_points,)
             supply = supply + conductivity * _integrate(
-                normal.reshape(face_shape), space, dimensions - 1
+                normal.reshape(face_shape),
+                tuple(rule for index, rule in enumerate(axes) if index != axis),
             )
     wall_error = np.concatenate(wall_errors)
     balance = rate - supply
