@@ -75,3 +75,52 @@ def test_invalid_robin_configuration_rejected(tmp_path: Path, invalid: str) -> N
     (tmp_path / "functions.py").write_text(source)
     with pytest.raises(ValueError):
         SolverFactory(TaskSettings.read(config), load_problem(tmp_path / "functions.py"), tmp_path)
+
+
+def test_robin_checkpoint_identity_tracks_boundary_recipe(tmp_path: Path) -> None:
+    case = CASES["heat_neumann"]
+    source = (
+        case.source.read_text()
+        + '\ndef alternative(c: Coordinates) -> torch.Tensor:\n    return wall(c) + c.t\nproblem.boundary_values["alternative"] = alternative\n'
+    )
+    (tmp_path / "functions.py").write_text(source)
+    problem = load_problem(tmp_path / "functions.py")
+    config = case.config("cpu", 3, 19)
+    config["training"]["constraints"] = "hard_initial_robin"
+    first = SolverFactory(TaskSettings.read(config), problem, tmp_path)
+    config["boundaries"][0]["weight"] = 2
+    same = SolverFactory(TaskSettings.read(config), problem, tmp_path)
+    assert same.constraint_signature == first.constraint_signature
+    config["boundaries"][0]["value_function"] = "alternative"
+    changed = SolverFactory(TaskSettings.read(config), problem, tmp_path)
+    assert changed.constraint_signature != first.constraint_signature
+
+
+def test_robin_checkpoint_rejects_reinterpreted_time_interval(tmp_path: Path) -> None:
+    import logging
+
+    from pinnstorch.runner.artifacts import ArtifactWriter
+    from pinnstorch.runner.execution import SolverExecution
+
+    case = CASES["heat_neumann"]
+    (tmp_path / "functions.py").write_bytes(case.source.read_bytes())
+    problem = load_problem(tmp_path / "functions.py")
+    config = case.config("cpu", 3, 19)
+    config["training"]["constraints"] = "hard_initial_robin"
+    original = SolverFactory(TaskSettings.read(config), problem, tmp_path).build(True)
+    checkpoint = tmp_path / "checkpoint.ckpt"
+    torch.save(
+        {
+            "hyper_parameters": dict(original.model.hparams),
+            "state_dict": original.model.state_dict(),
+        },
+        checkpoint,
+    )
+    config["domain"]["time"]["interval"] = [0, 0.3]
+    settings = TaskSettings.read(config)
+    changed = SolverFactory(settings, problem, tmp_path).build(True)
+    execution = SolverExecution(
+        settings, changed, ArtifactWriter(tmp_path, settings, problem), logging.getLogger("test")
+    )
+    with pytest.raises(ValueError, match="original spatial and time intervals"):
+        execution._load(checkpoint, False)

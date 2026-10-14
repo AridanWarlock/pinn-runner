@@ -117,6 +117,10 @@ class SolverExecution:
         bounds = validate_checkpoint_domain(
             checkpoint, self.settings.domain.input_names, requested, allow_extrapolation
         )
+        if constraint == "hard_initial_robin" and tuple(requested) != bounds:
+            raise ValueError(
+                "Robin checkpoint requires the original spatial and time intervals; change grid resolution only"
+            )
         self.objects.model.load_state_dict(checkpoint["state_dict"], strict=True)
         self.objects.model.hparams["input_bounds"] = bounds
         return bounds
