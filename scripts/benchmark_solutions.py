@@ -155,7 +155,9 @@ def arguments() -> tuple[argparse.Namespace, int]:
         default="soft",
     )
     parser.add_argument(
-        "--hard-execution", choices=("eager", "fused_predict", "product_rule"), default="eager"
+        "--hard-execution",
+        choices=("eager", "fused_predict", "product_rule", "robin_batch", "robin_grouped"),
+        default="eager",
     )
     args = parser.parse_args()
     if (

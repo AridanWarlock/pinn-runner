@@ -14,12 +14,14 @@ from tests.integration.test_runner_files import launch
 
 
 @pytest.mark.e2e
+@pytest.mark.parametrize("backend", ["eager", "robin_batch", "robin_grouped"])
 @pytest.mark.parametrize("name", ["heat_neumann", "heat_robin", "heat_neumann2d", "heat_robin3d"])
-def test_robin_file_roundtrip(tmp_path: Path, name: str) -> None:
+def test_robin_file_roundtrip(tmp_path: Path, name: str, backend: str) -> None:
     case = CASES[name]
     config = case.config(os.environ.get("PINN_TEST_DEVICE", "cpu"), 3, 19)
     config["training"].update(
         constraints="hard_initial_robin",
+        hard_execution=backend,
         refinement={"steps": 2},
         batch_size=17,
         collocation={"sampling": "lhs", "points": 17},
@@ -41,8 +43,10 @@ def test_robin_file_roundtrip(tmp_path: Path, name: str) -> None:
         else:
             state = torch.load(output / "checkpoints/final.ckpt", map_location="cpu")
             assert state["hyper_parameters"]["constraint_kind"] == "hard_initial_robin"
+            assert state["hyper_parameters"]["hard_execution"] == backend
             assert state["refinement_state"]["device"].split(":")[0] == config["runtime"]["device"]
     config["boundaries"][0]["weight"] = 2
+    config["training"]["hard_execution"] = "robin_batch" if backend == "eager" else "eager"
     (tmp_path / "config.yaml").write_text(yaml.safe_dump(config))
     result = launch(
         tmp_path,
@@ -51,3 +55,9 @@ def test_robin_file_roundtrip(tmp_path: Path, name: str) -> None:
         str(tmp_path / "train/checkpoints/final.ckpt"),
     )
     assert result.returncode == 0, result.stdout + result.stderr
+    np.testing.assert_allclose(
+        loadmat(tmp_path / "same-physics/predictions.mat")["u"],
+        loadmat(tmp_path / "predict/predictions.mat")["u"],
+        rtol=3e-5,
+        atol=3e-5,
+    )

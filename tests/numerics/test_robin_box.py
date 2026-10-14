@@ -28,7 +28,9 @@ def test_box_projection_independent_product_and_training_gradients(
 ) -> None:
     device = os.environ.get("PINN_TEST_DEVICE", "cpu")
     intervals = tuple(
-        IntervalRobinProjection((-0.4 + i, 1.2 + i), RobinOperator(i, 0.7), RobinOperator(2, -1.1))
+        IntervalRobinProjection(
+            (-0.4 + 0.2 * i, 1.2 + 0.5 * i), RobinOperator(i, 0.7), RobinOperator(2, -1.1)
+        )
         for i in range(dimensions)
     )
     projection = BoxRobinProjection(intervals)

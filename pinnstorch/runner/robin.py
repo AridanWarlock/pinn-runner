@@ -5,7 +5,9 @@ from functools import partial
 import torch
 
 from pinnstorch.api import Problem
+from pinnstorch.training.robin_batch import BatchedBoxRobinProjection
 from pinnstorch.training.robin_box import BoxRobinInitial, BoxRobinProjection
+from pinnstorch.training.robin_grouped import GroupedBoxRobinProjection
 from pinnstorch.training.robin_initial import IntervalRobinInitial
 from pinnstorch.training.robin_projection import IntervalRobinProjection, RobinOperator
 
@@ -22,7 +24,7 @@ def compile_robin(
         raise ValueError("hard_initial_robin requires one field and no parameters")
     if problem.transform is not None or tuple(problem.outputs) != tuple(problem.fields):
         raise ValueError("hard_initial_robin does not support custom transforms/network fields")
-    if len(settings.domain.space) > 1:
+    if len(settings.domain.space) > 1 or settings.training.hard_execution != "eager":
         return compile_box(settings, adapter)
     axis = next(iter(settings.domain.space))
     faces: dict[str, Boundary] = {}
@@ -98,8 +100,14 @@ def compile_box(settings: TaskSettings, adapter: ProblemAdapter) -> BoxRobinInit
         targets.append(
             (partial(trace_value, pair[0], adapter), partial(trace_value, pair[1], adapter))
         )
+    execution_types = {
+        "eager": BoxRobinProjection,
+        "robin_batch": BatchedBoxRobinProjection,
+        "robin_grouped": GroupedBoxRobinProjection,
+    }
+    projection_type = execution_types[settings.training.hard_execution]
     recipe = BoxRobinInitial(
-        BoxRobinProjection(tuple(projections)),
+        projection_type(tuple(projections)),
         settings.domain.time.interval,
         adapter.initial_tensors,
         tuple(targets),

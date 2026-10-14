@@ -294,10 +294,23 @@ class Training:
             "constraints", "soft", ("soft", "hard_initial_dirichlet", "hard_initial_robin")
         )
         hard_execution = reader.choice(
-            "hard_execution", "eager", ("eager", "fused_predict", "product_rule")
+            "hard_execution",
+            "eager",
+            ("eager", "fused_predict", "product_rule", "robin_batch", "robin_grouped"),
         )
-        if constraints == "hard_initial_robin" and hard_execution != "eager":
-            raise ValueError("hard_initial_robin currently requires eager execution")
+        if constraints == "hard_initial_robin" and hard_execution not in (
+            "eager",
+            "robin_batch",
+            "robin_grouped",
+        ):
+            raise ValueError(
+                "hard_initial_robin requires eager, robin_batch or robin_grouped execution"
+            )
+        if (
+            hard_execution in ("robin_batch", "robin_grouped")
+            and constraints != "hard_initial_robin"
+        ):
+            raise ValueError("Robin execution adapters require hard_initial_robin")
         if constraints == "soft" and hard_execution != "eager":
             raise ValueError("training.hard_execution requires hard constraints")
         return cls(

@@ -126,16 +126,20 @@ def test_robin_checkpoint_rejects_reinterpreted_time_interval(tmp_path: Path) ->
         execution._load(checkpoint, False)
 
 
+@pytest.mark.parametrize("backend", ["eager", "robin_batch", "robin_grouped"])
 @pytest.mark.parametrize(
     "name", ["heat_neumann2d", "heat_neumann3d", "heat_robin2d", "heat_robin3d"]
 )
-def test_factory_box_initial_faces_edges_and_training(name: str, tmp_path: Path) -> None:
+def test_factory_box_initial_faces_edges_and_training(
+    name: str, backend: str, tmp_path: Path
+) -> None:
     import itertools
 
     case = CASES[name]
     device = os.environ.get("PINN_TEST_DEVICE", "cpu")
     config = case.config(device, 3, 19)
     config["training"]["constraints"] = "hard_initial_robin"
+    config["training"]["hard_execution"] = backend
     for axis in config["domain"]["space"].values():
         axis["points"] = 3
     config["domain"]["time"]["points"] = 3
