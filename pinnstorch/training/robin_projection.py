@@ -74,13 +74,19 @@ class IntervalRobinProjection:
         return values[0], values[1]
 
     def __call__(self, field: IntervalField, x: torch.Tensor, time: torch.Tensor) -> TensorOutputs:
+        with torch.set_grad_enabled(True):
+            outputs = field(x, time)
+        return self.apply(outputs, field, x, time)
+
+    def apply(
+        self, outputs: TensorOutputs, field: IntervalField, x: torch.Tensor, time: torch.Tensor
+    ) -> TensorOutputs:
         # Traces need normal derivatives even when the caller only predicts.
         # Keep coordinate/parameter graphs when training; detach only no-grad output.
         tracking = torch.is_grad_enabled()
         with torch.set_grad_enabled(True):
             lower, upper = self.traces(field, x, time)
             basis_lower, basis_upper = self.basis(x)
-            outputs = field(x, time)
             result = {
                 name: cast(
                     torch.Tensor, value - basis_lower * lower[name] - basis_upper * upper[name]

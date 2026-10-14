@@ -10,7 +10,14 @@ import numpy as np
 import pytest
 import torch
 
-from benchmarks.cases import CASES, DirichletHeatCase, HeatCase
+from benchmarks.cases import (
+    CASES,
+    BenchmarkCase,
+    DirichletHeatCase,
+    HeatCase,
+    NeumannHeatCase,
+    RobinHeatCase,
+)
 from benchmarks.execution import fingerprint, validate_refinement
 from benchmarks.metrics import quality_failures, regression_failures, solution_errors
 from benchmarks.policies import CartesianGrid, FixedQuality, TrainingBudget
@@ -72,15 +79,7 @@ def test_variant_preserves_custom_grid_budget_and_acceptance() -> None:
     assert not quality_failures(CASES["heat2d"], metrics)
 
 
-@pytest.mark.parametrize("name", list(CASES))
-def test_analytical_field_satisfies_equation_initial_and_boundaries(name: str) -> None:
-    case = CASES[name]
-    generator = torch.Generator().manual_seed(19)
-    columns = [
-        torch.rand((17, 1), dtype=torch.float64, generator=generator).requires_grad_()
-        for _ in range(case.dimensions + 1)
-    ]
-    coordinates = Coordinates(dict(zip(("x", "y", "z"), columns[:-1])), columns[-1])
+def analytical_tensor(case: BenchmarkCase, coordinates: Coordinates) -> torch.Tensor:
     x, time = coordinates.x, coordinates.t
     if isinstance(case, HeatCase):
         field = torch.exp(-0.1 * case.dimensions * torch.pi**2 * time)
@@ -90,10 +89,31 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(name: str) -
             field = field + 1 + 0.2 * case.dimensions * time
             for column in coordinates.spatial.values():
                 field = field + column.square()
-    elif name == "advection":
+    elif isinstance(case, RobinHeatCase):
+        mu = torch.pi / 2
+        field = 1 + x * time + torch.exp(-0.1 * mu**2 * time) * torch.cos(mu * (x - 0.5))
+    elif isinstance(case, NeumannHeatCase):
+        field = 1 + x * time + torch.exp(-0.1 * torch.pi**2 * time) * torch.cos(torch.pi * x)
+    elif case.name == "advection":
         field = torch.sin((x - time) * torch.pi)
-    else:
+    elif case.name == "burgers":
         field = torch.exp(-time) * torch.sin(x * torch.pi)
+    else:
+        raise NotImplementedError(case.name)
+    return field
+
+
+@pytest.mark.parametrize("name", list(CASES))
+def test_analytical_field_satisfies_equation_initial_and_boundaries(name: str) -> None:
+    case = CASES[name]
+    generator = torch.Generator().manual_seed(19)
+    columns = [
+        torch.rand((17, 1), dtype=torch.float64, generator=generator).requires_grad_()
+        for _ in range(case.dimensions + 1)
+    ]
+    coordinates = Coordinates(dict(zip(("x", "y", "z"), columns[:-1])), columns[-1])
+    time = coordinates.t
+    field = analytical_tensor(case, coordinates)
     problem = load_problem(case.source)
     equation = Equation({"u": field}, coordinates)
     for function in problem.equations.values():
@@ -109,29 +129,30 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(name: str) -
     )
     settings = TaskSettings.read(case.config("cpu", 3, 1234))
     for boundary in settings.boundaries:
-        boundary_spatial = {
-            **numpy_spatial,
-            boundary.axis: np.zeros_like(numpy_spatial[boundary.axis]),
-        }
-        reference = case.reference(boundary_spatial, time.detach().numpy())
-        if boundary.value_function:
-            observed = (
-                problem.boundary_values[boundary.value_function](
-                    Coordinates(
-                        {axis: torch.as_tensor(value) for axis, value in boundary_spatial.items()},
-                        time,
-                    )
+        for side in ("lower", "upper") if boundary.side == "both" else (boundary.side,):
+            location = settings.domain.space[boundary.axis].interval[0 if side == "lower" else 1]
+            spatial = dict(coordinates.spatial)
+            spatial[boundary.axis] = torch.full_like(time, location, requires_grad=True)
+            face_coordinates = Coordinates(spatial, time)
+            face_value = analytical_tensor(case, face_coordinates)
+            if boundary.kind == "dirichlet":
+                observed = face_value
+            else:
+                normal = -1 if side == "lower" else 1
+                derivative = (
+                    Equation({"u": face_value}, face_coordinates).diff("u", boundary.axis) * normal
                 )
-                .detach()
-                .numpy()
+                observed = (
+                    derivative
+                    if boundary.kind == "neumann"
+                    else boundary.alpha * face_value + boundary.beta * derivative
+                )
+            target = (
+                problem.boundary_values[boundary.value_function](face_coordinates)
+                if boundary.value_function
+                else torch.full_like(time, boundary.value)
             )
-            np.testing.assert_allclose(observed, reference, atol=1e-12)
-        else:
-            np.testing.assert_allclose(reference, 0, atol=1e-12)
-            boundary_spatial[boundary.axis] = np.ones_like(boundary_spatial[boundary.axis])
-            np.testing.assert_allclose(
-                case.reference(boundary_spatial, time.detach().numpy()), 0, atol=1e-12
-            )
+            torch.testing.assert_close(observed, target, atol=2e-12, rtol=0)
 
 
 @pytest.mark.parametrize("name", list(CASES))

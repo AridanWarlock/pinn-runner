@@ -96,6 +96,42 @@ class DirichletHeatCase(HeatCase):
         ]
 
 
+class NeumannHeatCase(BenchmarkCase):
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        return cast(
+            Array,
+            1
+            + spatial["x"] * time
+            + np.exp(-0.1 * np.pi**2 * time) * np.cos(np.pi * spatial["x"]),
+        )
+
+    def boundaries(self, axes: tuple[str, ...]) -> list[dict[str, Any]]:
+        return [{"kind": "neumann", "field": "u", "axis": "x", "value_function": "wall"}]
+
+
+class RobinHeatCase(NeumannHeatCase):
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        mu = np.pi / 2
+        return cast(
+            Array,
+            1
+            + spatial["x"] * time
+            + np.exp(-0.1 * mu**2 * time) * np.cos(mu * (spatial["x"] - 0.5)),
+        )
+
+    def boundaries(self, axes: tuple[str, ...]) -> list[dict[str, Any]]:
+        return [
+            {
+                "kind": "robin",
+                "field": "u",
+                "axis": "x",
+                "alpha": float(np.pi / 2),
+                "beta": 1,
+                "value_function": "wall",
+            }
+        ]
+
+
 class AdvectionCase(BenchmarkCase):
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
         return cast(Array, np.sin(np.pi * (spatial["x"] - time)))
@@ -127,6 +163,8 @@ CASES: dict[str, BenchmarkCase] = {
         HeatCase("heat3d", 3, grid=CartesianGrid((8, 17))),
         DirichletHeatCase("heat_dirichlet2d", 2),
         DirichletHeatCase("heat_dirichlet3d", 3, grid=CartesianGrid((8, 17))),
+        NeumannHeatCase("heat_neumann", 1),
+        RobinHeatCase("heat_robin", 1),
         AdvectionCase("advection", 1),
         BurgersCase("burgers", 1),
     )

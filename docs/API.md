@@ -599,3 +599,52 @@ boundaries:
 Готовые manufactured примеры: `benchmarks/problems/heat_dirichlet2d/functions.py`
 и `heat_dirichlet3d/functions.py`; CLI `--cases heat_dirichlet2d heat_dirichlet3d
 --constraints hard_initial_dirichlet --hard-execution product_rule`.
+
+### Точные Неймана и Робина в 1D
+
+Новый режим для одного поля на отрезке:
+
+```yaml
+training:
+  constraints: hard_initial_robin
+  hard_execution: eager
+boundaries:
+  - kind: robin
+    field: u
+    axis: x
+    side: both
+    alpha: 1.5707963267948966
+    beta: 1
+    value_function: wall
+```
+
+Для Неймана замените `kind` на `neumann` и уберите `alpha`/`beta`.
+Можно задавать условия отдельно через `side: lower` и `side: upper`.
+`wall(c)` объявляется в `Problem.boundary_values`; получает физическую координату
+соответствующего конца отрезка и текущее время. Константа задаётся через `value`.
+Нужны условия на обоих концах без повторений.
+
+Условие Робина здесь использует внешнюю нормальную **производную**, а не поток:
+
+$$
+\alpha u+\beta\frac{\partial u}{\partial n}=h(t),\qquad
+\partial_n u\big|_{x=a}=-u_x(a,t),\quad
+\partial_n u\big|_{x=b}=u_x(b,t).
+$$
+
+Коэффициенты постоянные, `beta` ненулевой. Начальное поле обязано удовлетворять
+тому же граничному оператору при начальном времени: проверяются значения **и
+производные**. При несовместимости запуск отклоняется. В обучении остаётся
+только невязка PDE, начальные и граничные условия задаются конструкцией.
+
+Поддержан один пространственный аргумент, одно поле, без варьирующихся входных
+параметров и пользовательского преобразования выходов. 2D/3D, чистый Дирихле
+с `beta: 0`, `heat_flux` и ускорители `product_rule`/`fused_predict` для этого режима
+пока отклоняются. Нормальные производные сети вычисляются и при предсказании;
+наружное отключение autograd обрабатывается внутри преобразования.
+
+Определение сохранённой модели учитывает исходные функции, вид условий и
+коэффициенты граничных операторов. Вес штрафа не меняет физическую конструкцию.
+Примеры: `benchmarks/problems/heat_neumann/functions.py`,
+`benchmarks/problems/heat_robin/functions.py`. Математический вывод и численные
+результаты — [отчёт](robin-1d-experiments.md).

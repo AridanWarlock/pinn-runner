@@ -55,7 +55,7 @@ def require_matching(left: torch.Tensor, right: torch.Tensor, context: str) -> N
     if not (torch.isfinite(left).all() and torch.isfinite(right).all()) or not torch.allclose(
         left, right, atol=1e-6, rtol=1e-6
     ):
-        raise ValueError(f"Incompatible Dirichlet data: {context}")
+        raise ValueError(f"Incompatible boundary data: {context}")
 
 
 def validate_traces(

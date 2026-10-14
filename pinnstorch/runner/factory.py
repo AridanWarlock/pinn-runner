@@ -166,7 +166,7 @@ class SolverFactory:
         net = FCN(layers, mesh.lb, mesh.ub, self.problem.outputs)
         optimizer = settings.training.optimizer
         optimizer_class = torch.optim.AdamW if optimizer.name == "adamw" else torch.optim.Adam
-        output = self.constraints.output
+        output = self.constraints.bind(net.forward)
         return PINNModule(
             net,
             self.adapter.residuals,

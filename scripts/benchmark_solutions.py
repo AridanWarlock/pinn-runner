@@ -150,7 +150,9 @@ def arguments() -> tuple[argparse.Namespace, int]:
         "--lbfgs-steps", type=int, default=0, help="Additional full-objective steps"
     )
     parser.add_argument(
-        "--constraints", choices=("soft", "hard_initial_dirichlet"), default="soft"
+        "--constraints",
+        choices=("soft", "hard_initial_dirichlet", "hard_initial_robin"),
+        default="soft",
     )
     parser.add_argument(
         "--hard-execution", choices=("eager", "fused_predict", "product_rule"), default="eager"

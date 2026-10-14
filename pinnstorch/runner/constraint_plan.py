@@ -13,9 +13,11 @@ from pinnstorch.api import Problem
 from pinnstorch.contracts import FieldFunction
 from pinnstorch.training.constraints import HardBoxInitial
 from pinnstorch.training.hard_execution import hard_executor
+from pinnstorch.training.robin_initial import IntervalRobinInitial, NetworkField
 
 from .dirichlet import compile_lifting
 from .problem import ProblemAdapter
+from .robin import compile_robin
 from .settings import TaskSettings
 
 
@@ -26,6 +28,9 @@ class ExactFace:
     side: str
     value: float | None = 0.0
     value_function: str | None = None
+    kind: str = "dirichlet"
+    alpha: float = 1.0
+    beta: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -35,8 +40,13 @@ class ConstraintPlan:
     exact_faces: tuple[ExactFace, ...]
     remaining_losses: tuple[str, ...]
     signature: str
-    recipe: HardBoxInitial | None
+    recipe: HardBoxInitial | IntervalRobinInitial | None
     output: FieldFunction | None
+
+    def bind(self, network: NetworkField) -> FieldFunction | None:
+        if isinstance(self.recipe, IntervalRobinInitial):
+            return self.recipe.bind(network)
+        return self.output
 
     @classmethod
     def resolve(
@@ -47,6 +57,8 @@ class ConstraintPlan:
             return cls(
                 "soft", (), (), losses, "", None, adapter.transform if problem.transform else None
             )
+        if settings.training.constraints == "hard_initial_robin":
+            return cls._robin(settings, problem, adapter, directory)
         validate_box_initial(settings, problem, adapter)
         lifting = compile_lifting(settings, adapter)
         recipe = HardBoxInitial(
@@ -77,6 +89,42 @@ class ConstraintPlan:
             signature,
             recipe,
             hard_executor(recipe, settings.training.hard_execution),
+        )
+
+    @classmethod
+    def _robin(
+        cls, settings: TaskSettings, problem: Problem, adapter: ProblemAdapter, directory: Path
+    ) -> ConstraintPlan:
+        robin = compile_robin(settings, problem, adapter)
+        faces = tuple(
+            ExactFace(
+                b.field,
+                b.axis,
+                side,
+                b.value,
+                b.value_function,
+                b.kind,
+                b.alpha if b.kind == "robin" else 0,
+                b.beta if b.kind == "robin" else 1,
+            )
+            for b in settings.boundaries
+            for side in (("lower", "upper") if b.side == "both" else (b.side,))
+        )
+        robin_definition = [
+            (f.field, f.axis, f.side, f.kind, f.alpha, f.beta, f.value, f.value_function)
+            for f in faces
+        ]
+        source = (directory / "functions.py").read_bytes() + json.dumps(
+            sorted(robin_definition)
+        ).encode()
+        return cls(
+            settings.training.constraints,
+            tuple(problem.fields),
+            faces,
+            ("equations",),
+            hashlib.sha256(source).hexdigest(),
+            robin,
+            None,
         )
 
 
