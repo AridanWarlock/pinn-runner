@@ -13,6 +13,7 @@ from pinnstorch.api import Problem
 from pinnstorch.contracts import FieldFunction
 from pinnstorch.training.constraints import HardBoxInitial
 from pinnstorch.training.hard_execution import hard_executor
+from pinnstorch.training.robin_box import BoxRobinInitial
 from pinnstorch.training.robin_initial import IntervalRobinInitial, NetworkField
 
 from .dirichlet import compile_lifting
@@ -40,11 +41,11 @@ class ConstraintPlan:
     exact_faces: tuple[ExactFace, ...]
     remaining_losses: tuple[str, ...]
     signature: str
-    recipe: HardBoxInitial | IntervalRobinInitial | None
+    recipe: HardBoxInitial | IntervalRobinInitial | BoxRobinInitial | None
     output: FieldFunction | None
 
     def bind(self, network: NetworkField) -> FieldFunction | None:
-        if isinstance(self.recipe, IntervalRobinInitial):
+        if isinstance(self.recipe, (IntervalRobinInitial, BoxRobinInitial)):
             return self.recipe.bind(network)
         return self.output
 

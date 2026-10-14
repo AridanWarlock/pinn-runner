@@ -5,23 +5,25 @@ from functools import partial
 import torch
 
 from pinnstorch.api import Problem
+from pinnstorch.training.robin_box import BoxRobinInitial, BoxRobinProjection
 from pinnstorch.training.robin_initial import IntervalRobinInitial
 from pinnstorch.training.robin_projection import IntervalRobinProjection, RobinOperator
 
 from .dirichlet import require_matching, trace_value
 from .problem import ProblemAdapter
+from .robin_validation import validate_box_robin
 from .settings import Boundary, TaskSettings
 
 
 def compile_robin(
     settings: TaskSettings, problem: Problem, adapter: ProblemAdapter
-) -> IntervalRobinInitial:
-    if len(settings.domain.space) != 1 or settings.domain.parameters or len(problem.fields) != 1:
-        raise ValueError(
-            "hard_initial_robin requires one spatial axis, one field and no parameters"
-        )
+) -> IntervalRobinInitial | BoxRobinInitial:
+    if settings.domain.parameters or len(problem.fields) != 1:
+        raise ValueError("hard_initial_robin requires one field and no parameters")
     if problem.transform is not None or tuple(problem.outputs) != tuple(problem.fields):
         raise ValueError("hard_initial_robin does not support custom transforms/network fields")
+    if len(settings.domain.space) > 1:
+        return compile_box(settings, adapter)
     axis = next(iter(settings.domain.space))
     faces: dict[str, Boundary] = {}
     for boundary in settings.boundaries:
@@ -66,4 +68,42 @@ def compile_robin(
                 target([face], time),
                 "initial Robin/Neumann operator",
             )
+    return recipe
+
+
+def compile_box(settings: TaskSettings, adapter: ProblemAdapter) -> BoxRobinInitial:
+    names = tuple(settings.domain.space)
+    faces: dict[tuple[str, str], Boundary] = {}
+    for boundary in settings.boundaries:
+        if boundary.kind not in ("neumann", "robin") or boundary.axis not in names:
+            raise ValueError("hard_initial_robin requires Neumann/Robin on every face")
+        for side in ("lower", "upper") if boundary.side == "both" else (boundary.side,):
+            key = (boundary.axis, side)
+            if key in faces:
+                raise ValueError("hard_initial_robin requires one condition per face")
+            faces[key] = boundary
+    if set(faces) != {(name, side) for name in names for side in ("lower", "upper")}:
+        raise ValueError("hard_initial_robin requires all box faces")
+    projections = []
+    targets = []
+    for name in names:
+        pair = (faces[name, "lower"], faces[name, "upper"])
+        operators = tuple(
+            RobinOperator(0, 1) if b.kind == "neumann" else RobinOperator(b.alpha, b.beta)
+            for b in pair
+        )
+        projections.append(
+            IntervalRobinProjection(settings.domain.space[name].interval, *operators)
+        )
+        targets.append(
+            (partial(trace_value, pair[0], adapter), partial(trace_value, pair[1], adapter))
+        )
+    recipe = BoxRobinInitial(
+        BoxRobinProjection(tuple(projections)),
+        settings.domain.time.interval,
+        adapter.initial_tensors,
+        tuple(targets),
+        adapter.problem.fields[0],
+    )
+    validate_box_robin(settings, recipe)
     return recipe

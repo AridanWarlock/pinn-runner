@@ -124,3 +124,74 @@ def test_robin_checkpoint_rejects_reinterpreted_time_interval(tmp_path: Path) ->
     )
     with pytest.raises(ValueError, match="original spatial and time intervals"):
         execution._load(checkpoint, False)
+
+
+@pytest.mark.parametrize(
+    "name", ["heat_neumann2d", "heat_neumann3d", "heat_robin2d", "heat_robin3d"]
+)
+def test_factory_box_initial_faces_edges_and_training(name: str, tmp_path: Path) -> None:
+    import itertools
+
+    case = CASES[name]
+    device = os.environ.get("PINN_TEST_DEVICE", "cpu")
+    config = case.config(device, 3, 19)
+    config["training"]["constraints"] = "hard_initial_robin"
+    for axis in config["domain"]["space"].values():
+        axis["points"] = 3
+    config["domain"]["time"]["points"] = 3
+    (tmp_path / "functions.py").write_bytes(case.source.read_bytes())
+    problem = load_problem(tmp_path / "functions.py")
+    factory = SolverFactory(TaskSettings.read(config), problem, tmp_path)
+    model = factory.build(True).model.to(device)
+    points = list(itertools.product((0.0, 0.4, 1.0), repeat=case.dimensions))
+    spatial = [
+        torch.tensor([[p[i]] for p in points], device=device, requires_grad=True)
+        for i in range(case.dimensions)
+    ]
+    time = torch.full_like(spatial[0], 0.3, requires_grad=True)
+    physical = model(spatial, time)
+    equation = Equation(physical, Coordinates(dict(zip("xyz", spatial)), time))
+    alpha = math.pi / 2 if "robin" in name else 0
+    for axis, column in zip("xyz", spatial):
+        target = problem.boundary_values[f"wall_{axis}"](equation.coordinates)
+        for side, normal in ((0, -1), (1, 1)):
+            mask = column[:, 0] == side
+            trace = alpha * physical["u"] + normal * equation.diff("u", axis)
+            torch.testing.assert_close(trace[mask], target[mask], rtol=3e-5, atol=3e-5)
+    initial_time = torch.zeros_like(time)
+    torch.testing.assert_close(
+        model(spatial, initial_time)["u"],
+        problem.initial(Coordinates(dict(zip("xyz", spatial)), initial_time))["u"],
+        rtol=0,
+        atol=0,
+    )
+    factory.adapter.residuals(physical, *spatial, time)["heat"].square().mean().backward()
+    assert all(p.grad is not None and torch.isfinite(p.grad).all() for p in model.parameters())
+    with torch.no_grad():
+        prediction = model([x.detach() for x in spatial], time.detach())["u"]
+        assert not prediction.requires_grad
+        torch.testing.assert_close(prediction, physical["u"], rtol=0, atol=0)
+
+
+@pytest.mark.parametrize("defect", ["initial", "edge", "missing", "duplicate", "flux"])
+def test_box_rejects_incompatible_operator_data(tmp_path: Path, defect: str) -> None:
+    case = CASES["heat_robin3d"]
+    config = case.config("cpu", 3, 19)
+    config["training"]["constraints"] = "hard_initial_robin"
+    source = case.source.read_text()
+    if defect == "initial":
+        source = source.replace('return {"u": mode.add(1)}', 'return {"u": mode.add(2)}')
+    elif defect == "edge":
+        # Zero at t0; IC remains compatible, tangential operator traces do not.
+        source = source.replace('return data(c, "x")', 'return data(c, "x") + c.t * c.y')
+    elif defect == "missing":
+        config["boundaries"].pop()
+    elif defect == "duplicate":
+        config["boundaries"].append(dict(config["boundaries"][0]))
+    else:
+        config["boundaries"][0] = dict(
+            kind="heat_flux", field="u", axis="x", value=0, conductivity=0.1
+        )
+    (tmp_path / "functions.py").write_text(source)
+    with pytest.raises(ValueError):
+        SolverFactory(TaskSettings.read(config), load_problem(tmp_path / "functions.py"), tmp_path)
