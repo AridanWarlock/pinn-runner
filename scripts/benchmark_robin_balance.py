@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import math
 import sys
 from pathlib import Path
@@ -13,7 +14,10 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from benchmarks.cases import CASES  # noqa: E402
 from benchmarks.heat_balance import heat_balance  # noqa: E402
+from pinnstorch.runner.artifacts import ArtifactWriter  # noqa: E402
+from pinnstorch.runner.execution import SolverExecution  # noqa: E402
 from pinnstorch.runner.factory import SolverFactory  # noqa: E402
 from pinnstorch.runner.problem import load_problem  # noqa: E402
 from pinnstorch.runner.settings import TaskSettings  # noqa: E402
@@ -43,16 +47,21 @@ def main() -> None:
     if name not in ("heat_neumann", "heat_robin"):
         raise ValueError("Balance benchmark only supports the documented interval cases")
     task = args.trial / "task"
+    if (task / "functions.py").read_bytes() != CASES[name].source.read_bytes():
+        raise ValueError(
+            "Benchmark source differs; cannot assume the documented heat equation/source"
+        )
     settings = TaskSettings.load(task / "config.yaml")
     problem = load_problem(task / "functions.py")
     factory = SolverFactory(settings, problem, args.trial, task)
-    model = factory.build(predicting=True).model.to("cuda").eval()
-    model.load_state_dict(
-        torch.load(args.trial / "training/checkpoints/final.ckpt", map_location="cpu")[
-            "state_dict"
-        ],
-        strict=True,
-    )
+    objects = factory.build(predicting=True)
+    SolverExecution(
+        settings,
+        objects,
+        ArtifactWriter(args.trial, settings, problem),
+        logging.getLogger(__name__),
+    )._load(args.trial / "training/checkpoints/final.ckpt", False)
+    model = objects.model.to("cuda").eval()
 
     def field(x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         return model.forward([x], t)["u"]
