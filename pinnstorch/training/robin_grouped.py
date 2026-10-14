@@ -54,6 +54,7 @@ class GroupedBoxRobinProjection(BoxRobinProjection):
         value: torch.Tensor,
         columns: list[torch.Tensor],
         count: int,
+        differentiable: bool,
     ) -> torch.Tensor:
         for index, axis in enumerate(group.axes):
             derivative = (
@@ -61,7 +62,7 @@ class GroupedBoxRobinProjection(BoxRobinProjection):
                     value,
                     columns[axis],
                     torch.ones_like(value),
-                    create_graph=True,
+                    create_graph=differentiable or index < len(group.axes) - 1,
                     retain_graph=True,
                     allow_unused=True,
                 )[0]
@@ -84,7 +85,7 @@ class GroupedBoxRobinProjection(BoxRobinProjection):
                 value.reshape(len(group.sides), count, 1) * alpha
                 + derivative.reshape(len(group.sides), count, 1) * beta
             ).reshape(-1, 1)
-        return value
+        return value if differentiable else value.detach()
 
     def apply(
         self,
@@ -113,7 +114,7 @@ class GroupedBoxRobinProjection(BoxRobinProjection):
                         [bases[axis][sides[index]] for sides in group.sides]
                     )
                 for name, value in boundary.items():
-                    trace = self._trace(group, value, columns, len(time))
+                    trace = self._trace(group, value, columns, len(time), tracking)
                     correction = (weights * trace.reshape(len(group.sides), *time.shape)).sum(
                         dim=0
                     )

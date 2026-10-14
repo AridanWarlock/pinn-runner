@@ -117,8 +117,8 @@ class BoundBoxRobinInitial:
     def __call__(self, outputs: TensorOutputs, *columns: torch.Tensor) -> TensorOutputs:
         spatial, time = list(columns[:-1]), columns[-1]
         tracking = torch.is_grad_enabled()
+        correction = self.recipe.projection.apply(outputs, self.network, spatial, time)
         with torch.set_grad_enabled(True):
-            correction = self.recipe.projection.apply(outputs, self.network, spatial, time)
             background = self.recipe.background(spatial, time)
             lower, upper = self.recipe.time_interval
             value = background[self.recipe.field].add(
