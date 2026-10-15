@@ -89,7 +89,10 @@ class HardLifting:
     backend: str = "recursive"
 
     def apply(self, config: dict[str, Any]) -> None:
-        if self.backend != "recursive":
+        if (
+            self.backend != "recursive"
+            or config["training"].get("constraints") == "hard_initial_robin"
+        ):
             config["training"]["hard_lifting"] = self.backend
 
 

@@ -91,6 +91,8 @@ class ExpandedRobinLifting:
     def difference(
         self, spatial: list[torch.Tensor], time: torch.Tensor, initial_time: torch.Tensor
     ) -> torch.Tensor:
+        if len(self.axes) == 1:
+            return self._interval_difference(spatial[0], time, initial_time)
         bases = [axis.basis(x) for axis, x in zip(self.axes, spatial)]
         fixed = {
             (axis, side): torch.full_like(x, self.axes[axis].bounds[side], requires_grad=True)
@@ -112,4 +114,16 @@ class ExpandedRobinLifting:
             target = self.targets[primary_axis][primary_side]
             trace = self._difference_trace(target, projected, time, initial_time, term.faces[1:])
             result = result.add(weight.mul(trace).mul(term.sign))
+        return result
+
+    def _interval_difference(
+        self, coordinate: torch.Tensor, time: torch.Tensor, initial_time: torch.Tensor
+    ) -> torch.Tensor:
+        # A_0=0: no intersection trace or paired-batch derivative graph is needed.
+        basis = self.axes[0].basis(coordinate)
+        result = torch.zeros_like(time)
+        for side, target in enumerate(self.targets[0]):
+            face = [torch.full_like(coordinate, self.axes[0].bounds[side])]
+            delta = target(face, time).sub(target(face, initial_time))
+            result = result.add(basis[side].mul(delta))
         return result

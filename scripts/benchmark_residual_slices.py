@@ -13,11 +13,52 @@ from typing import Any
 
 import numpy as np
 import torch
+from scipy.io import loadmat
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from pinnstorch.models.pinn_module import PINNModule  # noqa: E402
 from scripts.benchmark_robin_execution import load_model  # noqa: E402
+
+
+def verify_saved_prediction(
+    trial: Path, model: PINNModule, spatial_names: tuple[str, ...], fields: tuple[str, ...]
+) -> dict[str, float | int]:
+    """Reevaluate every saved endpoint layer and common interior rows by their labels."""
+    saved = loadmat(trial / "prediction/predictions.mat")
+    times = np.asarray(saved["t"]).reshape(-1)
+    endpoints = np.flatnonzero((times == times.min()) | (times == times.max()))
+    interior = np.random.default_rng(20261016).choice(
+        len(times), min(128, len(times)), replace=False
+    )
+    selected = np.unique(np.concatenate((endpoints, interior)))
+    maximum = 0.0
+    for start in range(0, len(selected), 512):
+        indices = selected[start : start + 512]
+        columns = [
+            torch.tensor(
+                np.asarray(saved[name]).reshape(-1, 1)[indices],
+                dtype=torch.float32,
+                device=model.device,
+            )
+            for name in (*spatial_names, "t")
+        ]
+        with torch.no_grad():
+            actual = model(columns[:-1], columns[-1])
+        for name in fields:
+            expected = torch.tensor(
+                np.asarray(saved[name]).reshape(-1, 1)[indices],
+                dtype=torch.float32,
+                device=model.device,
+            )
+            torch.testing.assert_close(actual[name], expected, atol=3e-6, rtol=3e-5)
+            maximum = max(maximum, float((actual[name] - expected).abs().max().cpu()))
+    return {
+        "saved_prediction_points_checked": len(selected),
+        "saved_prediction_endpoint_points_checked": len(endpoints),
+        "saved_prediction_max_difference": maximum,
+    }
 
 
 def evaluate(trial: Path, count: int, layers: int) -> dict[str, Any]:
@@ -79,6 +120,9 @@ def evaluate(trial: Path, count: int, layers: int) -> dict[str, Any]:
         "training_time_bins": np.histogram(training_times, edges)[0].tolist(),
         "training_min_time": float(training_times.min()),
         "diagnostic_seconds": time.perf_counter() - started,
+        **verify_saved_prediction(
+            trial, model, tuple(settings.domain.space), tuple(factory.problem.fields)
+        ),
     }
 
 

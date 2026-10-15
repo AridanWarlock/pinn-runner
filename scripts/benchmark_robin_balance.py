@@ -8,6 +8,7 @@ import logging
 import math
 import sys
 import time
+from dataclasses import replace
 from pathlib import Path
 
 import torch
@@ -70,6 +71,14 @@ def main() -> None:
             "Benchmark source differs; cannot assume the documented heat equation/source"
         )
     settings = TaskSettings.load(task / "config.yaml")
+    settings = replace(
+        settings,
+        training=replace(
+            settings.training,
+            hard_execution=result.get("hard_execution", "eager"),
+            hard_lifting=result.get("hard_lifting", "recursive"),
+        ),
+    )
     problem = load_problem(task / "functions.py")
     factory = SolverFactory(settings, problem, args.trial, task)
     objects = factory.build(predicting=True)
@@ -156,6 +165,8 @@ def main() -> None:
         "case": name,
         "seed": result["seed"],
         "constraint_kind": result["constraint_kind"],
+        "evaluation_execution": settings.training.hard_execution,
+        "evaluation_lifting": settings.training.hard_lifting,
         "limits": limits,
         "metrics": combined,
         "status": "failed" if failures else "passed",

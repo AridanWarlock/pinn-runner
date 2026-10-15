@@ -130,7 +130,9 @@ def _volume(
     value, rate, laplacian = _volume_jets(field, columns, device, batch_size)
     forcing = source(columns[:-1], columns[-1]).detach().numpy().astype(np.float64).reshape(-1)
     exact = (
-        _sample(reference, columns, "t", "cpu", batch_size)[0] if reference is not None else None
+        reference(columns[:-1], columns[-1]).detach().cpu().numpy().astype(np.float64).reshape(-1)
+        if reference is not None
+        else None
     )
     initial_coefficient = None
     if initial is not None:

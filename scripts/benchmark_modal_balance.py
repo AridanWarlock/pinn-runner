@@ -43,7 +43,9 @@ def main() -> None:
         parser.error("Case source differs from the documented analytical problem")
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
-    factory, model = load_model(args.trial, "robin_grouped")
+    factory, model = load_model(
+        args.trial, "robin_grouped", original.get("hard_lifting", "recursive")
+    )
     settings = factory.settings
     if settings.domain.time.interval[0] != 0 or any(
         axis.interval != (0, 1) for axis in settings.domain.space.values()
