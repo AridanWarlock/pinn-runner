@@ -71,9 +71,18 @@ def main() -> None:
         ):
             column.mul_(axis.interval[1] - axis.interval[0]).add_(axis.interval[0])
         gradients = {}
+        # Compare steady executions, not a cold CUDA kernel with a warmed one.
+        # Timing also warms up; self-repeatability is checked independently below.
+        for mode in ("all", "parameters"):
+            model.hparams["backward_mode"] = mode
+            for _ in range(3):
+                weight_gradients(factory, model, points)
         for mode in ("all", "parameters"):
             model.hparams["backward_mode"] = mode
             gradients[mode] = weight_gradients(factory, model, points)
+            repeated = weight_gradients(factory, model, points)
+            for name, gradient in gradients[mode].items():
+                torch.testing.assert_close(repeated[name], gradient, rtol=0, atol=0)
         if gradients["all"].keys() != gradients["parameters"].keys():
             raise AssertionError("Backward modes reached different parameter leaves")
         differences[lifting] = {}
