@@ -181,6 +181,7 @@ class SolverFactory:
             constraint_kind=settings.training.constraints,
             hard_execution=settings.training.hard_execution,
             hard_lifting=settings.training.hard_lifting,
+            backward_mode=settings.training.backward,
             constraint_signature=self.constraint_signature,
             refinement_settings=asdict(settings.training.refinement),
             optimizer=partial(
@@ -217,6 +218,12 @@ class SolverFactory:
         )
         if training.refinement.steps and (runtime.precision != "32-true" or device_count != 1):
             raise ValueError("L-BFGS refinement requires 32-true precision and one device")
+        if training.backward == "parameters" and (
+            runtime.precision != "32-true" or device_count != 1 or runtime.device == "mps"
+        ):
+            raise ValueError(
+                "Parameter backward requires 32-true precision and one CPU/CUDA device"
+            )
         logger = CSVLogger(str(self.output / "csv"), name="metrics") if runtime.metrics else False
         devices = list(runtime.devices) if isinstance(runtime.devices, tuple) else runtime.devices
         return L.Trainer(

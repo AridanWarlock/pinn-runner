@@ -17,7 +17,12 @@ from tests.integration.test_runner_files import launch
 @pytest.mark.parametrize("backend", ["eager", "robin_batch", "robin_grouped"])
 @pytest.mark.parametrize("name", ["heat_neumann", "heat_robin", "heat_neumann2d", "heat_robin3d"])
 def test_robin_file_roundtrip(
-    tmp_path: Path, name: str, backend: str, lifting: str = "recursive", time_power: float = 0
+    tmp_path: Path,
+    name: str,
+    backend: str,
+    lifting: str = "recursive",
+    time_power: float = 0,
+    backward: str = "all",
 ) -> None:
     case = CASES[name]
     config = case.config(os.environ.get("PINN_TEST_DEVICE", "cpu"), 3, 19)
@@ -25,6 +30,7 @@ def test_robin_file_roundtrip(
         constraints="hard_initial_robin",
         hard_execution=backend,
         hard_lifting=lifting,
+        backward=backward,
         refinement={"steps": 2},
         batch_size=17,
         collocation={"sampling": "lhs", "points": 17},
@@ -50,10 +56,12 @@ def test_robin_file_roundtrip(
             assert state["hyper_parameters"]["constraint_kind"] == "hard_initial_robin"
             assert state["hyper_parameters"]["hard_execution"] == backend
             assert state["hyper_parameters"]["hard_lifting"] == lifting
+            assert state["hyper_parameters"]["backward_mode"] == backward
             assert state["refinement_state"]["device"].split(":")[0] == config["runtime"]["device"]
     config["boundaries"][0]["weight"] = 2
     config["training"]["hard_execution"] = "robin_batch" if backend == "eager" else "eager"
     config["training"]["hard_lifting"] = "expanded" if lifting == "recursive" else "recursive"
+    config["training"]["backward"] = "all" if backward == "parameters" else "parameters"
     (tmp_path / "config.yaml").write_text(yaml.safe_dump(config))
     result = launch(
         tmp_path,
@@ -85,3 +93,9 @@ def test_time_biased_robin_file_roundtrip(tmp_path: Path, name: str) -> None:
     restored = state["PINNDataModule"]["equations"]
     assert restored["signature"][-2:] == ("time_power", 1)
     torch.testing.assert_close(fixed, restored["time"], rtol=0, atol=0)
+
+
+@pytest.mark.e2e
+@pytest.mark.parametrize("name", ["heat_robin", "heat_mixed3d"])
+def test_parameter_backward_file_roundtrip(tmp_path: Path, name: str) -> None:
+    test_robin_file_roundtrip(tmp_path, name, "robin_grouped", "expanded", backward="parameters")

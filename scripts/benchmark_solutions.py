@@ -23,6 +23,7 @@ from benchmarks.cases import CASES  # noqa: E402
 from benchmarks.execution import fingerprint, measure_existing, run_trial  # noqa: E402
 from benchmarks.metrics import regression_failures  # noqa: E402
 from benchmarks.variants import (  # noqa: E402
+    Backward,
     BenchmarkVariant,
     BoundaryWeight,
     CollocationRefresh,
@@ -162,6 +163,7 @@ def arguments() -> tuple[argparse.Namespace, int]:
         default="eager",
     )
     parser.add_argument("--hard-lifting", choices=("recursive", "expanded"), default="recursive")
+    parser.add_argument("--backward", choices=("all", "parameters"), default="all")
     args = parser.parse_args()
     if (
         args.lbfgs_steps < 0
@@ -220,6 +222,7 @@ def main() -> int:
                     Constraints(args.constraints),
                     HardExecution(args.hard_execution),
                     HardLifting(args.hard_lifting),
+                    Backward(args.backward),
                     RefinementSteps(args.lbfgs_steps),
                 )
             ),

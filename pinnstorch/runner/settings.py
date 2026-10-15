@@ -262,6 +262,7 @@ class Training:
     refinement: Refinement = Refinement()
     hard_execution: str = "eager"
     hard_lifting: str = "recursive"
+    backward: str = "all"
 
     @classmethod
     def read(cls, reader: Reader) -> Training:
@@ -279,6 +280,7 @@ class Training:
             "refinement",
             "hard_execution",
             "hard_lifting",
+            "backward",
         )
         if (
             ScheduleSettings.read(reader.section("schedule")).kind != "constant"
@@ -336,6 +338,7 @@ class Training:
             refinement,
             hard_execution,
             hard_lifting,
+            reader.choice("backward", "all", ("all", "parameters")),
         )
 
 

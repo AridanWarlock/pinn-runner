@@ -13,11 +13,12 @@ from pinnstorch.runner.settings import Reader, Refinement, TaskSettings, Trainin
 from pinnstorch.training.refinement import FixedObjective, LBFGSRefinement
 
 
-def make_stage(directory: Path, hard: bool = False) -> LBFGSRefinement:
+def make_stage(directory: Path, hard: bool = False, backward: str = "all") -> LBFGSRefinement:
     case = CASES["burgers"]
     config = case.config("cpu", 3, 19)
     config["network"]["hidden_layers"] = [8, 8]
     config["training"]["collocation"]["points"] = 32
+    config["training"]["backward"] = backward
     if hard:
         config["training"]["constraints"] = "hard_initial_dirichlet"
     directory.mkdir(exist_ok=True)
@@ -40,8 +41,11 @@ def make_stage(directory: Path, hard: bool = False) -> LBFGSRefinement:
 
 
 @pytest.mark.parametrize("hard", [False, True])
-def test_fixed_objective_derivatives_and_exact_stage_restore(tmp_path: Path, hard: bool) -> None:
-    stage = make_stage(tmp_path / "original", hard)
+@pytest.mark.parametrize("backward", ["all", "parameters"])
+def test_fixed_objective_derivatives_and_exact_stage_restore(
+    tmp_path: Path, hard: bool, backward: str
+) -> None:
+    stage = make_stage(tmp_path / "original", hard, backward)
     before = stage.closure().item()
     gradients = [p.grad.clone() for p in stage.model.parameters() if p.grad is not None]
     assert stage.closure().item() == before
@@ -52,7 +56,9 @@ def test_fixed_objective_derivatives_and_exact_stage_restore(tmp_path: Path, har
     state = deepcopy(stage.state_dict(metrics))
     model_state = deepcopy(stage.model.state_dict())
     stage.run(3)
-    restored = make_stage(tmp_path / "restored", hard)
+    restored = make_stage(
+        tmp_path / "restored", hard, "parameters" if backward == "all" else "all"
+    )
     restored.model.load_state_dict(model_state)
     restored.load_state_dict(state)
     restored_metrics = restored.run(3)

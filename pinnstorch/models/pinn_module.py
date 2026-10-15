@@ -48,10 +48,13 @@ class PINNModule(LightningModule):
         refinement_settings: dict[str, int | float] | None = None,
         hard_execution: str = "eager",
         hard_lifting: str = "recursive",
+        backward_mode: str = "all",
     ) -> None:
         super().__init__()
         if loss_fn not in ("mse", "sse"):
             raise ValueError("loss_fn must be mse or sse")
+        if backward_mode not in ("all", "parameters"):
+            raise ValueError("backward_mode must be all or parameters")
         self.save_hyperparameters(
             logger=False, ignore=["net", "pde_fn", "output_fn", "coefficients"]
         )
@@ -92,6 +95,16 @@ class PINNModule(LightningModule):
     def on_save_checkpoint(self, checkpoint: dict[str, Any]) -> None:
         if self.refinement_state is not None:
             checkpoint["refinement_state"] = self.refinement_state
+
+    def backward(self, loss: torch.Tensor, *args: Any, **kwargs: Any) -> None:
+        """Keep physical AD intact; restrict only terminal leaf accumulation."""
+        if self.hparams["backward_mode"] == "parameters" and "inputs" not in kwargs:
+            parameters = tuple(p for p in self.parameters() if p.requires_grad)
+            if not parameters:
+                raise ValueError("Parameter backward requires trainable parameters")
+            kwargs["inputs"] = parameters
+        # Preserve Lightning's backward hook and its normal optimizer lifecycle.
+        super().backward(loss, *args, **kwargs)
 
     def _data_module(self) -> PINNDataModule:
         return cast("PINNDataModule", getattr(self.trainer, "datamodule"))

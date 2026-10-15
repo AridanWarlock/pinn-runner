@@ -97,6 +97,14 @@ class HardLifting:
 
 
 @dataclass(frozen=True)
+class Backward:
+    mode: str = "all"
+
+    def apply(self, config: dict[str, Any]) -> None:
+        config["training"]["backward"] = self.mode
+
+
+@dataclass(frozen=True)
 class TrainingComposition:
     adapters: tuple[TrainingAdapter, ...]
 

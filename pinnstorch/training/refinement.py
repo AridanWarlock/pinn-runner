@@ -78,7 +78,7 @@ class LBFGSRefinement:
             loss, _ = self.model.model_step(self.objective.fresh())
             if not bool(torch.isfinite(loss)):
                 raise FloatingPointError("Nonfinite L-BFGS objective")
-            torch.autograd.backward(loss)
+            self.model.backward(loss)
         if any(
             parameter.grad is not None and not bool(torch.isfinite(parameter.grad).all())
             for parameter in self.model.parameters()

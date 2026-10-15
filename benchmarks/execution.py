@@ -225,6 +225,7 @@ def finish_trial(
         "constraint_kind": state.get("hyper_parameters", {}).get("constraint_kind", "soft"),
         "hard_execution": state.get("hyper_parameters", {}).get("hard_execution", "eager"),
         "hard_lifting": state.get("hyper_parameters", {}).get("hard_lifting", "recursive"),
+        "backward_mode": state.get("hyper_parameters", {}).get("backward_mode", "all"),
         "pde_validation_backend": "physical_autograd",
         "refinement_recipe": state.get("hyper_parameters", {}).get("refinement_settings")
         or {"steps": 0},
