@@ -20,6 +20,7 @@ files = [
   "scripts/benchmark_robin_execution.py",
   "scripts/benchmark_robin_lifting.py",
   "scripts/benchmark_modal_diagnostics.py",
+  "scripts/benchmark_modal_balance.py",
   "scripts/benchmark_hard_execution.py",
   "scripts/benchmark_hard_derivatives.py",
   "benchmarks",
