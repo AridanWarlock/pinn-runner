@@ -210,6 +210,7 @@ def finish_trial(
         "fingerprint": fingerprint(case, device, steps, seed),
         "constraint_kind": state.get("hyper_parameters", {}).get("constraint_kind", "soft"),
         "hard_execution": state.get("hyper_parameters", {}).get("hard_execution", "eager"),
+        "hard_lifting": state.get("hyper_parameters", {}).get("hard_lifting", "recursive"),
         "pde_validation_backend": "physical_autograd",
         "refinement_recipe": state.get("hyper_parameters", {}).get("refinement_settings")
         or {"steps": 0},

@@ -16,12 +16,15 @@ from tests.integration.test_runner_files import launch
 @pytest.mark.e2e
 @pytest.mark.parametrize("backend", ["eager", "robin_batch", "robin_grouped"])
 @pytest.mark.parametrize("name", ["heat_neumann", "heat_robin", "heat_neumann2d", "heat_robin3d"])
-def test_robin_file_roundtrip(tmp_path: Path, name: str, backend: str) -> None:
+def test_robin_file_roundtrip(
+    tmp_path: Path, name: str, backend: str, lifting: str = "recursive"
+) -> None:
     case = CASES[name]
     config = case.config(os.environ.get("PINN_TEST_DEVICE", "cpu"), 3, 19)
     config["training"].update(
         constraints="hard_initial_robin",
         hard_execution=backend,
+        hard_lifting=lifting,
         refinement={"steps": 2},
         batch_size=17,
         collocation={"sampling": "lhs", "points": 17},
@@ -44,9 +47,11 @@ def test_robin_file_roundtrip(tmp_path: Path, name: str, backend: str) -> None:
             state = torch.load(output / "checkpoints/final.ckpt", map_location="cpu")
             assert state["hyper_parameters"]["constraint_kind"] == "hard_initial_robin"
             assert state["hyper_parameters"]["hard_execution"] == backend
+            assert state["hyper_parameters"]["hard_lifting"] == lifting
             assert state["refinement_state"]["device"].split(":")[0] == config["runtime"]["device"]
     config["boundaries"][0]["weight"] = 2
     config["training"]["hard_execution"] = "robin_batch" if backend == "eager" else "eager"
+    config["training"]["hard_lifting"] = "expanded" if lifting == "recursive" else "recursive"
     (tmp_path / "config.yaml").write_text(yaml.safe_dump(config))
     result = launch(
         tmp_path,
@@ -61,3 +66,9 @@ def test_robin_file_roundtrip(tmp_path: Path, name: str, backend: str) -> None:
         rtol=3e-5,
         atol=3e-5,
     )
+
+
+@pytest.mark.e2e
+@pytest.mark.parametrize("name", ["heat_neumann3d", "heat_mixed3d"])
+def test_expanded_robin_file_roundtrip(tmp_path: Path, name: str) -> None:
+    test_robin_file_roundtrip(tmp_path, name, "robin_grouped", "expanded")

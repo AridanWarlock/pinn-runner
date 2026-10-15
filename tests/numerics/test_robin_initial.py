@@ -214,3 +214,31 @@ def test_confirmed_robin_execution_default_and_explicit_control() -> None:
     config["training"]["constraints"] = "soft"
     config["training"].pop("hard_execution")
     assert TaskSettings.read(config).training.hard_execution == "eager"
+
+
+@pytest.mark.parametrize("kind", ["soft", "hard_initial_dirichlet"])
+def test_expanded_lifting_rejects_other_constraint_kinds(kind: str) -> None:
+    config = CASES["heat_robin3d"].config("cpu", 1, 19)
+    config["training"].update(constraints=kind, hard_lifting="expanded")
+    with pytest.raises(ValueError, match="hard_lifting"):
+        TaskSettings.read(config)
+
+
+@pytest.mark.parametrize("name", ["heat_robin", "heat_neumann2d", "heat_mixed3d"])
+def test_expanded_lifting_is_independent_of_projection_and_signature(
+    tmp_path: Path, name: str
+) -> None:
+    from pinnstorch.training.robin_box import BoxRobinInitial
+    from pinnstorch.training.robin_lifting import ExpandedRobinLifting
+
+    case = CASES[name]
+    config = case.config("cpu", 1, 19)
+    config["training"].update(constraints="hard_initial_robin", hard_execution="eager")
+    (tmp_path / "functions.py").write_bytes(case.source.read_bytes())
+    problem = load_problem(tmp_path / "functions.py")
+    original = SolverFactory(TaskSettings.read(config), problem, tmp_path)
+    config["training"]["hard_lifting"] = "expanded"
+    optimized = SolverFactory(TaskSettings.read(config), problem, tmp_path)
+    assert isinstance(optimized.constraints.recipe, BoxRobinInitial)
+    assert isinstance(optimized.constraints.recipe.lifting, ExpandedRobinLifting)
+    assert optimized.constraint_signature == original.constraint_signature

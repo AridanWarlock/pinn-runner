@@ -670,3 +670,31 @@ $$
 групповой адаптер `robin_grouped`. Для контрольного прямого вычисления укажите
 `hard_execution: eager`. Выбор самих ограничений по умолчанию остаётся `soft`;
 точную конструкцию нужно включить явно в пределах поддержанного класса задач.
+
+### Независимый способ продолжения данных Робина
+
+```yaml
+training:
+  constraints: hard_initial_robin
+  hard_execution: robin_grouped
+  hard_lifting: expanded
+```
+
+`hard_execution` выбирает расчёт проекции **сети**, `hard_lifting` — продолжения
+**заданных граничных данных**. Это независимые способы вычисления одной физической
+конструкции. `hard_lifting: recursive` — контроль и пока значение по умолчанию;
+`expanded` раскрывает сумму по пересечениям граней и объединяет два времени
+в один поточечный пакет. Способ можно менять при загрузке сохранённой модели.
+Для `soft` и Дирихле значение `expanded` отклоняется. Область применимости
+Неймана/Робина не расширяется. Математика: [robin-lifting-optimization.md](robin-lifting-optimization.md).
+
+В численном бенчмарке есть соответствующий флаг `--hard-lifting expanded`.
+Изолированное сравнение одних сохранённых весов:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/benchmark_robin_lifting.py --trial numerical-reports/EXPERIMENT/heat_neumann3d-19 --report numerical-reports/NEW-REPORT.json --trace
+```
+
+Команду CUDA выполняйте только на Windows из обязательной директории проекта,
+с guard и настройкой временных путей из `AGENTS.md`. `--trace` включает отдельный
+диагностический проход profiler, не добавляемый к измеренному времени.

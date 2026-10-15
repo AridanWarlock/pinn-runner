@@ -28,19 +28,28 @@ from pinnstorch.runner.problem import load_problem  # noqa: E402
 from pinnstorch.runner.settings import TaskSettings  # noqa: E402
 
 
-def load_model(trial: Path, backend: str) -> tuple[SolverFactory, PINNModule]:
+def load_model(
+    trial: Path, backend: str, lifting: str | None = None, device: str = "cuda"
+) -> tuple[SolverFactory, PINNModule]:
     task = trial / "task"
     settings = TaskSettings.load(task / "config.yaml")
     if settings.training.constraints != "hard_initial_robin":
         raise ValueError("Execution comparison requires an exact Robin checkpoint")
-    settings = replace(settings, training=replace(settings.training, hard_execution=backend))
+    settings = replace(
+        settings,
+        training=replace(
+            settings.training,
+            hard_execution=backend,
+            hard_lifting=lifting if lifting is not None else settings.training.hard_lifting,
+        ),
+    )
     problem = load_problem(task / "functions.py")
     factory = SolverFactory(settings, problem, trial, task)
     objects = factory.build(True)
     SolverExecution(
         settings, objects, ArtifactWriter(trial, settings, problem), logging.getLogger(__name__)
     )._load(trial / "training/checkpoints/final.ckpt", False)
-    return factory, objects.model.to("cuda").eval()
+    return factory, objects.model.to(device).eval()
 
 
 def point_columns(points: torch.Tensor) -> list[torch.Tensor]:

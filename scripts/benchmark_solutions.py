@@ -28,6 +28,7 @@ from benchmarks.variants import (  # noqa: E402
     CollocationRefresh,
     Constraints,
     HardExecution,
+    HardLifting,
     RateDecay,
     RefinementSteps,
     TrainingComposition,
@@ -159,6 +160,7 @@ def arguments() -> tuple[argparse.Namespace, int]:
         choices=("eager", "fused_predict", "product_rule", "robin_batch", "robin_grouped"),
         default="eager",
     )
+    parser.add_argument("--hard-lifting", choices=("recursive", "expanded"), default="recursive")
     args = parser.parse_args()
     if (
         args.lbfgs_steps < 0
@@ -211,6 +213,7 @@ def main() -> int:
                     CollocationRefresh(args.resample_every_epochs, args.collocation_points),
                     Constraints(args.constraints),
                     HardExecution(args.hard_execution),
+                    HardLifting(args.hard_lifting),
                     RefinementSteps(args.lbfgs_steps),
                 )
             ),

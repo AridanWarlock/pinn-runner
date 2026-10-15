@@ -173,6 +173,7 @@ class SolverFactory:
             output_fn=output,
             constraint_kind=settings.training.constraints,
             hard_execution=settings.training.hard_execution,
+            hard_lifting=settings.training.hard_lifting,
             constraint_signature=self.constraint_signature,
             refinement_settings=asdict(settings.training.refinement),
             optimizer=partial(

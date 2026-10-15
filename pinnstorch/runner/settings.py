@@ -257,6 +257,7 @@ class Training:
     constraints: str = "soft"
     refinement: Refinement = Refinement()
     hard_execution: str = "eager"
+    hard_lifting: str = "recursive"
 
     @classmethod
     def read(cls, reader: Reader) -> Training:
@@ -273,6 +274,7 @@ class Training:
             "constraints",
             "refinement",
             "hard_execution",
+            "hard_lifting",
         )
         if (
             ScheduleSettings.read(reader.section("schedule")).kind != "constant"
@@ -313,6 +315,9 @@ class Training:
             raise ValueError("Robin execution adapters require hard_initial_robin")
         if constraints == "soft" and hard_execution != "eager":
             raise ValueError("training.hard_execution requires hard constraints")
+        hard_lifting = reader.choice("hard_lifting", "recursive", ("recursive", "expanded"))
+        if hard_lifting != "recursive" and constraints != "hard_initial_robin":
+            raise ValueError("training.hard_lifting expanded requires hard_initial_robin")
         return cls(
             epochs,
             reader.integer("steps", None),
@@ -326,6 +331,7 @@ class Training:
             constraints,
             refinement,
             hard_execution,
+            hard_lifting,
         )
 
 

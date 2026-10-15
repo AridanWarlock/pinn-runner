@@ -79,6 +79,15 @@ class HardExecution:
 
 
 @dataclass(frozen=True)
+class HardLifting:
+    backend: str = "recursive"
+
+    def apply(self, config: dict[str, Any]) -> None:
+        if self.backend != "recursive":
+            config["training"]["hard_lifting"] = self.backend
+
+
+@dataclass(frozen=True)
 class TrainingComposition:
     adapters: tuple[TrainingAdapter, ...]
 

@@ -9,6 +9,7 @@ from pinnstorch.training.robin_batch import BatchedBoxRobinProjection
 from pinnstorch.training.robin_box import BoxRobinInitial, BoxRobinProjection
 from pinnstorch.training.robin_grouped import GroupedBoxRobinProjection
 from pinnstorch.training.robin_initial import IntervalRobinInitial
+from pinnstorch.training.robin_lifting import ExpandedRobinLifting
 from pinnstorch.training.robin_projection import IntervalRobinProjection, RobinOperator
 
 from .dirichlet import require_matching, trace_value
@@ -24,7 +25,11 @@ def compile_robin(
         raise ValueError("hard_initial_robin requires one field and no parameters")
     if problem.transform is not None or tuple(problem.outputs) != tuple(problem.fields):
         raise ValueError("hard_initial_robin does not support custom transforms/network fields")
-    if len(settings.domain.space) > 1 or settings.training.hard_execution != "eager":
+    if (
+        len(settings.domain.space) > 1
+        or settings.training.hard_execution != "eager"
+        or settings.training.hard_lifting != "recursive"
+    ):
         return compile_box(settings, adapter)
     axis = next(iter(settings.domain.space))
     faces: dict[str, Boundary] = {}
@@ -112,6 +117,11 @@ def compile_box(settings: TaskSettings, adapter: ProblemAdapter) -> BoxRobinInit
         adapter.initial_tensors,
         tuple(targets),
         adapter.problem.fields[0],
+        lifting=(
+            ExpandedRobinLifting(tuple(projections), tuple(targets))
+            if settings.training.hard_lifting == "expanded"
+            else None
+        ),
     )
     validate_box_robin(settings, recipe)
     return recipe
