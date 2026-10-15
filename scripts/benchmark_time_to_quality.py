@@ -56,7 +56,9 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     parser.add_argument(
         "--hard-lifting", choices=("recursive", "expanded"), nargs="+", default=["recursive"]
     )
-    parser.add_argument("--backward", choices=("all", "parameters"), nargs="+", default=["all"])
+    parser.add_argument(
+        "--backward", choices=("auto", "all", "parameters"), nargs="+", default=["all"]
+    )
     parser.add_argument("--relative-l2", type=float, default=LIMITS["relative_l2"])
     parser.add_argument("--final-relative-l2", type=float, default=LIMITS["final_relative_l2"])
     parser.add_argument("--pde-rmse", type=float, default=LIMITS["pde_rmse"])

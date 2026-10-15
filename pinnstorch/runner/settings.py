@@ -338,7 +338,7 @@ class Training:
             refinement,
             hard_execution,
             hard_lifting,
-            reader.choice("backward", "all", ("all", "parameters")),
+            reader.choice("backward", "all", ("auto", "all", "parameters")),
         )
 
 

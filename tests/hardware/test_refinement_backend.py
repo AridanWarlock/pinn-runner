@@ -14,8 +14,9 @@ from tests.numerics.test_refinement import make_stage
 
 
 @pytest.mark.parametrize("hard", [False, True])
-def test_refinement_checkpoint_transfer_to_cpu(tmp_path: Path, hard: bool) -> None:
-    stage = make_stage(tmp_path / "source", hard)
+@pytest.mark.parametrize("backward", ["all", "parameters"])
+def test_refinement_checkpoint_transfer_to_cpu(tmp_path: Path, hard: bool, backward: str) -> None:
+    stage = make_stage(tmp_path / "source", hard, backward)
     expected = stage.closure()
     device = torch.device(os.environ.get("PINN_TEST_DEVICE", "cpu"))
     stage.model.to(device)
@@ -26,7 +27,7 @@ def test_refinement_checkpoint_transfer_to_cpu(tmp_path: Path, hard: bool) -> No
     torch.save({"model": stage.model.state_dict(), "stage": stage.state_dict(metrics)}, stream)
     stream.seek(0)
     state = torch.load(stream, map_location="cpu")
-    restored = make_stage(tmp_path / "cpu", hard)
+    restored = make_stage(tmp_path / "cpu", hard, backward)
     restored.model.load_state_dict(state["model"])
     restored.load_state_dict(state["stage"])
     assert all(clock.device.type == "cpu" for _, clock, _ in restored.objective.batches.values())

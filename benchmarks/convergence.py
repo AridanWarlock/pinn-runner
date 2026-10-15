@@ -255,6 +255,7 @@ def convergence_trial(
         "backend": arm.execution,
         "lifting": arm.lifting,
         "backward": arm.backward,
+        "resolved_backward": objects.model.hparams["backward_mode"],
         "seed": seed,
         "snapshots": rows,
         "crossing": crossing(rows),

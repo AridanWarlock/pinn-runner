@@ -163,7 +163,7 @@ def arguments() -> tuple[argparse.Namespace, int]:
         default="eager",
     )
     parser.add_argument("--hard-lifting", choices=("recursive", "expanded"), default="recursive")
-    parser.add_argument("--backward", choices=("all", "parameters"), default="all")
+    parser.add_argument("--backward", choices=("auto", "all", "parameters"), default="all")
     args = parser.parse_args()
     if (
         args.lbfgs_steps < 0

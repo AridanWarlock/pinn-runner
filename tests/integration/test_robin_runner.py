@@ -56,12 +56,14 @@ def test_robin_file_roundtrip(
             assert state["hyper_parameters"]["constraint_kind"] == "hard_initial_robin"
             assert state["hyper_parameters"]["hard_execution"] == backend
             assert state["hyper_parameters"]["hard_lifting"] == lifting
-            assert state["hyper_parameters"]["backward_mode"] == backward
+            assert state["hyper_parameters"]["backward_mode"] == (
+                "parameters" if backward == "auto" else backward
+            )
             assert state["refinement_state"]["device"].split(":")[0] == config["runtime"]["device"]
     config["boundaries"][0]["weight"] = 2
     config["training"]["hard_execution"] = "robin_batch" if backend == "eager" else "eager"
     config["training"]["hard_lifting"] = "expanded" if lifting == "recursive" else "recursive"
-    config["training"]["backward"] = "all" if backward == "parameters" else "parameters"
+    config["training"]["backward"] = "all" if backward in ("parameters", "auto") else "parameters"
     (tmp_path / "config.yaml").write_text(yaml.safe_dump(config))
     result = launch(
         tmp_path,
@@ -99,3 +101,8 @@ def test_time_biased_robin_file_roundtrip(tmp_path: Path, name: str) -> None:
 @pytest.mark.parametrize("name", ["heat_robin", "heat_mixed3d"])
 def test_parameter_backward_file_roundtrip(tmp_path: Path, name: str) -> None:
     test_robin_file_roundtrip(tmp_path, name, "robin_grouped", "expanded", backward="parameters")
+
+
+@pytest.mark.e2e
+def test_auto_backward_file_roundtrip(tmp_path: Path) -> None:
+    test_robin_file_roundtrip(tmp_path, "heat_neumann2d", "robin_grouped", backward="auto")
