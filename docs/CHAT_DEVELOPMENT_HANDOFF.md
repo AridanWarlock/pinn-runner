@@ -397,3 +397,13 @@ seed19/1234, all/parameters, recursive/robin_grouped; расширить до5se
 `parameter-backward.md` и `parameter-backward-math.md`. Кэш фоновой невязки —
 лишь следующая гипотеза, пока не реализован.
 <!-- END BACKWARD-BLOCK-20261015 -->
+
+Дополнение активного блока: спектральная диагностика **на Mac по готовым MAT**,
+не обучение. Данные6старыхмоделей в `numerical-reports/spectrum-inputs`; извлечены
+изWindowsподguard, текстfunctionsпроверяетсяснормализациейCRLF/LF.
+`benchmarks/cosine_spectrum.py` + `scripts/benchmark_cosine_spectrum.py`,11CPUтестов,
+fast434/39excluded. Вравномерныхвыборках54–84%позднейэнергиивбыстрыхформах,
+вплохойпозднейплотности42–51%впостоянной. Это дискретный спектр9³,неcontinuous
+certificate. Документ `neumann-error-spectrum.md`,rawJSON/PNG вdocs/experiments.
+МатрицаCUDAпокаактивна:перваяпараseed19имеетпобитовосовпадающиеметрики,
+train376.24→300.76s;predict.2974→.2969s. Дальшеещёнеобъявлятьgateпройденным.
