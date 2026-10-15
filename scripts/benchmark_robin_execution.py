@@ -38,6 +38,7 @@ def load_model(
         raise ValueError("Execution comparison requires an exact Robin checkpoint")
     settings = replace(
         settings,
+        runtime=replace(settings.runtime, device=device, devices=1),
         training=replace(
             settings.training,
             hard_execution=backend,
