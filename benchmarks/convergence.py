@@ -12,6 +12,7 @@ import numpy as np
 import torch
 import yaml
 
+from pinnstorch.runner.checkpoint_io import load_checkpoint
 from pinnstorch.runner.factory import ExecutionObjects, SolverFactory
 from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import Reader, Refinement, TaskSettings
@@ -171,7 +172,7 @@ class SnapshotEvaluation:
         self.holdout = holdout_inputs(factory.settings)
 
     def evaluate(self, checkpoint: Path) -> tuple[dict[str, float], dict[str, Any]]:
-        self.model.load_state_dict(torch.load(checkpoint, map_location=self.plan.device))
+        self.model.load_state_dict(load_checkpoint(checkpoint, map_location=self.plan.device))
         chunks = []
         for index, start in enumerate(range(0, len(self.clock), 2048)):
             outputs = self.model.predict_step(

@@ -17,6 +17,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from pinnstorch.runner.checkpoint_io import load_checkpoint  # noqa: E402
 from pinnstorch.runner.factory import SolverFactory  # noqa: E402
 from pinnstorch.runner.problem import load_problem  # noqa: E402
 from pinnstorch.runner.settings import TaskSettings  # noqa: E402
@@ -60,7 +61,7 @@ def main() -> None:
     factory = SolverFactory(settings, problem, args.trial, task)
     model = factory.build(predicting=True).model.to("cuda").eval()
     checkpoint = args.trial / "training/checkpoints/final.ckpt"
-    model.load_state_dict(torch.load(checkpoint, map_location="cpu")["state_dict"], strict=True)
+    model.load_state_dict(load_checkpoint(checkpoint)["state_dict"], strict=True)
     recipe = hard_recipe(model.output_fn)
     if not isinstance(recipe.lifting, DirichletLifting):
         raise ValueError("Requires compiled nonzero Dirichlet lifting")

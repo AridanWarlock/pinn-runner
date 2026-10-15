@@ -98,7 +98,11 @@ class PINNModule(LightningModule):
 
     def backward(self, loss: torch.Tensor, *args: Any, **kwargs: Any) -> None:
         """Keep physical AD intact; restrict only terminal leaf accumulation."""
-        if self.hparams["backward_mode"] == "parameters" and "inputs" not in kwargs:
+        if (
+            self.hparams["backward_mode"] == "parameters"
+            and "inputs" not in kwargs
+            and len(args) < 4  # Tensor.backward also accepts inputs as its fourth argument.
+        ):
             parameters = tuple(p for p in self.parameters() if p.requires_grad)
             if not parameters:
                 raise ValueError("Parameter backward requires trainable parameters")

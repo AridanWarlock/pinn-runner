@@ -204,7 +204,7 @@ class SolverFactory:
 
     def _checkpoint(self) -> ModelCheckpoint:
         return ModelCheckpoint(
-            dirpath=self.output / "checkpoints",
+            dirpath=str(self.output / "checkpoints"),
             filename="best",
             monitor="val/loss" if self.settings.validation else "train/loss",
             mode="min",

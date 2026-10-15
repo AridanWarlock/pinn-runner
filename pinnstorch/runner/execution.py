@@ -15,6 +15,7 @@ from pinnstorch.training.refinement import FixedObjective, LBFGSRefinement
 from pinnstorch.utils.module_fn import fix_predictions
 
 from .artifacts import ArtifactWriter
+from .checkpoint_io import load_checkpoint
 from .factory import ExecutionObjects
 from .settings import TaskSettings
 
@@ -96,7 +97,7 @@ class SolverExecution:
         return fix_predictions(cast(list[TensorOutputs], results))
 
     def _load(self, path: Path, allow_extrapolation: bool) -> InputBounds:
-        checkpoint = torch.load(path, map_location="cpu")
+        checkpoint = load_checkpoint(path)
         constraint = checkpoint.get("hyper_parameters", {}).get("constraint_kind", "soft")
         saved_signature = checkpoint.get("hyper_parameters", {}).get("constraint_signature", "")
         if saved_signature != self.objects.model.hparams.get("constraint_signature", ""):

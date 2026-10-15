@@ -1,0 +1,17 @@
+{
+  "contract": 1,
+  "checkpoint_sha256": "65217e1680c46f5150a149eff38b214a9e95683f108957de6b26d63394fbd330",
+  "origin": "Windows RTX4070Ti CUDA saved checkpoint and MAT",
+  "evaluation_device": "Mac CPU",
+  "torch": "2.1.0",
+  "points": 729,
+  "max_absolute_difference": 9.5367431640625e-07,
+  "cpu_inference_seconds": 0.02148599992506206,
+  "cpu_points_per_second": 33929.07021048937,
+  "atol": 3e-05,
+  "rtol": 3e-05,
+  "limitations": "Actual cross-OS/device portability check, one CPU inference pass including normal derivatives of hard transform. Not CUDA acceptance or warm CPU performance benchmark. No training.",
+  "cpu_public_predict_points": 22599,
+  "cpu_public_predict_seconds": 2.999049208010547,
+  "cpu_public_predict_max_difference": 9.5367431640625e-07
+}

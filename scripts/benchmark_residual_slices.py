@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from pinnstorch.models.pinn_module import PINNModule  # noqa: E402
+from pinnstorch.runner.checkpoint_io import load_checkpoint  # noqa: E402
 from scripts.benchmark_robin_execution import load_model  # noqa: E402
 
 
@@ -114,7 +115,7 @@ def evaluate(trial: Path, count: int, layers: int) -> dict[str, Any]:
             }
         )
     torch.cuda.synchronize()
-    checkpoint = torch.load(trial / "training/checkpoints/final.ckpt", map_location="cpu")
+    checkpoint = load_checkpoint(trial / "training/checkpoints/final.ckpt")
     training_times = (
         checkpoint["refinement_state"]["fixed_batches"]["equations"][1].numpy().reshape(-1)
     )

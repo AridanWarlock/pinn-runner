@@ -19,6 +19,7 @@ import torch
 import yaml
 from scipy.io import loadmat
 
+from pinnstorch.runner.checkpoint_io import load_checkpoint
 from pinnstorch.runner.factory import SolverFactory
 from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import TaskSettings
@@ -88,7 +89,7 @@ def evaluate_checkpoint(
     factory = SolverFactory(settings, problem, output_dir, input_dir)
     objects = factory.build(predicting=True)
     model = objects.model
-    state = torch.load(checkpoint, map_location="cpu")
+    state = load_checkpoint(checkpoint)
     model.load_state_dict(state["state_dict"], strict=True)
     model.to(device).eval()
     points = holdout_inputs(settings)
@@ -177,7 +178,7 @@ def finish_trial(
 ) -> dict[str, Any]:
     if not math.isfinite(duration) or duration <= 0:
         raise ValueError("Training duration must be finite and positive")
-    state = torch.load(checkpoint, map_location="cpu")
+    state = load_checkpoint(checkpoint)
     if state["global_step"] != steps:
         raise RuntimeError(f"Training performed {state['global_step']} steps, expected {steps}")
     refinement = case.config(device, steps, seed)["training"].get("refinement", {})

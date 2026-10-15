@@ -142,3 +142,30 @@ problem = Problem(fields=("T",), network_fields=("potential",), equations={"heat
     saved = loadmat(predict_dir / "predictions.mat")
     assert saved["T"].shape == saved["potential"].shape == (8, 3)
     assert np.isfinite(saved["T"]).all()
+
+
+def test_runner_loads_foreign_callback_path_for_prediction_and_retraining(tmp_path: Path) -> None:
+    import pathlib
+
+    class ForeignPath:
+        def __reduce__(self) -> tuple[type[Path], tuple[str]]:
+            foreign = pathlib.PosixPath if os.name == "nt" else pathlib.WindowsPath
+            value = "/foreign/checkpoints" if os.name == "nt" else r"C:\foreign\checkpoints"
+            return foreign, (value,)
+
+    input_dir = tmp_path / "input"
+    prepare_input(input_dir)
+    trained = tmp_path / "train"
+    result = launch(input_dir, trained)
+    assert result.returncode == 0, result.stdout + result.stderr
+    checkpoint = torch.load(trained / "checkpoints/final.ckpt", map_location="cpu")
+    callback = next(iter(checkpoint["callbacks"].values()))
+    assert isinstance(callback["dirpath"], str)
+    callback["dirpath"] = ForeignPath()
+    path = tmp_path / "foreign.ckpt"
+    torch.save(checkpoint, path)
+    for mode in ("predict", "retrain"):
+        result = launch(input_dir, tmp_path / mode, mode, str(path))
+        assert result.returncode == 0, result.stdout + result.stderr
+    fresh = torch.load(tmp_path / "retrain/checkpoints/final.ckpt", map_location="cpu")
+    assert isinstance(next(iter(fresh["callbacks"].values()))["dirpath"], str)

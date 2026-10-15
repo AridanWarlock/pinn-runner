@@ -119,11 +119,15 @@ def test_frozen_parameters_are_excluded_and_explicit_targets_are_respected(tmp_p
     model.backward(model.model_step(stage.objective.fresh())[0])
     assert frozen.grad is None
     assert any(p.grad is not None for p in model.parameters())
-    batch = stage.objective.fresh()
-    loss, _ = model.model_step(batch)
-    clock = batch["equations"][1]
-    model.backward(loss, inputs=(clock,))
-    assert clock.grad is not None
+    for positional in (False, True):
+        batch = stage.objective.fresh()
+        loss, _ = model.model_step(batch)
+        clock = batch["equations"][1]
+        if positional:
+            model.backward(loss, None, None, False, (clock,))
+        else:
+            model.backward(loss, inputs=(clock,))
+        assert clock.grad is not None
     for p in model.parameters():
         p.requires_grad_(False)
     with pytest.raises(ValueError, match="trainable parameters"):
