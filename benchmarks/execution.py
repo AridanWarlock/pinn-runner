@@ -91,10 +91,8 @@ def evaluate_checkpoint(
     state = torch.load(checkpoint, map_location="cpu")
     model.load_state_dict(state["state_dict"], strict=True)
     model.to(device).eval()
-    generator = np.random.default_rng(20261013)
-    points = generator.uniform(0.0, 1.0, (2048, case.dimensions + 1))
+    points = holdout_inputs(settings)
     lower, upper = settings.domain.time.interval
-    points[:, -1] = lower + points[:, -1] * (upper - lower)
     columns = [
         torch.tensor(points[:, i : i + 1], dtype=torch.float32, device=device, requires_grad=True)
         for i in range(points.shape[1])
@@ -121,6 +119,22 @@ def evaluate_checkpoint(
         bins,
         prediction_speed(model, features, clock, settings.training.batch_size or len(clock)),
     )
+
+
+def holdout_inputs(settings: TaskSettings, count: int = 2048, seed: int = 20261013) -> Array:
+    """Sample every named input in physical bounds, including family parameters."""
+    axes = (
+        *settings.domain.space.values(),
+        *settings.domain.parameters.values(),
+        settings.domain.time,
+    )
+    if count < 1:
+        raise ValueError("Holdout point count must be positive")
+    unit = np.random.default_rng(seed).uniform(0.0, 1.0, (count, len(axes)))
+    for index, axis in enumerate(axes):
+        lower, upper = axis.interval
+        unit[:, index] = lower + (upper - lower) * unit[:, index]
+    return unit
 
 
 def prepare_task(case: BenchmarkCase, directory: Path, device: str, steps: int, seed: int) -> Path:

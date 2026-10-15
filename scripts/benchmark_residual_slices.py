@@ -42,7 +42,7 @@ def evaluate(trial: Path, count: int, layers: int) -> dict[str, Any]:
             for i in range(points.shape[1])
         ]
         clock = torch.full_like(spatial[0], float(instant), requires_grad=True)
-        with torch.enable_grad():
+        with torch.set_grad_enabled(True):
             physical = dict(model(spatial, clock))
             residuals = factory.adapter.residuals(physical, *spatial, clock)
             values = (
