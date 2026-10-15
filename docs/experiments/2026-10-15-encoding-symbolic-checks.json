@@ -1,0 +1,16 @@
+{
+  "contract": 1,
+  "sympy": "1.14.0",
+  "identities": {
+    "lower_robin_trace": "0",
+    "upper_robin_trace": "0",
+    "third_derivative_lower": "0",
+    "third_derivative_upper": "0",
+    "manufactured_pde_residual": "0",
+    "counter_residual_dx_lower_minus_expected": "0",
+    "counter_residual_dx_upper_minus_expected": "0"
+  },
+  "counterexample_polynomial_third_derivative": "-12",
+  "counterexample_model_residual_dx_at_endpoints": "12*kappa*(1 - exp(-t))",
+  "limitations": "Symbolic identities only. No implementation or numerical/performance acceptance of the proposed encoding. All actual backward CUDA experiments use the original field representation."
+}
