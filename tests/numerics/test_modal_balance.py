@@ -125,3 +125,76 @@ def test_incompatible_eigenmode_is_rejected() -> None:
             space_points=3,
             time_points=3,
         )
+
+
+def test_modal_coefficient_can_be_checked_without_analytical_reference() -> None:
+    mode = HeatEigenmode((math.pi,), (0,))
+
+    def initial(spatial: list[torch.Tensor], time: torch.Tensor) -> torch.Tensor:
+        return mode.spatial(spatial) + 1
+
+    def physical(spatial: list[torch.Tensor], time: torch.Tensor) -> torch.Tensor:
+        return 1 + spatial[0] * time + mode.spatial(spatial) * time.mul(-mode.decay_rate).exp()
+
+    def source(spatial: list[torch.Tensor], time: torch.Tensor) -> torch.Tensor:
+        return spatial[0] + time * 0
+
+    def target(spatial: list[torch.Tensor], time: torch.Tensor, side: int) -> torch.Tensor:
+        return (-1 if side == 0 else 1) * time
+
+    targets = ((partial(target, side=0), partial(target, side=1)),)
+    defects = []
+    for times in (21, 81):
+        result = modal_heat_balance(
+            physical,
+            None,
+            source,
+            targets,
+            (((0, 1), (0, 1)),),
+            mode,
+            ((0, 1),),
+            (0, 0.5),
+            "cpu",
+            space_points=13,
+            time_points=times,
+            initial=initial,
+        )
+        defects.append(result.metrics["teacher_free_max_coefficient_defect"])
+        assert "amplitude_error" not in result.rows[-1]
+        assert result.metrics["ode_identity_rmse"] < 1e-6
+    assert defects[1] < defects[0] / 10
+    assert defects[1] < 4e-6
+
+
+def test_constant_neumann_mode_reproduces_heat_content_balance() -> None:
+    mode = HeatEigenmode((0, 0), (0, 0))
+
+    def initial(spatial: list[torch.Tensor], time: torch.Tensor) -> torch.Tensor:
+        return torch.ones_like(time)
+
+    def field(spatial: list[torch.Tensor], time: torch.Tensor) -> torch.Tensor:
+        return 1 + time * (spatial[0] + spatial[1])
+
+    def source(spatial: list[torch.Tensor], time: torch.Tensor) -> torch.Tensor:
+        return spatial[0] + spatial[1]
+
+    def target(spatial: list[torch.Tensor], time: torch.Tensor, side: int) -> torch.Tensor:
+        return (-1 if side == 0 else 1) * time
+
+    targets = ((partial(target, side=0), partial(target, side=1)),) * 2
+    result = modal_heat_balance(
+        field,
+        None,
+        source,
+        targets,
+        (((0, 1), (0, 1)),) * 2,
+        mode,
+        ((0, 1),) * 2,
+        (0, 1),
+        "cpu",
+        space_points=5,
+        time_points=5,
+        initial=initial,
+    )
+    assert result.metrics["teacher_free_max_coefficient_defect"] < 2e-7
+    assert result.rows[-1]["coefficient_from_problem_data"] == pytest.approx(2, abs=2e-7)

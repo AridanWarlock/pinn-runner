@@ -29,6 +29,7 @@ def main() -> None:
     parser.add_argument("--space-points", type=int, default=13)
     parser.add_argument("--time-points", type=int, default=81)
     parser.add_argument("--batch-size", type=int, default=512)
+    parser.add_argument("--without-reference", action="store_true")
     args = parser.parse_args()
     if args.report.exists():
         parser.error("Refusing to overwrite a report")
@@ -71,6 +72,9 @@ def main() -> None:
             torch.Tensor, background + mode.spatial(spatial) * clock.mul(-mode.decay_rate).exp()
         )
 
+    def initial(spatial: list[torch.Tensor], clock: torch.Tensor) -> torch.Tensor:
+        return factory.adapter.initial_tensors(spatial, clock)["u"]
+
     lookup = {boundary.axis: boundary for boundary in settings.boundaries}
     if len(lookup) != len(settings.boundaries) or any(
         boundary.side != "both" for boundary in lookup.values()
@@ -91,7 +95,7 @@ def main() -> None:
     started = time.perf_counter()
     budget = modal_heat_balance(
         field,
-        reference,
+        None if args.without_reference else reference,
         source,
         targets,
         operators,
@@ -102,6 +106,7 @@ def main() -> None:
         args.space_points,
         args.time_points,
         args.batch_size,
+        initial=initial,
     )
     torch.cuda.synchronize()
     report = {
@@ -115,6 +120,7 @@ def main() -> None:
         "space_points": args.space_points,
         "time_points": args.time_points,
         "decay_rate": mode.decay_rate,
+        "uses_reference": not args.without_reference,
         "diagnostic_seconds": time.perf_counter() - started,
         **asdict(budget),
         "limitations": "Gauss spatial quadrature and trapezoidal time integration; linear constant-coefficient heat and one known unit-amplitude eigenmode. Independent physical autograd; no training or new acceptance gate. Boundary forcing retained, not assumed zero.",

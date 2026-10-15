@@ -125,6 +125,36 @@ def signature(
     }
 
 
+def profile_objective(factory: SolverFactory, model: PINNModule, points: torch.Tensor) -> None:
+    """Instrument the same physical formula without adding hooks to the solver."""
+    bound = model.output_fn
+    if not isinstance(bound, BoundBoxRobinInitial):
+        raise ValueError("Requires a box Robin model")
+    model.zero_grad(set_to_none=True)
+    columns = [x.detach().requires_grad_() for x in point_columns(points)]
+    spatial, clock = columns[:-1], columns[-1]
+    with torch.profiler.record_function("pinn/raw_network"):
+        raw = bound.network(spatial, clock)
+    with torch.profiler.record_function("pinn/network_projection"):
+        correction = bound.recipe.projection.apply(raw, bound.network, spatial, clock)
+    with torch.profiler.record_function("pinn/data_background"):
+        background = bound.recipe.background(spatial, clock)
+    with torch.profiler.record_function("pinn/field_reconstruction"):
+        lower, upper = bound.recipe.time_interval
+        outputs = {
+            name: value + (clock - lower) / (upper - lower) * correction[name]
+            for name, value in background.items()
+        }
+    with torch.profiler.record_function("pinn/physical_pde_derivatives"):
+        residuals = factory.adapter.residuals(outputs, *columns)
+        loss = torch.zeros((), device=points.device)
+        for value in residuals.values():
+            loss = loss + value.square().mean()
+    with torch.profiler.record_function("pinn/parameter_backward"):
+        torch.autograd.backward(loss)
+    model.zero_grad(set_to_none=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trial", type=Path, required=True)
@@ -132,9 +162,12 @@ def main() -> None:
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--batch-sizes", type=int, nargs="+", default=[128, 512, 2048])
     parser.add_argument("--trace", action="store_true", help="Separate diagnostic profiler pass")
+    parser.add_argument("--profile-only", action="store_true")
     args = parser.parse_args()
     if args.report.exists() or min(args.batch_sizes) < 1:
         parser.error("New report path and positive batch sizes required")
+    if args.profile_only and not args.trace:
+        parser.error("--profile-only requires --trace")
     if args.device == "cuda" and not torch.cuda.is_available():
         parser.error("CUDA unavailable; no fallback")
     torch.backends.cuda.matmul.allow_tf32 = False
@@ -162,7 +195,7 @@ def main() -> None:
         torch.testing.assert_close(candidate[name], expected, atol=3e-5, rtol=3e-4)
         differences[name] = float((candidate[name] - expected).abs().max().cpu())
     rows: list[dict[str, Any]] = []
-    for repeat in range(3):
+    for repeat in range(0 if args.profile_only else 3):
         for size in args.batch_sizes:
             for kind in (
                 ("recursive", "expanded") if repeat % 2 == 0 else ("expanded", "recursive")
@@ -183,11 +216,10 @@ def main() -> None:
         if args.device == "cuda":
             activities.append(torch.profiler.ProfilerActivity.CUDA)
         for kind, pair in models.items():
-            action = actions(*pair, points[:128])["full_objective_backward"]
             with torch.profiler.profile(
                 activities=activities, record_shapes=True, profile_memory=True
             ) as profiler:
-                action()
+                profile_objective(*pair, points[:128])
                 synchronize(args.device)
             args.report.parent.mkdir(parents=True, exist_ok=True)
             profiler.export_chrome_trace(str(args.report.with_suffix(f".{kind}.trace.json")))
@@ -195,6 +227,16 @@ def main() -> None:
                 {
                     "lifting": kind,
                     "batch_size": min(128, len(points)),
+                    "regions": [
+                        {
+                            "name": event.key,
+                            "cpu_time_us": event.cpu_time_total,
+                            "cuda_time_us": event.cuda_time_total,
+                            "count": event.count,
+                        }
+                        for event in profiler.key_averages()
+                        if event.key.startswith("pinn/")
+                    ],
                     "events": [
                         {
                             "name": event.key,

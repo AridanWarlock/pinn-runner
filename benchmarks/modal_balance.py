@@ -50,6 +50,44 @@ class ModalBalance:
     metrics: dict[str, float]
 
 
+@dataclass(frozen=True)
+class ModalGrid:
+    axes: tuple[SpatialQuadrature, ...]
+    instants: torch.Tensor
+    bounds: tuple[tuple[float, float], ...]
+
+    def columns(self, face: tuple[int, int] | None = None) -> list[torch.Tensor]:
+        nodes = [axis.nodes for axis in self.axes]
+        if face is not None:
+            axis, side = face
+            nodes[axis] = torch.tensor([self.bounds[axis][side]], dtype=torch.float32)
+        mesh = torch.meshgrid(*nodes, self.instants, indexing="ij")
+        return [column.reshape(-1, 1) for column in mesh]
+
+    def integrate(self, flat: Array, face_axis: int | None = None) -> Array:
+        rules = tuple(rule for i, rule in enumerate(self.axes) if i != face_axis)
+        shape = tuple(len(rule.nodes) for rule in rules) + (len(self.instants),)
+        return _integrate(flat.reshape(shape), rules)
+
+
+@dataclass(frozen=True)
+class ModalVolume:
+    norm: Array
+    solution: Array
+    rate: Array
+    source: Array
+    residual: Array
+    error: Array | None
+    error_squared_integral: Array | None
+    initial: float | None
+
+
+@dataclass(frozen=True)
+class ModalBoundary:
+    prescribed: Array
+    defect: Array
+
+
 def _volume_jets(
     field: BoxField, columns: list[torch.Tensor], device: str, batch_size: int
 ) -> tuple[Array, Array, Array]:
@@ -74,9 +112,169 @@ def _volume_jets(
     )
 
 
+def _volume(
+    field: BoxField,
+    reference: BoxField | None,
+    source: BoxField,
+    initial: BoxField | None,
+    mode: HeatEigenmode,
+    grid: ModalGrid,
+    device: str,
+    batch_size: int,
+) -> ModalVolume:
+    columns = grid.columns()
+    phi = mode.spatial(columns[:-1]).detach().numpy().astype(np.float64).reshape(-1)
+    norm = grid.integrate(phi**2)
+    if np.any(norm <= np.finfo(float).tiny):
+        raise ValueError("Eigenmode must have nonzero spatial norm")
+    value, rate, laplacian = _volume_jets(field, columns, device, batch_size)
+    forcing = source(columns[:-1], columns[-1]).detach().numpy().astype(np.float64).reshape(-1)
+    exact = (
+        _sample(reference, columns, "t", "cpu", batch_size)[0] if reference is not None else None
+    )
+    initial_coefficient = None
+    if initial is not None:
+        spatial = [column[:: len(grid.instants)] for column in columns[:-1]]
+        clock = torch.full_like(spatial[0], float(grid.instants[0]))
+        values = initial(spatial, clock).detach().numpy().astype(np.float64).reshape(-1)
+        initial_coefficient = float(
+            _integrate(
+                (values * phi[:: len(grid.instants)]).reshape(
+                    tuple(len(axis.nodes) for axis in grid.axes)
+                ),
+                grid.axes,
+            )
+            / norm[0]
+        )
+    return ModalVolume(
+        norm,
+        grid.integrate(value * phi) / norm,
+        grid.integrate(rate * phi) / norm,
+        grid.integrate(forcing * phi) / norm,
+        grid.integrate((rate - mode.conductivity * laplacian - forcing) * phi) / norm,
+        grid.integrate((value - exact) * phi) / norm if exact is not None else None,
+        grid.integrate((value - exact) ** 2) if exact is not None else None,
+        initial_coefficient,
+    )
+
+
+def _boundary(
+    field: BoxField,
+    targets: tuple[tuple[BoxField, BoxField], ...],
+    operators: tuple[tuple[tuple[float, float], tuple[float, float]], ...],
+    mode: HeatEigenmode,
+    grid: ModalGrid,
+    norm: Array,
+    device: str,
+    batch_size: int,
+) -> ModalBoundary:
+    supplied = np.zeros(len(grid.instants), dtype=np.float64)
+    boundary = np.zeros_like(supplied)
+    for axis, axis_name in enumerate("xyz"[: len(grid.axes)]):
+        for side in (0, 1):
+            columns = grid.columns((axis, side))
+            alpha, beta = operators[axis][side]
+            phi = mode.spatial(columns[:-1])
+            normal = mode.normal_derivative(columns[:-1], axis, side)
+            eigen_defect = cast(torch.Tensor, alpha * phi + beta * normal)
+            if float(eigen_defect.abs().max()) > 2e-5:
+                raise ValueError(
+                    "Chosen eigenmode does not satisfy the homogeneous boundary operator"
+                )
+            wall, derivative = _sample(field, columns, axis_name, device, batch_size)
+            prescribed = (
+                targets[axis][side](columns[:-1], columns[-1])
+                .detach()
+                .numpy()
+                .astype(np.float64)
+                .reshape(-1)
+            )
+            defect = alpha * wall + beta * (-1 if side == 0 else 1) * derivative - prescribed
+            weight = phi.detach().numpy().astype(np.float64).reshape(-1) / beta
+            supplied += mode.conductivity * grid.integrate(prescribed * weight, axis) / norm
+            boundary += mode.conductivity * grid.integrate(defect * weight, axis) / norm
+    return ModalBoundary(supplied, boundary)
+
+
+def _summarize(
+    volume: ModalVolume, boundary: ModalBoundary, mode: HeatEigenmode, grid: ModalGrid
+) -> ModalBalance:
+    clock = grid.instants.numpy().astype(np.float64)
+    decay = np.exp(-mode.decay_rate * (clock - clock[0]))
+    drive = volume.residual + boundary.defect
+    identity_defect = (
+        volume.rate
+        + mode.decay_rate * volume.solution
+        - volume.source
+        - boundary.prescribed
+        - drive
+    )
+    rows = [
+        {
+            "time": float(t),
+            "solution_coefficient": float(volume.solution[i]),
+            "projected_residual": float(volume.residual[i]),
+            "boundary_forcing": float(boundary.defect[i]),
+            "ode_identity_defect": float(identity_defect[i]),
+        }
+        for i, t in enumerate(clock)
+    ]
+    metrics = {
+        "ode_identity_rmse": float(np.sqrt(np.mean(identity_defect**2))),
+        "max_boundary_forcing": float(np.max(np.abs(boundary.defect))),
+        "max_projected_residual": float(np.max(np.abs(volume.residual))),
+    }
+    if volume.error is not None:
+        relative = volume.error / decay
+        reconstructed = relative[0] + cumulative_trapezoid(drive / decay, clock, initial=0)
+        for i, row in enumerate(rows):
+            row.update(
+                amplitude_error=float(volume.error[i]),
+                relative_amplitude_error=float(relative[i]),
+                reconstructed_relative_amplitude_error=float(reconstructed[i]),
+            )
+        metrics.update(
+            final_signed_relative_amplitude_error=float(relative[-1]),
+            final_reconstructed_relative_amplitude_error=float(reconstructed[-1]),
+            reconstruction_max_error=float(np.max(np.abs(relative - reconstructed))),
+        )
+        if volume.error_squared_integral is not None:
+            total = np.sqrt(volume.error_squared_integral / volume.norm) / decay
+            measure = float(np.prod([upper - lower for lower, upper in grid.bounds]))
+            orthogonal = np.sqrt(
+                np.maximum(volume.error_squared_integral - volume.error**2 * volume.norm, 0)
+                / measure
+            )
+            for i, row in enumerate(rows):
+                row.update(
+                    mode_relative_l2_gauss=float(total[i]),
+                    orthogonal_rmse_gauss=float(orthogonal[i]),
+                )
+            metrics.update(
+                final_mode_relative_l2_gauss=float(total[-1]),
+                final_orthogonal_rmse_gauss=float(orthogonal[-1]),
+            )
+    if volume.initial is not None:
+        expected = decay * (
+            volume.initial
+            + cumulative_trapezoid((volume.source + boundary.prescribed) / decay, clock, initial=0)
+        )
+        defect = volume.solution - expected
+        for i, row in enumerate(rows):
+            row.update(
+                coefficient_from_problem_data=float(expected[i]),
+                coefficient_defect_from_problem_data=float(defect[i]),
+            )
+        metrics.update(
+            teacher_free_final_coefficient_defect=float(defect[-1]),
+            teacher_free_max_coefficient_defect=float(np.max(np.abs(defect))),
+        )
+    return ModalBalance(rows, metrics)
+
+
 def modal_heat_balance(
     field: BoxField,
-    reference: BoxField,
+    reference: BoxField | None,
     source: BoxField,
     targets: tuple[tuple[BoxField, BoxField], ...],
     operators: tuple[tuple[tuple[float, float], tuple[float, float]], ...],
@@ -87,6 +285,7 @@ def modal_heat_balance(
     space_points: int = 13,
     time_points: int = 81,
     batch_size: int = 512,
+    initial: BoxField | None = None,
 ) -> ModalBalance:
     dimensions = len(bounds)
     if (
@@ -95,6 +294,8 @@ def modal_heat_balance(
         or len(operators) != dimensions
     ):
         raise ValueError("Modal balance requires matching dimensions, operators and data")
+    if reference is None and initial is None:
+        raise ValueError("Supply initial data for reference-free modal diagnostics")
     if (
         time_points < 2
         or batch_size < 1
@@ -112,85 +313,14 @@ def modal_heat_balance(
         raise ValueError(
             "Modal boundary correction requires finite Robin operators with nonzero beta"
         )
-    axes = tuple(
-        SpatialQuadrature.build(interval, space_points, "gauss_legendre") for interval in bounds
+    grid = ModalGrid(
+        tuple(
+            SpatialQuadrature.build(interval, space_points, "gauss_legendre")
+            for interval in bounds
+        ),
+        torch.linspace(*time_interval, time_points),
+        bounds,
     )
-    instants = torch.linspace(*time_interval, time_points)
-    shape = (space_points,) * dimensions + (time_points,)
-    mesh = torch.meshgrid(*(axis.nodes for axis in axes), instants, indexing="ij")
-    columns = [column.reshape(-1, 1) for column in mesh]
-    phi = mode.spatial(columns[:-1]).detach().numpy().astype(np.float64).reshape(shape)
-    norm = _integrate(phi**2, axes)
-    if np.any(norm <= np.finfo(float).tiny):
-        raise ValueError("Eigenmode must have nonzero spatial norm")
-    value, rate, laplacian = _volume_jets(field, columns, device, batch_size)
-    exact, exact_rate = _sample(reference, columns, "t", "cpu", batch_size)
-    forcing = source(columns[:-1], columns[-1]).detach().numpy().astype(np.float64).reshape(shape)
-    error = value.reshape(shape) - exact.reshape(shape)
-    error_rate = rate.reshape(shape) - exact_rate.reshape(shape)
-    amplitude = _integrate(error * phi, axes) / norm
-    amplitude_rate = _integrate(error_rate * phi, axes) / norm
-    residual = rate.reshape(shape) - mode.conductivity * laplacian.reshape(shape) - forcing
-    projected_residual = _integrate(residual * phi, axes) / norm
-    boundary = np.zeros(time_points, dtype=np.float64)
-    for axis, axis_name in enumerate("xyz"[:dimensions]):
-        for side in (0, 1):
-            nodes = [rule.nodes for rule in axes]
-            nodes[axis] = torch.tensor([bounds[axis][side]], dtype=torch.float32)
-            face_mesh = torch.meshgrid(*nodes, instants, indexing="ij")
-            face_columns = [column.reshape(-1, 1) for column in face_mesh]
-            alpha, beta = operators[axis][side]
-            eigenvalue = mode.spatial(face_columns[:-1])
-            eigennormal = mode.normal_derivative(face_columns[:-1], axis, side)
-            eigen_defect = cast(torch.Tensor, alpha * eigenvalue + beta * eigennormal)
-            if float(eigen_defect.abs().max()) > 2e-5:
-                raise ValueError(
-                    "Chosen eigenmode does not satisfy the homogeneous boundary operator"
-                )
-            wall, derivative = _sample(field, face_columns, axis_name, device, batch_size)
-            prescribed = (
-                targets[axis][side](face_columns[:-1], face_columns[-1])
-                .detach()
-                .numpy()
-                .astype(np.float64)
-                .reshape(-1)
-            )
-            defect = alpha * wall + beta * (-1 if side == 0 else 1) * derivative - prescribed
-            face_shape = (space_points,) * (dimensions - 1) + (time_points,)
-            weighted = defect * eigenvalue.detach().numpy().astype(np.float64).reshape(-1) / beta
-            boundary += (
-                mode.conductivity
-                * _integrate(
-                    weighted.reshape(face_shape),
-                    tuple(rule for i, rule in enumerate(axes) if i != axis),
-                )
-                / norm
-            )
-    clock = instants.numpy().astype(np.float64)
-    decay = np.exp(-mode.decay_rate * (clock - time_interval[0]))
-    relative_amplitude = amplitude / decay
-    drive = projected_residual + boundary
-    reconstructed = relative_amplitude[0] + cumulative_trapezoid(drive / decay, clock, initial=0)
-    identity_defect = amplitude_rate + mode.decay_rate * amplitude - drive
-    return ModalBalance(
-        rows=[
-            {
-                "time": float(t),
-                "amplitude_error": float(amplitude[i]),
-                "relative_amplitude_error": float(relative_amplitude[i]),
-                "projected_residual": float(projected_residual[i]),
-                "boundary_forcing": float(boundary[i]),
-                "ode_identity_defect": float(identity_defect[i]),
-                "reconstructed_relative_amplitude_error": float(reconstructed[i]),
-            }
-            for i, t in enumerate(clock)
-        ],
-        metrics={
-            "final_signed_relative_amplitude_error": float(relative_amplitude[-1]),
-            "final_reconstructed_relative_amplitude_error": float(reconstructed[-1]),
-            "reconstruction_max_error": float(np.max(np.abs(relative_amplitude - reconstructed))),
-            "ode_identity_rmse": float(np.sqrt(np.mean(identity_defect**2))),
-            "max_boundary_forcing": float(np.max(np.abs(boundary))),
-            "max_projected_residual": float(np.max(np.abs(projected_residual))),
-        },
-    )
+    volume = _volume(field, reference, source, initial, mode, grid, device, batch_size)
+    boundary = _boundary(field, targets, operators, mode, grid, volume.norm, device, batch_size)
+    return _summarize(volume, boundary, mode, grid)
