@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-13 13:28'
-updated_date: '2026-10-13 18:30'
+updated_date: '2026-10-15 17:32'
 labels:
   - performance
   - hard-constraints
@@ -63,11 +63,7 @@ Hard constraints улучшили heat3d, но на пяти seed увеличи
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-1. Начать с профиля eager hard на текущем FP32 CUDA стеке и закрепить контроль TASK-11. 2. Проверить сокращение kernel launches в B через эквивалентный полином; доказать значения, производные и parameter gradients на shifted 1D–3D. 3. Принять только измеренно полезный opt-in backend с сохранением eager; далее подготовленный predict и ConstraintPlan по docs/hard-heat-plan.md. 4. Отдельно интегрировать расширенные heat BC; не объявлять эти этапы завершёнными в TASK-21.
-
-Следующий блок: отдельный HardBoxDerivatives с точным правилом произведения и AD только для N/g; проверить float64/FP32 derivatives/residual/parameter gradients на shifted 1D–3D и границах. Сначала standalone CUDA comparison на одном checkpoint. Интегрировать в Equation только при подтверждённой пользе; никаких detach train cache или изменений функций пользователя.
-
-Короткий time-to-quality screening: heat3d, два парных seed 1234/19, Adam3000 и LBFGS300 с заранее заданными snapshot 0/25/50/100/150/200/300. Пороги global L2<=0.001, final L2<=0.002 и physical AD PDE RMSE<=0.005; два соседних прохождения. Оценивать после завершения обучения; сохранять overhead snapshot и интервальную цензуру. Это screening, не повтор полной пяти-seed матрицы.
+1. Завершены оптимизация произведения Дирихле, сгруппированная проекция Robin и раскрытое продолжение; результаты15октября в docs/current-stack-study-2026-10-15.md. 2. Сохранить recursive default: пятисостоянийный критерий сохранения качества expanded не пройден. 3. Следующий согласованный блок: интеграция и проверка конечного backward только по весам без потери координатных производных; проверить Adam/Lightning/L-BFGS и полные парные обучения. 4. Отдельно довести сравнение одинакового времени и время первого достижения точности на пяти состояниях; существующий snapshot script требует обобщения с heat3d Dirichlet на Robin. 5. Замену базиса, причинное взвешивание и обновления зависимостей не внедрять автоматически; текущая задача остаётся открытой.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -82,4 +78,14 @@ Hard constraints улучшили heat3d, но на пяти seed увеличи
 Добавлен изолированный scripts/benchmark_time_to_quality.py (4bcd54c), без изменений solver: заранее заданные LB snapshot, evaluation только после обучения, интервальная/left-censored оценка crossing и подтверждение двумя точками. Быстрый CPU244passed/20e2e excluded; explicit strict mypy benchmark1file passed. Короткий CUDA screening four trials heat3d, seed1234/19 запущен; полная30trial matrix не повторяется.
 
 Короткий CUDA time-to-quality screening завершён:4trials heat3d,seed1234/19,eager/product_rule,Adam3000+LB300. Наблюдаемые upper crossing43.617→42.053s и43.051→36.130s; подтверждения46.659→44.754 и46.100→37.475. Snapshot8.27–10.03ms/trial. Первую пару разделяет всего.030s между интервалами, нельзя считать robust timing gain. Второй seed fast LB150 против eager200. Финальная точность fast немного хуже обеихпар; defaults unchanged. Отчёт docs/time-to-quality-screening.md и raw JSON;CPU244passed/20excluded. Task не завершена: kernel profile и полноценный5seed TTO остаются.
+
+2026-10-15: 9e7bf76 добавляет независимый hard_lifting recursive/expanded. Вывод sum по непустым наборам осей, общая геометрия одного вызова и один пакет двух времён; проекция сети/физическая сигнатура не меняются. 24 численных теста новых формул FP32/64 1D–3D; профильный CPU74passed. Скрипт benchmark_robin_lifting сравнивает одни веса и раздельные компоненты, profiler вне timing. CUDA-измерения поставлены после текущих обучений, не считать принятыми до результата.
+
+Короткие1Dзамеры обнаружили регрессию expanded4–5% на PDE+backward;2Dвыигрыш6.5–9.2%,3D10–21%. Общийdefault пока не принимается. Добавлен точный частный1Dпуть A1=phi_minus*d_minus+phi_plus*d_plus без парного временного графа/нулевых следов A0;26CPUпрофильныхтестов, повторныйCUDAзамер впереди. Никакие пороги принятия не смягчаются.
+
+Матрица5seed2048завершена: все5expanded strictpass, медиана train355.515→280.078s(−21.22%),warm predict.285174→.224357s(−21.33%),peak−0.17%. Но медианы global/mode+1.636%,final+6.928%; худшая параglobal+16.7%,final+18.5%. Предварительный критерий неухудшения медиан НЕ выполнен: hard_lifting expanded остаётся opt-in. Исправлен измерительный прокси: adapter.residuals возвращает также u; изолированныйloss теперь отбирает толькоименауравнений, регрессионный тест на ненулевом точномполе. Реальнообучение и основной PDEholdout быликорректны; старые standaloneцифры помечаются proxy и повторяются.
+
+Финальная чистая PDE после исправления измерителя: пакет512, код665fc17, три чередующихся повторения: Neumann3D152.466→119.208ms(−21.81%),Robin3D158.228→139.508ms(−11.83%),mixed3D154.340→126.321ms(−18.15%);2D−10.70%/−7.10%;прямой1D−2.42%/−2.75%. Все пять expanded2048 strictpass, но критерий медианного качества не выполнен: recursive остаётсяdefault. Прототип terminal backward только по параметрам:152.037→121.251ms/117.956→104.378ms,градиенты весов побитово равны;не интегрирован. ПолныйCPU445passed,финальныйWindows38passed. Дополнительный matched-wall2048 опыт2500Adam+190LB начат на19/1234 в numerical-reports/robin-expanded2048-budget-001;не менять решениеdefault по двум опытам. Пользователь просит завершить текущий блок из-за лимита.
+
+Дополнительный matched-wall опыт завершён: seed19/1234, expanded2048, Adam2500+LB190, код665fc17, обе строгие проверки пройдены. Время351.333/351.569s против355.515/357.470s контроля; globalL2 .0476005/.0562048% против.052034/.058469%;final .0593185/.0694142% против.067850/.074394%;PDE .0112783/.0107080 против.0122244/.0121928. Всего18обучений;очередь завершена,Pythonпроцессов нет,SSHзакрыт. Два состояния предварительны,не отменяют неудачный5seedgate при равных шагах. Полные данные docs/experiments/2026-10-15-robin-study.json/CSV.
 <!-- SECTION:NOTES:END -->
