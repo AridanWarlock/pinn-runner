@@ -1,13 +1,12 @@
-"""Saved endpoint coordinates must reproduce the model, including a simulated time shift."""
+"""Use the real MAT writer to check endpoint labels and a simulated time shift."""
 
 from pathlib import Path
 
-import numpy as np
 import pytest
 import torch
-from scipy.io import savemat
 
 from benchmarks.cases import CASES
+from pinnstorch.runner.artifacts import ArtifactWriter
 from pinnstorch.runner.factory import SolverFactory
 from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import TaskSettings
@@ -25,24 +24,27 @@ def test_saved_field_labels_are_checked_against_direct_model(
     for axis in config["domain"]["space"].values():
         axis["points"] = 3
     config["domain"]["time"]["points"] = 3
-    factory = SolverFactory(
-        TaskSettings.read(config), load_problem(case.source), tmp_path, case.source.parent
-    )
-    model = factory.build(True).model.eval()
-    mesh = torch.meshgrid(
-        *(torch.linspace(0, 1, 3), torch.linspace(0, 1, 3), torch.linspace(0, 0.5, 3)),
-        indexing="ij",
-    )
-    columns = [x.reshape(-1, 1) for x in mesh]
+    settings = TaskSettings.read(config)
+    problem = load_problem(case.source)
+    factory = SolverFactory(settings, problem, tmp_path, case.source.parent)
+    objects = factory.build(True)
+    model = objects.model.eval()
+    points, times, _ = objects.mesh.flatten_mesh(None)
+    spatial = [
+        torch.tensor(points[:, i : i + 1], dtype=torch.float32) for i in range(points.shape[1])
+    ]
+    clock = torch.tensor(times, dtype=torch.float32)
     with torch.no_grad():
-        values = model(columns[:-1], columns[-1])["u"].numpy()
+        values = model(spatial, clock)["u"]
     if shift_time:
-        values = np.roll(values.reshape(-1, 3), 1, axis=-1).reshape(-1, 1)
-    (tmp_path / "prediction").mkdir()
-    savemat(
-        tmp_path / "prediction/predictions.mat",
-        {"x": columns[0].numpy(), "y": columns[1].numpy(), "t": columns[2].numpy(), "u": values},
+        values = torch.roll(values.reshape(-1, 3), 1, dims=-1).reshape(-1, 1)
+    prediction = tmp_path / "prediction"
+    prediction.mkdir()
+    writer = ArtifactWriter(prediction, settings, problem)
+    bounds = tuple(
+        axis.interval for axis in (*settings.domain.space.values(), settings.domain.time)
     )
+    writer.save_prediction({"u": values}, objects.mesh, bounds)
     if shift_time:
         with pytest.raises(AssertionError):
             verify_saved_prediction(tmp_path, model, ("x", "y"), ("u",))

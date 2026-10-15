@@ -22,7 +22,7 @@ from pinnstorch.api import Coordinates, Equation  # noqa: E402
 from pinnstorch.models.pinn_module import PINNModule  # noqa: E402
 from pinnstorch.runner.factory import SolverFactory  # noqa: E402
 from pinnstorch.training.robin_box import BoundBoxRobinInitial  # noqa: E402
-from scripts.benchmark_robin_execution import load_model, objective, point_columns  # noqa: E402
+from scripts.benchmark_robin_execution import equation_loss, load_model, objective, point_columns  # noqa: E402
 
 
 def synchronize(device: str) -> None:
@@ -110,9 +110,11 @@ def signature(
     columns = [x.detach().requires_grad_() for x in point_columns(points)]
     outputs = dict(model(columns[:-1], columns[-1]))
     residuals = factory.adapter.residuals(outputs, *columns)
-    residual = torch.cat(tuple(residuals.values()), dim=1)
+    residual = torch.cat([residuals[name] for name in factory.problem.equations], dim=1)
     parameters = tuple(model.parameters())
-    gradients = torch.autograd.grad(residual.square().mean(), parameters, allow_unused=True)
+    gradients = torch.autograd.grad(
+        equation_loss(factory, residuals), parameters, allow_unused=True
+    )
     return {
         "field": outputs["u"].detach(),
         "residual": residual.detach(),
@@ -147,9 +149,7 @@ def profile_objective(factory: SolverFactory, model: PINNModule, points: torch.T
         }
     with torch.profiler.record_function("pinn/physical_pde_derivatives"):
         residuals = factory.adapter.residuals(outputs, *columns)
-        loss = torch.zeros((), device=points.device)
-        for value in residuals.values():
-            loss = loss + value.square().mean()
+        loss = equation_loss(factory, residuals)
     with torch.profiler.record_function("pinn/parameter_backward"):
         torch.autograd.backward(loss)
     model.zero_grad(set_to_none=True)

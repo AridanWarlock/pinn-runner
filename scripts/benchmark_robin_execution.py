@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from benchmarks.performance import prediction_speed  # noqa: E402
+from pinnstorch.contracts import TensorOutputs  # noqa: E402
 from pinnstorch.models.pinn_module import PINNModule  # noqa: E402
 from pinnstorch.runner.artifacts import ArtifactWriter  # noqa: E402
 from pinnstorch.runner.execution import SolverExecution  # noqa: E402
@@ -60,10 +61,13 @@ def objective(factory: SolverFactory, model: PINNModule, points: torch.Tensor) -
     columns = [x.detach().requires_grad_() for x in point_columns(points)]
     outputs = dict(model(columns[:-1], columns[-1]))
     residuals = factory.adapter.residuals(outputs, *columns)
-    loss = torch.zeros((), device=points.device)
-    for value in residuals.values():
-        loss = loss + value.square().mean()
-    return loss
+    return equation_loss(factory, residuals)
+
+
+def equation_loss(factory: SolverFactory, outputs: TensorOutputs) -> torch.Tensor:
+    # The adapter returns physical fields alongside named equation residuals.
+    values = [outputs[name].square().mean() for name in factory.problem.equations]
+    return torch.sum(torch.stack(values))
 
 
 def training_speed(

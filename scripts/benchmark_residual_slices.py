@@ -28,9 +28,14 @@ def verify_saved_prediction(
     """Reevaluate every saved endpoint layer and common interior rows by their labels."""
     saved = loadmat(trial / "prediction/predictions.mat")
     times = np.asarray(saved["t"]).reshape(-1)
-    endpoints = np.flatnonzero((times == times.min()) | (times == times.max()))
+    space_rows = len(np.asarray(saved[spatial_names[0]]).reshape(-1))
+    for name in fields:
+        if np.asarray(saved[name]).shape != (space_rows, len(times)):
+            raise ValueError("Saved field must have shape (spatial rows, time instants)")
+    time_endpoints = np.flatnonzero((times == times.min()) | (times == times.max()))
+    endpoints = (np.arange(space_rows)[:, None] * len(times) + time_endpoints[None, :]).reshape(-1)
     interior = np.random.default_rng(20261016).choice(
-        len(times), min(128, len(times)), replace=False
+        space_rows * len(times), min(128, space_rows * len(times)), replace=False
     )
     selected = np.unique(np.concatenate((endpoints, interior)))
     maximum = 0.0
@@ -38,12 +43,19 @@ def verify_saved_prediction(
         indices = selected[start : start + 512]
         columns = [
             torch.tensor(
-                np.asarray(saved[name]).reshape(-1, 1)[indices],
+                np.asarray(saved[name]).reshape(-1, 1)[indices // len(times)],
                 dtype=torch.float32,
                 device=model.device,
             )
-            for name in (*spatial_names, "t")
+            for name in spatial_names
         ]
+        columns.append(
+            torch.tensor(
+                times[indices % len(times)].reshape(-1, 1),
+                dtype=torch.float32,
+                device=model.device,
+            )
+        )
         with torch.no_grad():
             actual = model(columns[:-1], columns[-1])
         for name in fields:
@@ -87,7 +99,7 @@ def evaluate(trial: Path, count: int, layers: int) -> dict[str, Any]:
             physical = dict(model(spatial, clock))
             residuals = factory.adapter.residuals(physical, *spatial, clock)
             values = (
-                torch.cat(tuple(residuals.values()), dim=1)
+                torch.cat([residuals[name] for name in factory.problem.equations], dim=1)
                 .detach()
                 .cpu()
                 .numpy()
