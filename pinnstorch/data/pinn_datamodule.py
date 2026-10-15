@@ -70,7 +70,7 @@ class PINNDataModule(LightningDataModule):
     def state_dict(self) -> dict[str, Any]:
         return {
             name: {
-                "signature": dataset.sampling_policy.signature(),
+                "signature": dataset.sampling_signature(),
                 "epoch": dataset.last_sampling_epoch,
                 "spatial": [
                     column.detach().cpu().clone() for column in dataset.spatial_domain_sampled
@@ -89,7 +89,7 @@ class PINNDataModule(LightningDataModule):
             if (
                 not isinstance(dataset, MeshSampler)
                 or dataset.sampling_policy is None
-                or tuple(saved["signature"]) != dataset.sampling_policy.signature()
+                or tuple(saved["signature"]) != dataset.sampling_signature()
             ):
                 raise ValueError("Checkpoint sampling recipe differs from current task")
             dataset.spatial_domain_sampled = [column.clone() for column in saved["spatial"]]

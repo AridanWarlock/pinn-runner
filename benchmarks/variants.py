@@ -43,12 +43,15 @@ class RateDecay:
 class CollocationRefresh:
     every_epochs: int = 0
     points: int | None = None
+    time_power: float = 0.0
 
     def apply(self, config: dict[str, Any]) -> None:
         if self.points is not None:
             config["training"]["collocation"]["points"] = self.points
         if self.every_epochs:
             config["training"]["collocation"]["resample_every_epochs"] = self.every_epochs
+        if self.time_power:
+            config["training"]["collocation"]["time_power"] = self.time_power
 
 
 @dataclass(frozen=True)
@@ -74,7 +77,10 @@ class HardExecution:
     backend: str = "eager"
 
     def apply(self, config: dict[str, Any]) -> None:
-        if self.backend != "eager":
+        if (
+            self.backend != "eager"
+            or config["training"].get("constraints") == "hard_initial_robin"
+        ):
             config["training"]["hard_execution"] = self.backend
 
 

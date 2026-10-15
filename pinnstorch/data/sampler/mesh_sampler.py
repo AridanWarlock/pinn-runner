@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pinnstorch.contracts import LossAccumulator, SamplerBatch, TensorOutputs
-from pinnstorch.training.sampling import SamplingPolicy
+from pinnstorch.training.sampling import SamplingPolicy, TimePower
 
 from ..mesh.mesh import MeshBase
 from .sampler_base import SamplerBase
@@ -19,9 +19,11 @@ class MeshSampler(SamplerBase):
         collection_points: list[str] | None = None,
         use_lhs: bool = True,
         sampling_policy: SamplingPolicy | None = None,
+        time_map: TimePower | None = None,
     ) -> None:
         super().__init__()
         self.sampling_policy = sampling_policy
+        self.time_map = time_map
         self.last_sampling_epoch = 0
         self.collection_points_names = collection_points or []
         if solution:
@@ -32,7 +34,19 @@ class MeshSampler(SamplerBase):
             self.store(spatial, time, values, num_sample)
         else:
             spatial, time = mesh.collection_points(num_sample, use_lhs)
+            if time_map is not None:
+                if not use_lhs:
+                    raise ValueError("Time density applies only to LHS equation sampling")
+                time = time_map(time)
             self.store(spatial, time, {})
+
+    def sampling_signature(self) -> tuple[int | float | str, ...]:
+        if self.sampling_policy is None:
+            return ()
+        signature = self.sampling_policy.signature()
+        if self.time_map is None or self.time_map.power == 0:
+            return signature
+        return (*signature, "time_power", self.time_map.power)
 
     def refresh(self, epoch: int) -> None:
         policy = self.sampling_policy
@@ -42,7 +56,8 @@ class MeshSampler(SamplerBase):
             and epoch % policy.every_epochs == 0
         ):
             points = policy.points(epoch)
-            self.store(points[:, :-1], points[:, -1:], {})
+            time = points[:, -1:]
+            self.store(points[:, :-1], self.time_map(time) if self.time_map else time, {})
             self.last_sampling_epoch = epoch
 
     def _loss_fn(

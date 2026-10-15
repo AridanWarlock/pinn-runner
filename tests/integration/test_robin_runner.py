@@ -17,7 +17,7 @@ from tests.integration.test_runner_files import launch
 @pytest.mark.parametrize("backend", ["eager", "robin_batch", "robin_grouped"])
 @pytest.mark.parametrize("name", ["heat_neumann", "heat_robin", "heat_neumann2d", "heat_robin3d"])
 def test_robin_file_roundtrip(
-    tmp_path: Path, name: str, backend: str, lifting: str = "recursive"
+    tmp_path: Path, name: str, backend: str, lifting: str = "recursive", time_power: float = 0
 ) -> None:
     case = CASES[name]
     config = case.config(os.environ.get("PINN_TEST_DEVICE", "cpu"), 3, 19)
@@ -29,6 +29,8 @@ def test_robin_file_roundtrip(
         batch_size=17,
         collocation={"sampling": "lhs", "points": 17},
     )
+    if time_power:
+        config["training"]["collocation"].update(time_power=time_power, resample_every_epochs=1)
     if case.dimensions > 1:
         config["network"]["hidden_layers"] = [8, 8]
         for axis in config["domain"]["space"].values():
@@ -72,3 +74,14 @@ def test_robin_file_roundtrip(
 @pytest.mark.parametrize("name", ["heat_neumann3d", "heat_mixed3d"])
 def test_expanded_robin_file_roundtrip(tmp_path: Path, name: str) -> None:
     test_robin_file_roundtrip(tmp_path, name, "robin_grouped", "expanded")
+
+
+@pytest.mark.e2e
+@pytest.mark.parametrize("name", ["heat_robin", "heat_mixed3d"])
+def test_time_biased_robin_file_roundtrip(tmp_path: Path, name: str) -> None:
+    test_robin_file_roundtrip(tmp_path, name, "robin_grouped", time_power=1)
+    state = torch.load(tmp_path / "train/checkpoints/final.ckpt", map_location="cpu")
+    fixed = state["refinement_state"]["fixed_batches"]["equations"][1]
+    restored = state["PINNDataModule"]["equations"]
+    assert restored["signature"][-2:] == ("time_power", 1)
+    torch.testing.assert_close(fixed, restored["time"], rtol=0, atol=0)

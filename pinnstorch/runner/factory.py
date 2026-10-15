@@ -21,7 +21,7 @@ from pinnstorch.data import (
 )
 from pinnstorch.data.sampler.sampler_base import SamplerBase
 from pinnstorch.models import FCN, PINNModule
-from pinnstorch.training.sampling import ResampledLHS
+from pinnstorch.training.sampling import ResampledLHS, TimePower
 
 from .coefficients import CoefficientBank
 from .constraint_plan import ConstraintPlan
@@ -133,6 +133,8 @@ class SolverFactory:
         return names, datasets
 
     def _sampler(self, mesh: PointCloud, sampling: Sampling) -> MeshSampler:
+        if sampling is self.settings.validation and sampling.time_power != 0:
+            raise ValueError("Validation time density must remain uniform")
         policy = None
         if sampling.resample_every_epochs:
             if self.settings.training.seed is None or sampling.points is None:
@@ -154,6 +156,11 @@ class SolverFactory:
             use_lhs=sampling.sampling == "lhs",
             num_sample=sampling.points,
             sampling_policy=policy,
+            time_map=(
+                TimePower(self.settings.domain.time.interval, sampling.time_power)
+                if sampling.time_power != 0
+                else None
+            ),
         )
 
     def _model(self, mesh: PointCloud) -> PINNModule:

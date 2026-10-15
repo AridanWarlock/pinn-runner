@@ -150,10 +150,11 @@ class Sampling:
     resample_every_epochs: int = 0
     sampling: Literal["grid", "lhs"] = "grid"
     points: int | None = None
+    time_power: float = 0.0
 
     @classmethod
     def read(cls, reader: Reader) -> Sampling:
-        reader.only("sampling", "points", "resample_every_epochs")
+        reader.only("sampling", "points", "resample_every_epochs", "time_power")
         kind = cast(Literal["grid", "lhs"], reader.choice("sampling", "grid", ("grid", "lhs")))
         points = reader.integer("points", None)
         if (kind == "lhs") != (points is not None):
@@ -161,7 +162,10 @@ class Sampling:
         every = reader.integer("resample_every_epochs", 0, 0)
         if every is None or (every and kind != "lhs"):
             raise ValueError("resampling requires lhs and a nonnegative interval")
-        return cls(every, kind, points)
+        power = reader.number("time_power", 0)
+        if power < 0 or (power != 0 and kind != "lhs"):
+            raise ValueError("time_power requires LHS and a nonnegative power")
+        return cls(every, kind, points, power)
 
 
 @dataclass(frozen=True)

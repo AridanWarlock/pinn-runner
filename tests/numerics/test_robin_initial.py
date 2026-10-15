@@ -242,3 +242,11 @@ def test_expanded_lifting_is_independent_of_projection_and_signature(
     assert isinstance(optimized.constraints.recipe, BoxRobinInitial)
     assert isinstance(optimized.constraints.recipe.lifting, ExpandedRobinLifting)
     assert optimized.constraint_signature == original.constraint_signature
+
+
+def test_benchmark_eager_control_overrides_grouped_runtime_default() -> None:
+    from benchmarks.variants import Constraints, HardExecution, TrainingComposition
+
+    config = CASES["heat_robin3d"].config("cpu", 1, 19)
+    TrainingComposition((Constraints("hard_initial_robin"), HardExecution("eager"))).apply(config)
+    assert TaskSettings.read(config).training.hard_execution == "eager"

@@ -130,7 +130,7 @@ def main() -> None:
     parser.add_argument("--trial", type=Path, required=True)
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
-    parser.add_argument("--batch-sizes", type=int, nargs="+", default=[128, 512])
+    parser.add_argument("--batch-sizes", type=int, nargs="+", default=[128, 512, 2048])
     parser.add_argument("--trace", action="store_true", help="Separate diagnostic profiler pass")
     args = parser.parse_args()
     if args.report.exists() or min(args.batch_sizes) < 1:
@@ -183,7 +183,7 @@ def main() -> None:
         if args.device == "cuda":
             activities.append(torch.profiler.ProfilerActivity.CUDA)
         for kind, pair in models.items():
-            action = actions(*pair, points)["full_objective_backward"]
+            action = actions(*pair, points[:128])["full_objective_backward"]
             with torch.profiler.profile(
                 activities=activities, record_shapes=True, profile_memory=True
             ) as profiler:
@@ -194,6 +194,7 @@ def main() -> None:
             profile.append(
                 {
                     "lifting": kind,
+                    "batch_size": min(128, len(points)),
                     "events": [
                         {
                             "name": event.key,

@@ -147,6 +147,7 @@ def arguments() -> tuple[argparse.Namespace, int]:
     parser.add_argument("--lr-final-ratio", type=float, default=1.0)
     parser.add_argument("--resample-every-epochs", type=int, default=0)
     parser.add_argument("--collocation-points", type=int, help="Override the case point budget")
+    parser.add_argument("--time-power", type=float, default=0.0)
     parser.add_argument(
         "--lbfgs-steps", type=int, default=0, help="Additional full-objective steps"
     )
@@ -181,6 +182,9 @@ def arguments() -> tuple[argparse.Namespace, int]:
             "experiment.loss",
         )
     )
+    from pinnstorch.training.sampling import TimePower
+
+    TimePower((0, 1), args.time_power)
     steps = (
         args.steps
         if args.steps is not None
@@ -210,7 +214,9 @@ def main() -> int:
                 (
                     BoundaryWeight(args.boundary_weight, args.gradient_norm_every),
                     RateDecay(args.lr_final_ratio),
-                    CollocationRefresh(args.resample_every_epochs, args.collocation_points),
+                    CollocationRefresh(
+                        args.resample_every_epochs, args.collocation_points, args.time_power
+                    ),
                     Constraints(args.constraints),
                     HardExecution(args.hard_execution),
                     HardLifting(args.hard_lifting),
