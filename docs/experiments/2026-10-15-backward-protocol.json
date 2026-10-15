@@ -1,0 +1,44 @@
+{
+  "contract": 1,
+  "started_utc": "2026-10-15T17:35:00Z",
+  "training_revision": "f1bf7bb",
+  "device": "Windows RTX 4070 Ti CUDA",
+  "precision": "32-true",
+  "tf32": false,
+  "constraints": "hard_initial_robin",
+  "execution": "robin_grouped",
+  "adam_steps": 2000,
+  "lbfgs_steps": 150,
+  "collocation_points": 2048,
+  "adam_batch_size": 128,
+  "network_layers": [32, 32, 32],
+  "comparison": ["all", "parameters"],
+  "groups": [
+    {"case": "heat_neumann3d", "lifting": "recursive", "seeds": [19, 1234, 4321, 2026, 73]},
+    {"case": "heat_neumann2d", "lifting": "recursive", "seeds": [19, 1234, 4321, 2026, 73]},
+    {"case": "heat_neumann3d", "lifting": "expanded", "seeds": [19, 1234]}
+  ],
+  "order": "all/parameters for even seed-list positions; reverse for odd positions; expanded reverses at seed1234",
+  "predeclared_adoption_limits": {
+    "all_existing_strict_solution_checks_pass": true,
+    "median_candidate_control_training_seconds_at_most": 0.95,
+    "median_candidate_control_allocated_memory_at_most": 1.10,
+    "median_candidate_control_relative_l2_at_most": 1.0,
+    "median_candidate_control_final_relative_l2_at_most": 1.0,
+    "median_candidate_control_mode_relative_l2_at_most": 1.0,
+    "each_pair_candidate_control_error_ratio_at_most": 1.5
+  },
+  "convergence_screening": {
+    "case": "heat_neumann3d",
+    "seeds_initial": [19, 1234],
+    "seeds_extension_if_time_allows": [4321, 2026, 73],
+    "lifting": "recursive",
+    "adam_steps": 2000,
+    "lbfgs_snapshots": [0, 25, 50, 100, 150],
+    "points": 2048,
+    "limits": {"relative_l2": 0.001, "final_relative_l2": 0.002, "pde_rmse": 0.015},
+    "confirmation": "two adjacent passing snapshots; earlier unobserved crossings are possible"
+  },
+  "default_before_results": "all",
+  "limitations": "Quality gates are not relaxed after outcomes. Exact warm fixed-weight gradients are checked separately from cold-call repeatability. Expanded study has only two seeds and does not promote expanded lifting to default. Unsupported mixed precision, MPS and multiple devices are not accepted."
+}

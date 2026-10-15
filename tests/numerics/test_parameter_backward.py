@@ -147,3 +147,51 @@ def test_parameter_backward_config_and_backend_guards(tmp_path: Path) -> None:
         factory = SolverFactory(TaskSettings.read(invalid), load_problem(source), tmp_path)
         with pytest.raises(ValueError, match="Parameter backward requires"):
             factory.build(predicting=False)
+
+
+@pytest.mark.parametrize("lifting", ["recursive", "expanded"])
+def test_directional_weight_derivative_matches_finite_difference(
+    tmp_path: Path, lifting: str
+) -> None:
+    _, stage = build(tmp_path, "heat_mixed3d", "hard_initial_robin", lifting)
+    model = stage.model.double()
+    parameters = list(model.parameters())
+    generator = torch.Generator(device=model.device).manual_seed(73)
+    directions = [
+        torch.randn(p.shape, dtype=p.dtype, device=p.device, generator=generator)
+        for p in parameters
+    ]
+    norm = torch.cat([d.flatten() for d in directions]).norm()
+    directions = [d / norm for d in directions]
+
+    def loss() -> torch.Tensor:
+        batch = {
+            name: (
+                [c.double() for c in spatial],
+                clock.double(),
+                {k: v.double() for k, v in targets.items()},
+            )
+            for name, (spatial, clock, targets) in stage.objective.fresh().items()
+        }
+        return model.model_step(batch)[0]
+
+    derivatives = []
+    for mode in ("all", "parameters"):
+        model.hparams["backward_mode"] = mode
+        model.zero_grad(set_to_none=True)
+        model.backward(loss())
+        derivatives.append(
+            sum((p.grad * d).sum() for p, d in zip(parameters, directions) if p.grad is not None)
+        )
+    epsilon = 1e-5
+    with torch.no_grad():
+        for p, d in zip(parameters, directions):
+            p.add_(d, alpha=epsilon)
+    plus = loss().detach()
+    with torch.no_grad():
+        for p, d in zip(parameters, directions):
+            p.add_(d, alpha=-2 * epsilon)
+    minus = loss().detach()
+    finite_difference = (plus - minus) / (2 * epsilon)
+    for derivative in derivatives:
+        torch.testing.assert_close(derivative, finite_difference, atol=1e-9, rtol=2e-6)
