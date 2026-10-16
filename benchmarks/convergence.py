@@ -22,6 +22,7 @@ from pinnstorch.training.refinement import FixedObjective, LBFGSRefinement
 from .boundary_metrics import boundary_operator_errors
 from .cases import BenchmarkCase
 from .execution import holdout_inputs
+from .fingerprints import objective_fingerprint, tensor_fingerprint
 from .metrics import solution_errors, temporal_errors
 from .performance import prediction_speed
 from .variants import Backward, HardBackground, HardExecution, HardLifting, TrainingComposition
@@ -113,6 +114,7 @@ class SnapshotTraining:
 
     def run(self) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         objects, device = self.objects, self.plan.device
+        initial_fingerprint = tensor_fingerprint(objects.model.state_dict())
         if device == "cuda":
             torch.cuda.reset_peak_memory_stats()
         synchronize(device)
@@ -150,14 +152,17 @@ class SnapshotTraining:
                     * len(stage.objective.batches["equations"][1]),
                 }
             )
+        training_seconds = time.perf_counter() - started
+        peak_allocated = torch.cuda.max_memory_allocated() if device == "cuda" else None
+        peak_reserved = torch.cuda.max_memory_reserved() if device == "cuda" else None
         return rows, {
             "snapshot_seconds": overhead,
-            "training_seconds_with_snapshots": time.perf_counter() - started,
+            "training_seconds_with_snapshots": training_seconds,
+            "initial_state_sha256": initial_fingerprint,
+            "fixed_objective_sha256": objective_fingerprint(stage.objective.batches),
             "adam_steps": objects.trainer.global_step,
-            "peak_allocated_bytes": torch.cuda.max_memory_allocated()
-            if device == "cuda"
-            else None,
-            "peak_reserved_bytes": torch.cuda.max_memory_reserved() if device == "cuda" else None,
+            "peak_allocated_bytes": peak_allocated,
+            "peak_reserved_bytes": peak_reserved,
         }
 
 

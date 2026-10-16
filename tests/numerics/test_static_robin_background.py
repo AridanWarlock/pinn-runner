@@ -189,6 +189,8 @@ def test_static_convergence_keeps_independent_general_evaluator(tmp_path: Path) 
     assert trials[1]["resolved_background"] == "static"
     assert trials[1]["control_prediction_background"] == "general"
     assert trials[1]["control_prediction_execution"] == "eager"
+    assert trials[0]["initial_state_sha256"] == trials[1]["initial_state_sha256"]
+    assert trials[0]["fixed_objective_sha256"] == trials[1]["fixed_objective_sha256"]
     for left, right in zip(trials[0]["snapshots"], trials[1]["snapshots"]):
         assert left["metrics"] == right["metrics"]
         assert left["closures"] == right["closures"]
