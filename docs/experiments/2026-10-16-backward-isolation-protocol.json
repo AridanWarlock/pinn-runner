@@ -1,0 +1,47 @@
+{
+  "contract": 1,
+  "declared_after_observing_initial_seed_19_pair": true,
+  "revision": "e3075759076b9dd4240c5aeae807718af1d592c7",
+  "reason": "All 12 original pairs used separate processes and matched exactly. Initial time-to-quality seed19 pair shared one process and differed slightly after Adam, then more after L-BFGS. Investigate process-lifecycle confounding without changing thresholds. No backend cause is established.",
+  "case": "heat_neumann3d",
+  "seed": 19,
+  "arms": [
+    "all",
+    "parameters"
+  ],
+  "one_new_python_process_per_arm": true,
+  "constraints": "hard_initial_robin",
+  "execution": "robin_grouped",
+  "lifting": "recursive",
+  "adam_steps": 2000,
+  "collocation_points": 2048,
+  "lbfgs_snapshots": [
+    0,
+    25,
+    50,
+    100,
+    150
+  ],
+  "limits": {
+    "relative_l2": 0.001,
+    "final_relative_l2": 0.002,
+    "pde_rmse": 0.015
+  },
+  "comparisons": [
+    "all snapshot metrics and counters",
+    "snapshot weight state values on CPU",
+    "fixed-step training and inference timing",
+    "two adjacent passing snapshots"
+  ],
+  "limitations": "Exploratory diagnostic, not a replacement for original five-seed gates. Exact equality may still depend on backend determinism. Two-arm repeat alone does not identify a specific CUDA cause or estimate within-arm variability.",
+  "original_matrix_revision": "f1bf7bb",
+  "initial_shared_process_observation": {
+    "all_adam_pde_rmse": 0.04302745684981346,
+    "parameters_adam_pde_rmse": 0.04302743449807167,
+    "all_final_relative_l2": 0.0006784957461787397,
+    "parameters_final_relative_l2": 0.0007306262525496858,
+    "all_final_pde_rmse": 0.0122243482619524,
+    "parameters_final_pde_rmse": 0.01252276636660099,
+    "crossing_both": "not_confirmed"
+  }
+}

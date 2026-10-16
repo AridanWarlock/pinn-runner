@@ -1,0 +1,47 @@
+{
+  "contract": 1,
+  "sympy": "1.14.0",
+  "implemented_in_solver": false,
+  "endpoint_jets": [
+    {
+      "endpoint": 0,
+      "first_derivatives": [
+        "0",
+        "0"
+      ],
+      "second_third_derivative_matrix": [
+        [
+          "6",
+          "2"
+        ],
+        [
+          "-12",
+          "-12"
+        ]
+      ],
+      "determinant": "-48"
+    },
+    {
+      "endpoint": 1,
+      "first_derivatives": [
+        "0",
+        "0"
+      ],
+      "second_third_derivative_matrix": [
+        [
+          "-6",
+          "2"
+        ],
+        [
+          "-12",
+          "12"
+        ]
+      ],
+      "determinant": "-48"
+    }
+  ],
+  "general_two_feature_chain_rule_difference": "0",
+  "shifted_scaled_polynomial_chain_rule_difference": "0",
+  "counterexample_V_equals_q_difference": "0",
+  "limitations": "Only endpoint derivative freedom through third order and exact chain rule are proved. No claim of universal approximation or measured optimization/accuracy improvement."
+}
