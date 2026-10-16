@@ -37,6 +37,8 @@ def trial_command(
         arm.lifting,
         "--backward",
         arm.backward,
+        "--hard-background",
+        arm.background,
     ]
     for name, limit in plan.limits.items():
         command.extend(["--" + name.replace("_", "-"), str(limit)])
@@ -72,6 +74,7 @@ def read_trial(
         "backend": arm.execution,
         "lifting": arm.lifting,
         "backward": arm.backward,
+        "background": arm.background,
     }
     if any(trial.get(k) != v for k, v in identity.items()):
         raise ValueError("Child returned a different seed or experiment arm")

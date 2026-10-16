@@ -183,6 +183,11 @@ class SolverFactory:
             hard_execution=settings.training.hard_execution,
             hard_lifting=settings.training.hard_lifting,
             backward_mode=resolve_backward(settings.training, settings.runtime),
+            hard_background=(
+                "static"
+                if getattr(self.constraints.recipe, "static_background", None) is not None
+                else "general"
+            ),
             constraint_signature=self.constraint_signature,
             refinement_settings=asdict(settings.training.refinement),
             optimizer=partial(

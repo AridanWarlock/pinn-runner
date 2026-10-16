@@ -106,6 +106,14 @@ class Backward:
 
 
 @dataclass(frozen=True)
+class HardBackground:
+    mode: str = "general"
+
+    def apply(self, config: dict[str, Any]) -> None:
+        config["training"]["hard_background"] = self.mode
+
+
+@dataclass(frozen=True)
 class TrainingComposition:
     adapters: tuple[TrainingAdapter, ...]
 

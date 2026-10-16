@@ -1,0 +1,29 @@
+{
+  "contract": 1,
+  "registered_utc": "2026-10-16T12:58:00Z",
+  "session_deadline_utc": "2026-10-16T14:52:00Z",
+  "last_new_training_utc": "2026-10-16T14:25:00Z",
+  "cases": ["heat_neumann_polynomial2d", "heat_neumann_polynomial3d"],
+  "seeds": [19, 1234, 4321, 2026, 73],
+  "arms": ["general", "static"],
+  "device": "remote Windows RTX 4070 Ti",
+  "precision": "FP32, TF32 off",
+  "adam_steps": 2000,
+  "lbfgs_steps": 150,
+  "snapshots": [0, 25, 50, 75, 100, 125, 150],
+  "collocation_points": 1024,
+  "constraints": "hard_initial_robin",
+  "hard_execution": "robin_grouped",
+  "hard_lifting": "recursive",
+  "backward": "parameters",
+  "quality_limits": {"relative_l2": 0.05, "max_error": 0.15, "pde_rmse": 0.1, "initial_rmse": 0.05, "boundary_rmse": 0.05},
+  "time_to_quality_limits": {
+    "heat_neumann_polynomial2d": {"relative_l2": 0.001, "final_relative_l2": 0.002, "pde_rmse": 0.005},
+    "heat_neumann_polynomial3d": {"relative_l2": 0.005, "final_relative_l2": 0.01, "pde_rmse": 0.02}
+  },
+  "time_to_quality_definition": "Two adjacent successful saved observations. No interpolation, no teacher/early stopping. All analytic evaluation after every trial finishes all optimizer steps. The 3D manufactured case has no previous full training; its explicitly looser diagnostic limits are registered before any outcome.",
+  "lifecycle": "One fresh Python process per arm/seed, alternating order each seed. One pinned source revision throughout. No concurrent GPU workloads. Training/snapshot/prediction/per-process times and memory recorded separately. Independent eager/general evaluator for quality; actual trained execution/background for prediction timing.",
+  "promotion_gate": "All fixed-quality gates pass on every seed in both cases; paired saved weights/metrics/counters match exactly or any differences investigated before promotion. Median training time improves at least 5 percent in each case; peak allocated memory grows no more than 10 percent. Preserve explicit general fallback and dynamic-callback auto fallback. Do not relax thresholds, omit failures or change precision after outcomes. TTO failures remain failures and do not become successful by rounding.",
+  "initial_default": "general until validation; auto considered only after promotion gate",
+  "baseline_scope": "Original common projection unchanged. No new feature representation, optimizer or library upgrade. boundary_rmse is face temperature error; operator error measured separately."
+}

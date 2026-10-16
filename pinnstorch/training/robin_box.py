@@ -7,6 +7,7 @@ import torch
 
 from pinnstorch.contracts import TensorOutputs
 from pinnstorch.training.dirichlet_lifting import TraceFunction
+from pinnstorch.training.robin_background import InitialOnlyBackground
 from pinnstorch.training.robin_initial import NetworkField
 from pinnstorch.training.robin_lifting import ExpandedRobinLifting
 from pinnstorch.training.robin_projection import IntervalRobinProjection
@@ -74,6 +75,7 @@ class BoxRobinInitial:
     targets: tuple[tuple[TraceFunction, TraceFunction], ...]
     field: str
     lifting: ExpandedRobinLifting | None = None
+    static_background: InitialOnlyBackground | None = None
 
     def bind(self, network: NetworkField) -> "BoundBoxRobinInitial":
         return BoundBoxRobinInitial(self, network)
@@ -104,6 +106,8 @@ class BoxRobinInitial:
         return {self.field: value}
 
     def background(self, spatial: list[torch.Tensor], time: torch.Tensor) -> TensorOutputs:
+        if self.static_background is not None:
+            return self.static_background(spatial, time)
         initial_time = torch.full_like(time, self.time_interval[0])
         initial = self.initial(spatial, initial_time)
         difference = (

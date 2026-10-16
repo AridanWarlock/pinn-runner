@@ -8,6 +8,7 @@ import torch
 
 from pinnstorch.contracts import TensorOutputs
 from pinnstorch.training.dirichlet_lifting import TraceFunction
+from pinnstorch.training.robin_background import InitialOnlyBackground
 from pinnstorch.training.robin_projection import IntervalRobinProjection
 
 NetworkField = Callable[[list[torch.Tensor], torch.Tensor], TensorOutputs]
@@ -20,11 +21,14 @@ class IntervalRobinInitial:
     initial: NetworkField
     targets: tuple[TraceFunction, TraceFunction]
     field: str
+    static_background: InitialOnlyBackground | None = None
 
     def bind(self, network: NetworkField) -> "BoundRobinInitial":
         return BoundRobinInitial(self, network)
 
     def background(self, x: torch.Tensor, time: torch.Tensor) -> TensorOutputs:
+        if self.static_background is not None:
+            return self.static_background([x], time)
         initial_time = torch.full_like(time, self.time_interval[0])
         result = self.initial([x], initial_time)
         basis = self.projection.basis(x)

@@ -5,6 +5,7 @@ from functools import partial
 import torch
 
 from pinnstorch.api import Problem
+from pinnstorch.training.robin_background import InitialOnlyBackground
 from pinnstorch.training.robin_batch import BatchedBoxRobinProjection
 from pinnstorch.training.robin_box import BoxRobinInitial, BoxRobinProjection
 from pinnstorch.training.robin_grouped import GroupedBoxRobinProjection
@@ -59,6 +60,7 @@ def compile_robin(
         adapter.initial_tensors,
         targets,
         problem.fields[0],
+        static_background=compile_background(settings, adapter),
     )
     time = torch.tensor([[settings.domain.time.interval[0]]], dtype=torch.float64)
     x = torch.zeros_like(time)
@@ -122,6 +124,19 @@ def compile_box(settings: TaskSettings, adapter: ProblemAdapter) -> BoxRobinInit
             if settings.training.hard_lifting == "expanded"
             else None
         ),
+        static_background=compile_background(settings, adapter),
     )
     validate_box_robin(settings, recipe)
     return recipe
+
+
+def compile_background(
+    settings: TaskSettings, adapter: ProblemAdapter
+) -> InitialOnlyBackground | None:
+    mode = settings.training.hard_background
+    constant = all(boundary.value_function is None for boundary in settings.boundaries)
+    if mode == "static" and not constant:
+        raise ValueError("Static Robin background requires explicit numeric boundary values")
+    if mode == "static" or (mode == "auto" and constant):
+        return InitialOnlyBackground(adapter.initial_tensors, settings.domain.time.interval[0])
+    return None

@@ -23,7 +23,7 @@ from .cases import BenchmarkCase
 from .execution import holdout_inputs
 from .metrics import solution_errors, temporal_errors
 from .performance import prediction_speed
-from .variants import Backward, HardExecution, HardLifting, TrainingComposition
+from .variants import Backward, HardBackground, HardExecution, HardLifting, TrainingComposition
 
 
 @dataclass(frozen=True)
@@ -31,14 +31,21 @@ class ConvergenceArm:
     execution: str = "eager"
     lifting: str = "recursive"
     backward: str = "all"
+    background: str = "general"
 
     @property
     def name(self) -> str:
-        return f"{self.execution}-{self.lifting}-{self.backward}"
+        base = f"{self.execution}-{self.lifting}-{self.backward}"
+        return base if self.background == "general" else f"{base}-{self.background}"
 
     def apply(self, config: dict[str, Any]) -> None:
         TrainingComposition(
-            (HardExecution(self.execution), HardLifting(self.lifting), Backward(self.backward))
+            (
+                HardExecution(self.execution),
+                HardLifting(self.lifting),
+                Backward(self.backward),
+                HardBackground(self.background),
+            )
         ).apply(config)
 
 
@@ -229,7 +236,7 @@ def convergence_trial(
     evaluation_started = time.perf_counter()
     # Separate evaluator: force physical-autograd control, preserve the actual lifting.
     evaluator_config = plan.config(
-        seed, ConvergenceArm("eager", arm.lifting, "all"), evaluating=True
+        seed, ConvergenceArm("eager", arm.lifting, "all", "general"), evaluating=True
     )
     evaluator = SnapshotEvaluation(
         plan,
@@ -260,9 +267,12 @@ def convergence_trial(
         "backend": arm.execution,
         "lifting": arm.lifting,
         "backward": arm.backward,
+        "background": arm.background,
+        "resolved_background": objects.model.hparams["hard_background"],
         "resolved_backward": objects.model.hparams["backward_mode"],
         "prediction_execution": objects.model.hparams["hard_execution"],
         "control_prediction_execution": evaluator.model.hparams["hard_execution"],
+        "control_prediction_background": evaluator.model.hparams["hard_background"],
         "control_prediction_performance": control_prediction,
         "seed": seed,
         "snapshots": rows,

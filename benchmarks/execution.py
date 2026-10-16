@@ -227,6 +227,7 @@ def finish_trial(
         "hard_execution": state.get("hyper_parameters", {}).get("hard_execution", "eager"),
         "hard_lifting": state.get("hyper_parameters", {}).get("hard_lifting", "recursive"),
         "backward_mode": state.get("hyper_parameters", {}).get("backward_mode", "all"),
+        "hard_background": state.get("hyper_parameters", {}).get("hard_background", "general"),
         "pde_validation_backend": "physical_autograd",
         "refinement_recipe": state.get("hyper_parameters", {}).get("refinement_settings")
         or {"steps": 0},

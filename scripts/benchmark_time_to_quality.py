@@ -65,6 +65,9 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     parser.add_argument(
         "--backward", choices=("auto", "all", "parameters"), nargs="+", default=["all"]
     )
+    parser.add_argument(
+        "--hard-background", choices=("general", "static", "auto"), nargs="+", default=["general"]
+    )
     parser.add_argument("--relative-l2", type=float, default=LIMITS["relative_l2"])
     parser.add_argument("--final-relative-l2", type=float, default=LIMITS["final_relative_l2"])
     parser.add_argument("--pde-rmse", type=float, default=LIMITS["pde_rmse"])
@@ -73,7 +76,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
         parser.error("Unique nonnegative seeds required")
     if any(
         len(set(values)) != len(values)
-        for values in (args.hard_execution, args.hard_lifting, args.backward)
+        for values in (args.hard_execution, args.hard_lifting, args.backward, args.hard_background)
     ):
         parser.error("Duplicate experiment arms are not allowed")
     limits = {
@@ -86,7 +89,9 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     )
     arms = [
         ConvergenceArm(*values)
-        for values in itertools.product(args.hard_execution, args.hard_lifting, args.backward)
+        for values in itertools.product(
+            args.hard_execution, args.hard_lifting, args.backward, args.hard_background
+        )
     ]
     # Validate combinations before creating files or allocating CUDA models.
     for arm in arms:

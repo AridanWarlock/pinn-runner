@@ -263,6 +263,7 @@ class Training:
     hard_execution: str = "eager"
     hard_lifting: str = "recursive"
     backward: str = "auto"
+    hard_background: str = "general"
 
     @classmethod
     def read(cls, reader: Reader) -> Training:
@@ -281,6 +282,7 @@ class Training:
             "hard_execution",
             "hard_lifting",
             "backward",
+            "hard_background",
         )
         if (
             ScheduleSettings.read(reader.section("schedule")).kind != "constant"
@@ -324,6 +326,11 @@ class Training:
         hard_lifting = reader.choice("hard_lifting", "recursive", ("recursive", "expanded"))
         if hard_lifting != "recursive" and constraints != "hard_initial_robin":
             raise ValueError("training.hard_lifting expanded requires hard_initial_robin")
+        hard_background = reader.choice(
+            "hard_background", "general", ("general", "static", "auto")
+        )
+        if hard_background != "general" and constraints != "hard_initial_robin":
+            raise ValueError("training.hard_background requires hard_initial_robin")
         return cls(
             epochs,
             reader.integer("steps", None),
@@ -339,6 +346,7 @@ class Training:
             hard_execution,
             hard_lifting,
             reader.choice("backward", "auto", ("auto", "all", "parameters")),
+            hard_background,
         )
 
 

@@ -28,6 +28,7 @@ from benchmarks.variants import (  # noqa: E402
     BoundaryWeight,
     CollocationRefresh,
     Constraints,
+    HardBackground,
     HardExecution,
     HardLifting,
     RateDecay,
@@ -164,6 +165,9 @@ def arguments() -> tuple[argparse.Namespace, int]:
     )
     parser.add_argument("--hard-lifting", choices=("recursive", "expanded"), default="recursive")
     parser.add_argument("--backward", choices=("auto", "all", "parameters"), default="all")
+    parser.add_argument(
+        "--hard-background", choices=("general", "static", "auto"), default="general"
+    )
     args = parser.parse_args()
     if (
         args.lbfgs_steps < 0
@@ -223,6 +227,7 @@ def main() -> int:
                     HardExecution(args.hard_execution),
                     HardLifting(args.hard_lifting),
                     Backward(args.backward),
+                    HardBackground(args.hard_background),
                     RefinementSteps(args.lbfgs_steps),
                 )
             ),
