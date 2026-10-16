@@ -327,7 +327,9 @@ class Training:
         if hard_lifting != "recursive" and constraints != "hard_initial_robin":
             raise ValueError("training.hard_lifting expanded requires hard_initial_robin")
         hard_background = reader.choice(
-            "hard_background", "general", ("general", "static", "auto")
+            "hard_background",
+            "auto" if constraints == "hard_initial_robin" else "general",
+            ("general", "static", "auto"),
         )
         if hard_background != "general" and constraints != "hard_initial_robin":
             raise ValueError("training.hard_background requires hard_initial_robin")

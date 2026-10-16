@@ -170,6 +170,33 @@ def test_background_rejected_without_robin_constraints(constraints: str) -> None
         TaskSettings.read(config)
 
 
+@pytest.mark.parametrize(
+    ("case_name", "constraints", "expected"),
+    [
+        ("heat_neumann_polynomial1d", "hard_initial_robin", "static"),
+        ("heat_neumann_polynomial2d", "hard_initial_robin", "static"),
+        ("heat_neumann_polynomial3d", "hard_initial_robin", "static"),
+        ("heat_neumann2d", "hard_initial_robin", "general"),
+        ("heat2d", "soft", "general"),
+        ("heat2d", "hard_initial_dirichlet", "general"),
+    ],
+)
+def test_default_background_selects_only_eligible_robin_data(
+    case_name: str, constraints: str, expected: str, tmp_path: Path
+) -> None:
+    case = CASES[case_name]
+    config = case.config("cpu", 2, 19)
+    config["training"]["constraints"] = constraints
+    assert "hard_background" not in config["training"]
+    settings = TaskSettings.read(config)
+    problem = load_problem(case.source)
+    factory = SolverFactory(settings, problem, tmp_path, case.source.parent)
+    assert factory.build(True).model.hparams["hard_background"] == expected
+    config["training"]["hard_background"] = "general"
+    control = SolverFactory(TaskSettings.read(config), problem, tmp_path, case.source.parent)
+    assert control.build(True).model.hparams["hard_background"] == "general"
+
+
 def test_static_convergence_keeps_independent_general_evaluator(tmp_path: Path) -> None:
     from benchmarks.convergence import ConvergenceArm, ConvergencePlan, convergence_trial
     from benchmarks.policies import CartesianGrid, TrainingBudget
