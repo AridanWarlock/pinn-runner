@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +19,7 @@ from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import Reader, Refinement, TaskSettings
 from pinnstorch.training.refinement import FixedObjective, LBFGSRefinement
 
+from .boundary_metrics import boundary_operator_errors
 from .cases import BenchmarkCase
 from .execution import holdout_inputs
 from .metrics import solution_errors, temporal_errors
@@ -213,7 +214,13 @@ class SnapshotEvaluation:
         if not all(math.isfinite(v) for v in metrics.values()):
             raise ValueError("Nonfinite snapshot metric")
         return metrics, {
-            "temporal": temporal_errors(self.plan.case, self.axes, self.grid_time, values)
+            "temporal": temporal_errors(self.plan.case, self.axes, self.grid_time, values),
+            "boundary_operators": [
+                asdict(row)
+                for row in boundary_operator_errors(
+                    self.factory.settings, self.factory.adapter, self.model, self.plan.device
+                )
+            ],
         }
 
     def performance(self, model: PINNModule | None = None) -> dict[str, int | float]:

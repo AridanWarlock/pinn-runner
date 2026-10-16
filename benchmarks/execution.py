@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +24,7 @@ from pinnstorch.runner.factory import SolverFactory
 from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import TaskSettings
 
+from .boundary_metrics import BoundaryOperatorError, boundary_operator_errors
 from .cases import Array, BenchmarkCase
 from .diagnostics import residual_time_bins, worst_time_error
 from .metrics import quality_failures, solution_errors, temporal_errors
@@ -79,6 +80,7 @@ class CheckpointEvaluation:
     residual_rmse: float
     residual_bins: list[dict[str, float | int | None]]
     performance: dict[str, float | int]
+    boundary_operators: tuple[BoundaryOperatorError, ...] = ()
 
 
 def evaluate_checkpoint(
@@ -119,6 +121,7 @@ def evaluate_checkpoint(
         error,
         bins,
         prediction_speed(model, features, clock, settings.training.batch_size or len(clock)),
+        boundary_operator_errors(settings, factory.adapter, model, device),
     )
 
 
@@ -245,6 +248,8 @@ def finish_trial(
         "diagnostics": {
             **worst_time_error(temporal),
             "pde_time_bins": evaluation.residual_bins,
+            "boundary_operators": [asdict(row) for row in evaluation.boundary_operators],
+            "boundary_temperature_metric": "boundary_temperature_rmse",
             "holdout_seed": 20261013,
             "holdout_points": 2048,
             "version": 1,

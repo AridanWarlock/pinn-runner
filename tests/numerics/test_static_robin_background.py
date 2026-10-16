@@ -65,7 +65,12 @@ def recipe(dimensions: int, condition: str, execution: str) -> dict[str, Any]:
 @pytest.mark.parametrize("execution", ["eager", "robin_grouped"])
 @pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
 def test_static_background_preserves_field_derivatives_and_gradients(
-    dimensions: int, condition: str, execution: str, dtype: torch.dtype, tmp_path: Path
+    dimensions: int,
+    condition: str,
+    execution: str,
+    dtype: torch.dtype,
+    tmp_path: Path,
+    lifting: str = "recursive",
 ) -> None:
     case = CASES[f"heat_neumann_polynomial{dimensions}d"]
     initial = {"zero": initial_polynomial, "flux": initial_affine, "robin": initial_constant}[
@@ -73,6 +78,7 @@ def test_static_background_preserves_field_derivatives_and_gradients(
     ]
     problem = replace(load_problem(case.source), initial=initial)
     config = recipe(dimensions, condition, execution)
+    config["training"]["hard_lifting"] = lifting
     positions = torch.tensor(
         [
             *product((0.0, 1.0), repeat=dimensions),
@@ -186,3 +192,64 @@ def test_static_convergence_keeps_independent_general_evaluator(tmp_path: Path) 
     for left, right in zip(trials[0]["snapshots"], trials[1]["snapshots"]):
         assert left["metrics"] == right["metrics"]
         assert left["closures"] == right["closures"]
+
+
+@pytest.mark.parametrize("dimensions", [1, 2, 3])
+def test_static_background_with_expanded_lifting(dimensions: int, tmp_path: Path) -> None:
+    test_static_background_preserves_field_derivatives_and_gradients(
+        dimensions, "zero", "robin_grouped", torch.float64, tmp_path, "expanded"
+    )
+
+
+@pytest.mark.parametrize("dimensions", [2, 3])
+def test_static_background_directional_weight_derivative(dimensions: int, tmp_path: Path) -> None:
+    case = CASES[f"heat_neumann_polynomial{dimensions}d"]
+    base = case.config("cpu", 2, 19)
+    base["network"]["hidden_layers"] = [8, 8]
+    base["training"].update(constraints="hard_initial_robin", hard_execution="robin_grouped")
+    problem = load_problem(case.source)
+    generator = torch.Generator().manual_seed(73)
+    points = torch.rand((13, dimensions + 1), dtype=torch.float64, generator=generator)
+    points[:, -1] *= 0.5
+    state = None
+    measured = []
+    for background in ("general", "static"):
+        base["training"]["hard_background"] = background
+        factory = SolverFactory(TaskSettings.read(base), problem, tmp_path, case.source.parent)
+        model = factory.build(True).model.double()
+        if state is None:
+            state = {k: v.clone() for k, v in model.state_dict().items()}
+        else:
+            model.load_state_dict(state)
+        parameters = tuple(model.parameters())
+        direction_generator = torch.Generator().manual_seed(73)
+        directions = [
+            torch.randn(p.shape, dtype=p.dtype, generator=direction_generator) for p in parameters
+        ]
+        norm = torch.cat([d.flatten() for d in directions]).norm()
+        directions = [d / norm for d in directions]
+
+        def loss() -> torch.Tensor:
+            columns = [
+                points[:, i : i + 1].detach().requires_grad_() for i in range(dimensions + 1)
+            ]
+            output = dict(model(columns[:-1], columns[-1]))
+            return factory.adapter.residuals(output, *columns)["heat"].square().mean()
+
+        value = loss()
+        grads = torch.autograd.grad(value, parameters)
+        derivative = sum((g * d).sum() for g, d in zip(grads, directions))
+        epsilon = 1e-5
+        with torch.no_grad():
+            for p, d in zip(parameters, directions):
+                p.add_(d, alpha=epsilon)
+        plus = loss().detach()
+        with torch.no_grad():
+            for p, d in zip(parameters, directions):
+                p.add_(d, alpha=-2 * epsilon)
+        minus = loss().detach()
+        finite_difference = (plus - minus) / (2 * epsilon)
+        torch.testing.assert_close(derivative, finite_difference, atol=1e-9, rtol=2e-6)
+        measured.append((value.detach(), derivative.detach()))
+    for before, after in zip(measured[0], measured[1]):
+        torch.testing.assert_close(before, after, atol=1e-12, rtol=1e-12)

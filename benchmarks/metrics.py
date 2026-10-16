@@ -28,6 +28,7 @@ def solution_errors(
         "max_error": float(np.max(np.abs(error))),
         "initial_rmse": float(np.sqrt(np.mean(error[:, 0] ** 2))),
         "boundary_rmse": float(np.sqrt(np.mean(error[boundary] ** 2))),
+        "boundary_temperature_rmse": float(np.sqrt(np.mean(error[boundary] ** 2))),
         "final_relative_l2": float(np.linalg.norm(error[:, -1]) / np.linalg.norm(expected[:, -1])),
     }
 
@@ -77,6 +78,9 @@ def temporal_errors(
                 "rmse": float(np.sqrt(np.mean(error[:, index] ** 2))),
                 "max_error": float(np.max(np.abs(error[:, index]))),
                 "boundary_rmse": float(np.sqrt(np.mean(error[boundary, index] ** 2)))
+                if boundary.any()
+                else None,
+                "boundary_temperature_rmse": float(np.sqrt(np.mean(error[boundary, index] ** 2)))
                 if boundary.any()
                 else None,
                 "interior_rmse": float(np.sqrt(np.mean(error[~boundary, index] ** 2)))
