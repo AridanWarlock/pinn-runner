@@ -1,0 +1,20 @@
+{
+  "contract": 1,
+  "registered_utc": "2026-10-16T04:42:00Z",
+  "case": "heat_neumann_polynomial2d",
+  "seeds": [19, 1234],
+  "source_commit": "087f641",
+  "device": "remote Windows CUDA RTX 4070 Ti",
+  "precision": "FP32, TF32 disabled",
+  "adam_steps": 2000,
+  "lbfgs_steps": 150,
+  "collocation_points": 1024,
+  "constraints": "hard_initial_robin",
+  "hard_execution": "robin_grouped",
+  "hard_lifting": "recursive",
+  "backward": "parameters",
+  "quality_limits": {"relative_l2": 0.05, "max_error": 0.15, "pde_rmse": 0.1, "initial_rmse": 0.05, "boundary_rmse": 0.05},
+  "purpose": "Baseline of the existing general projection on a smooth manufactured Neumann problem with nonzero third boundary derivatives. No cosine or polynomial feature adapter implemented; no superiority claim.",
+  "lifecycle": "One benchmark trial per independent CLI process; training and prediction use the public file runner. Begin only after the five-seed convergence queue; no GPU overlap. Do not start a new trial after 05:43 UTC.",
+  "outcome_policy": "Publish both outcomes and timings, including failures. Do not tune budget, thresholds or source after observing results. No analytical teacher or early stopping."
+}
