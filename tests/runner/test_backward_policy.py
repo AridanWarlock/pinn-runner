@@ -21,15 +21,20 @@ from pinnstorch.runner.settings import TaskSettings
         ("hard_initial_dirichlet", {"device": "cuda"}, "all"),
     ],
 )
-def test_explicit_auto_resolves_supported_scope(
+def test_default_and_explicit_auto_resolve_supported_scope(
     constraints: str, runtime: dict[str, Any], expected: str
 ) -> None:
     config = CASES["heat_neumann2d"].config("cpu", 3, 19)
-    config["training"].update(backward="auto", constraints=constraints)
+    config["training"]["constraints"] = constraints
     config["runtime"].update(runtime)
-    settings = TaskSettings.read(config)
-    assert settings.training.backward == "auto"
-    assert resolve_backward(settings.training, settings.runtime) == expected
+    for requested in (None, "auto"):
+        if requested is None:
+            config["training"].pop("backward", None)
+        else:
+            config["training"]["backward"] = requested
+        settings = TaskSettings.read(config)
+        assert settings.training.backward == "auto"
+        assert resolve_backward(settings.training, settings.runtime) == expected
     config["training"]["backward"] = "all"
     settings = TaskSettings.read(config)
     assert resolve_backward(settings.training, settings.runtime) == "all"

@@ -22,7 +22,7 @@ def test_robin_file_roundtrip(
     backend: str,
     lifting: str = "recursive",
     time_power: float = 0,
-    backward: str = "all",
+    backward: str | None = "all",
 ) -> None:
     case = CASES[name]
     config = case.config(os.environ.get("PINN_TEST_DEVICE", "cpu"), 3, 19)
@@ -30,11 +30,14 @@ def test_robin_file_roundtrip(
         constraints="hard_initial_robin",
         hard_execution=backend,
         hard_lifting=lifting,
-        backward=backward,
         refinement={"steps": 2},
         batch_size=17,
         collocation={"sampling": "lhs", "points": 17},
     )
+    if backward is not None:
+        config["training"]["backward"] = backward
+    else:
+        config["training"].pop("backward", None)
     if time_power:
         config["training"]["collocation"].update(time_power=time_power, resample_every_epochs=1)
     if case.dimensions > 1:
@@ -57,13 +60,15 @@ def test_robin_file_roundtrip(
             assert state["hyper_parameters"]["hard_execution"] == backend
             assert state["hyper_parameters"]["hard_lifting"] == lifting
             assert state["hyper_parameters"]["backward_mode"] == (
-                "parameters" if backward == "auto" else backward
+                "parameters" if backward in (None, "auto") else backward
             )
             assert state["refinement_state"]["device"].split(":")[0] == config["runtime"]["device"]
     config["boundaries"][0]["weight"] = 2
     config["training"]["hard_execution"] = "robin_batch" if backend == "eager" else "eager"
     config["training"]["hard_lifting"] = "expanded" if lifting == "recursive" else "recursive"
-    config["training"]["backward"] = "all" if backward in ("parameters", "auto") else "parameters"
+    config["training"]["backward"] = (
+        "all" if backward in (None, "parameters", "auto") else "parameters"
+    )
     (tmp_path / "config.yaml").write_text(yaml.safe_dump(config))
     result = launch(
         tmp_path,
@@ -104,5 +109,6 @@ def test_parameter_backward_file_roundtrip(tmp_path: Path, name: str) -> None:
 
 
 @pytest.mark.e2e
-def test_auto_backward_file_roundtrip(tmp_path: Path) -> None:
-    test_robin_file_roundtrip(tmp_path, "heat_neumann2d", "robin_grouped", backward="auto")
+@pytest.mark.parametrize("backward", [None, "auto"])
+def test_auto_backward_file_roundtrip(tmp_path: Path, backward: str | None) -> None:
+    test_robin_file_roundtrip(tmp_path, "heat_neumann2d", "robin_grouped", backward=backward)

@@ -262,7 +262,7 @@ class Training:
     refinement: Refinement = Refinement()
     hard_execution: str = "eager"
     hard_lifting: str = "recursive"
-    backward: str = "all"
+    backward: str = "auto"
 
     @classmethod
     def read(cls, reader: Reader) -> Training:
@@ -338,7 +338,7 @@ class Training:
             refinement,
             hard_execution,
             hard_lifting,
-            reader.choice("backward", "all", ("auto", "all", "parameters")),
+            reader.choice("backward", "auto", ("auto", "all", "parameters")),
         )
 
 

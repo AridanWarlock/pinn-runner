@@ -137,7 +137,7 @@ def test_frozen_parameters_are_excluded_and_explicit_targets_are_respected(tmp_p
 def test_parameter_backward_config_and_backend_guards(tmp_path: Path) -> None:
     case = CASES["heat2d"]
     config = case.config("cpu", 3, 19)
-    assert TaskSettings.read(config).training.backward == "all"
+    assert TaskSettings.read(config).training.backward == "auto"
     config["training"]["backward"] = "invalid"
     with pytest.raises(ValueError, match="backward"):
         TaskSettings.read(config)
