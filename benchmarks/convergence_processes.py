@@ -1,0 +1,132 @@
+"""Isolate each numerical trial without initializing CUDA in the coordinator."""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+from .convergence import ConvergenceArm, ConvergencePlan
+
+
+def trial_command(
+    script: Path, plan: ConvergencePlan, arm: ConvergenceArm, seed: int, output: Path
+) -> list[str]:
+    command = [
+        sys.executable,
+        str(script),
+        "--shared-process",
+        "--output",
+        str(output),
+        "--case",
+        plan.case.name,
+        "--seeds",
+        str(seed),
+        "--steps",
+        str(plan.steps),
+        "--snapshots",
+        *(str(step) for step in plan.snapshots),
+        "--constraints",
+        plan.constraints,
+        "--hard-execution",
+        arm.execution,
+        "--hard-lifting",
+        arm.lifting,
+        "--backward",
+        arm.backward,
+    ]
+    for name, limit in plan.limits.items():
+        command.extend(["--" + name.replace("_", "-"), str(limit)])
+    if plan.points is not None:
+        command.extend(["--points", str(plan.points)])
+    return command
+
+
+def read_trial(
+    directory: Path, plan: ConvergencePlan, arm: ConvergenceArm, seed: int
+) -> dict[str, Any]:
+    report = json.loads((directory / "report.json").read_text(encoding="utf-8"))
+    expected = {
+        "contract": 3,
+        "case": plan.case.name,
+        "limits": plan.limits,
+        "adam_steps": plan.steps,
+        "lbfgs_snapshots": list(plan.snapshots),
+        "constraints": plan.constraints,
+        "points_override": plan.points,
+        "execution_lifecycle": "single_trial",
+        "status": "completed",
+    }
+    if not isinstance(report, dict) or any(report.get(k) != v for k, v in expected.items()):
+        raise ValueError("Child report does not match the requested convergence protocol")
+    trials = report.get("trials")
+    if not isinstance(trials, list) or len(trials) != 1 or not isinstance(trials[0], dict):
+        raise ValueError("Each child must return exactly one trial")
+    trial = trials[0]
+    identity = {
+        "case": plan.case.name,
+        "seed": seed,
+        "backend": arm.execution,
+        "lifting": arm.lifting,
+        "backward": arm.backward,
+    }
+    if any(trial.get(k) != v for k, v in identity.items()):
+        raise ValueError("Child returned a different seed or experiment arm")
+    if not isinstance(report.get("environment"), dict) or not report["environment"].get(
+        "revision"
+    ):
+        raise ValueError("Child report requires a recorded source environment")
+    return report
+
+
+def write_report(output: Path, report: dict[str, Any]) -> None:
+    temporary = output / "report.json.tmp"
+    temporary.write_text(json.dumps(report, indent=2, allow_nan=False), encoding="utf-8")
+    temporary.replace(output / "report.json")
+
+
+def run_isolated(
+    plan: ConvergencePlan,
+    arms: list[ConvergenceArm],
+    seeds: list[int],
+    output: Path,
+    script: Path,
+) -> dict[str, Any]:
+    if not arms or not seeds:
+        raise ValueError("At least one arm and seed required")
+    output.mkdir(parents=True, exist_ok=False)
+    started = time.perf_counter()
+    combined: dict[str, Any] | None = None
+    for index, seed in enumerate(seeds):
+        for arm in arms if index % 2 == 0 else list(reversed(arms)):
+            child = output / "processes" / f"{arm.name}-{seed}"
+            command = trial_command(script, plan, arm, seed, child)
+            process_started = time.perf_counter()
+            subprocess.run(command, cwd=script.parent.parent, check=True)
+            process_seconds = time.perf_counter() - process_started
+            report = read_trial(child, plan, arm, seed)
+            if combined is None:
+                combined = {
+                    **report,
+                    "execution_lifecycle": "isolated_trials",
+                    "status": "running",
+                    "trials": [],
+                }
+            elif report["environment"] != combined["environment"]:
+                raise ValueError(
+                    "Child source revision or runtime environment changed during study"
+                )
+            trial = dict(report["trials"][0])
+            trial.update(
+                process_seconds=process_seconds, process_report=str(child / "report.json")
+            )
+            combined["trials"].append(trial)
+            combined["study_seconds"] = time.perf_counter() - started
+            write_report(output, combined)
+    assert combined is not None
+    combined["status"] = "completed"
+    write_report(output, combined)
+    return combined

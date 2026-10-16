@@ -12,6 +12,7 @@ import numpy as np
 import torch
 import yaml
 
+from pinnstorch.models.pinn_module import PINNModule
 from pinnstorch.runner.checkpoint_io import load_checkpoint
 from pinnstorch.runner.factory import ExecutionObjects, SolverFactory
 from pinnstorch.runner.problem import load_problem
@@ -208,8 +209,9 @@ class SnapshotEvaluation:
             "temporal": temporal_errors(self.plan.case, self.axes, self.grid_time, values)
         }
 
-    def performance(self) -> dict[str, int | float]:
-        return prediction_speed(self.model, self.features, self.clock, 2048)
+    def performance(self, model: PINNModule | None = None) -> dict[str, int | float]:
+        predictor = self.model if model is None else model
+        return prediction_speed(predictor, self.features, self.clock, 2048)
 
 
 def convergence_trial(
@@ -245,7 +247,9 @@ def convergence_trial(
             **diagnostics,
             passed=all(metrics[name] <= limit for name, limit in plan.limits.items()),
         )
-    performance.update(evaluator.performance())
+    # Quality uses the independent control; deployment timing uses the trained executor.
+    performance.update(evaluator.performance(objects.model.eval()))
+    control_prediction = evaluator.performance()
     performance.update(
         setup_seconds=setup_seconds,
         evaluation_seconds=time.perf_counter() - evaluation_started,
@@ -257,6 +261,9 @@ def convergence_trial(
         "lifting": arm.lifting,
         "backward": arm.backward,
         "resolved_backward": objects.model.hparams["backward_mode"],
+        "prediction_execution": objects.model.hparams["hard_execution"],
+        "control_prediction_execution": evaluator.model.hparams["hard_execution"],
+        "control_prediction_performance": control_prediction,
         "seed": seed,
         "snapshots": rows,
         "crossing": crossing(rows),

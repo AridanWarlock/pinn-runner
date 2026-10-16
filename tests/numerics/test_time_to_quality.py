@@ -59,6 +59,21 @@ def test_generic_robin_snapshots_preserve_training_and_evaluate_afterward(
     completed = False
     original_run = SnapshotTraining.run
     original_reference = type(case.base).reference
+    import benchmarks.convergence as convergence
+    from benchmarks.performance import Predictor
+    from pinnstorch.models.pinn_module import PINNModule
+
+    prediction_executors: list[str] = []
+    original_prediction_speed = convergence.prediction_speed
+
+    def prediction_spy(
+        model: Predictor, spatial: list[Any], times: Any, batch_size: int
+    ) -> dict[str, int | float]:
+        assert isinstance(model, PINNModule)
+        prediction_executors.append(model.hparams["hard_execution"])
+        return original_prediction_speed(model, spatial, times, batch_size)
+
+    monkeypatch.setattr(convergence, "prediction_speed", prediction_spy)
 
     def guarded_run(self: SnapshotTraining) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         nonlocal completed
@@ -83,6 +98,9 @@ def test_generic_robin_snapshots_preserve_training_and_evaluate_afterward(
     for result in results:
         assert result["adam_steps"] == 2
         assert result["prediction_points"] == 27
+        assert result["prediction_execution"] == "robin_grouped"
+        assert result["control_prediction_execution"] == "eager"
+        assert result["control_prediction_performance"]["prediction_points"] == 27
         assert result["snapshot_seconds"] >= 0
         rows = result["snapshots"]
         assert [r["lb_steps"] for r in rows] == [0, 1, 2]
@@ -94,6 +112,7 @@ def test_generic_robin_snapshots_preserve_training_and_evaluate_afterward(
         assert a["metrics"] == b["metrics"]
         assert a["closures"] == b["closures"]
         assert a["lbfgs_residual_points"] == b["lbfgs_residual_points"]
+    assert prediction_executors == ["robin_grouped", "eager"] * 2
 
 
 def test_convergence_plan_rejects_invalid_budgets() -> None:

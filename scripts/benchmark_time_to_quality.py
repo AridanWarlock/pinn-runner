@@ -22,6 +22,7 @@ from benchmarks.convergence import (  # noqa: E402
     convergence_trial,
     crossing,
 )
+from benchmarks.convergence_processes import run_isolated, write_report  # noqa: E402
 from pinnstorch.runner.settings import TaskSettings  # noqa: E402
 from scripts.benchmark_solutions import environment  # noqa: E402
 
@@ -33,6 +34,11 @@ LIMITS = {"relative_l2": 0.001, "final_relative_l2": 0.002, "pde_rmse": 0.005}
 def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceArm]]:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--shared-process",
+        action="store_true",
+        help="Diagnostic only: reuse this process for all trials instead of isolating each trial",
+    )
     parser.add_argument(
         "--case",
         choices=tuple(name for name in CASES if name.startswith("heat")),
@@ -90,6 +96,9 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
 
 def main() -> None:
     args, plan, arms = arguments()
+    if not args.shared_process:
+        run_isolated(plan, arms, args.seeds, args.output.resolve(), Path(__file__).resolve())
+        return
     if not torch.cuda.is_available():
         raise RuntimeError("This benchmark requires the remote CUDA machine")
     torch.backends.cuda.matmul.allow_tf32 = False
@@ -97,7 +106,11 @@ def main() -> None:
     torch.set_float32_matmul_precision("highest")
     args.output.mkdir(parents=True, exist_ok=False)
     report: dict[str, Any] = {
-        "contract": 2,
+        "contract": 3,
+        "status": "running",
+        "execution_lifecycle": "single_trial"
+        if len(args.seeds) * len(arms) == 1
+        else "shared_process",
         "environment": environment("cuda"),
         "case": plan.case.name,
         "limits": plan.limits,
@@ -105,7 +118,7 @@ def main() -> None:
         "lbfgs_snapshots": plan.snapshots,
         "constraints": plan.constraints,
         "points_override": plan.points,
-        "limitations": "Only L-BFGS snapshots after completed Adam. Two adjacent successes required. Snapshot I/O overhead included in wall times and reported separately; no interpolation. Analytical evaluation follows all optimizer steps within each trial, never changes training or stopping. Physical autograd used independently of derivative executor. Final warm inference is measured separately.",
+        "limitations": "Only L-BFGS snapshots after completed Adam. Two adjacent successes required; no interpolation. Previous snapshot I/O included and reported separately. Analytical evaluation follows all optimizer steps, never changes training. Quality uses independent eager physical autograd. Prediction timing of the trained executor and eager control are separate. Shared-process reuse is diagnostic and may affect FP32 repeatability.",
         "trials": [],
     }
     for index, seed in enumerate(args.seeds):
@@ -114,13 +127,13 @@ def main() -> None:
             torch.cuda.empty_cache()
             result = convergence_trial(plan, arm, seed, args.output / f"{arm.name}-{seed}")
             report["trials"].append(result)
-            (args.output / "report.json").write_text(
-                json.dumps(report, indent=2), encoding="utf-8"
-            )
+            write_report(args.output, report)
             print(
                 json.dumps({"arm": arm.name, "seed": seed, "crossing": result["crossing"]}),
                 flush=True,
             )
+    report["status"] = "completed"
+    write_report(args.output, report)
 
 
 if __name__ == "__main__":
