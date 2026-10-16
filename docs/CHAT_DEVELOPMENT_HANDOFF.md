@@ -314,7 +314,7 @@ production-режим и не измерение времени до точно�
 могут содержать только результаты и памятки — проверяй фактический Git.
 
 [Полный отчёт с математикой](static-background-integration-2026-10-16.md),
-[основные срезы](experiments/2026-10-16-static-background-integration.json),
+[основные срезы](experiments/2026-10-16-static-background-snapshots.csv),
 [CSV](experiments/2026-10-16-static-background-integration.csv),
 [дополнительные проверки](experiments/2026-10-16-static-background-diagnostics.json).
 
