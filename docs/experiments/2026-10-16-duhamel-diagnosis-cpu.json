@@ -1,0 +1,318 @@
+{
+  "contract": 1,
+  "case": "heat_neumann3d",
+  "seed": 19,
+  "device": "cpu",
+  "precision": "float64 evaluation of fixed float32-trained weights",
+  "torch": "2.1.0",
+  "cpu_threads": 1,
+  "checkpoint_sha256": "65217e1680c46f5150a149eff38b214a9e95683f108957de6b26d63394fbd330",
+  "measurements": [
+    {
+      "space_points": 7,
+      "time_points": 9,
+      "total_evaluated_points": 3773,
+      "final_error_l2": 0.0008783915749194477,
+      "mean_bound": 0.00028529629968002216,
+      "nonconstant_bound": 0.004435926930818323,
+      "combined_bound": 0.004445091867911212,
+      "undamped_bound": 0.005505974527888056,
+      "largest_coefficient_identity_defect": 4.3590735268749946e-06,
+      "modes": [
+        {
+          "index": [
+            0,
+            0,
+            0
+          ],
+          "decay_rate": 0.0,
+          "observed_final_error": -8.423255506045165e-05,
+          "integrated_residual_error": -8.527689833887871e-05,
+          "identity_defect": 1.0443432784270587e-06
+        },
+        {
+          "index": [
+            0,
+            0,
+            1
+          ],
+          "decay_rate": 0.9869604401089358,
+          "observed_final_error": -5.5324399600986084e-05,
+          "integrated_residual_error": -5.616289049925223e-05,
+          "identity_defect": 8.384908982661432e-07
+        },
+        {
+          "index": [
+            0,
+            1,
+            0
+          ],
+          "decay_rate": 0.9869604401089358,
+          "observed_final_error": 6.243832910224998e-05,
+          "integrated_residual_error": 6.240759085726703e-05,
+          "identity_defect": 3.073824498295188e-08
+        },
+        {
+          "index": [
+            0,
+            1,
+            1
+          ],
+          "decay_rate": 1.9739208802178716,
+          "observed_final_error": -0.0002686392538989056,
+          "integrated_residual_error": -0.0002688803071820326,
+          "identity_defect": 2.410532831270424e-07
+        },
+        {
+          "index": [
+            1,
+            0,
+            0
+          ],
+          "decay_rate": 0.9869604401089358,
+          "observed_final_error": -0.00024244052323615654,
+          "integrated_residual_error": -0.00024298784388631606,
+          "identity_defect": 5.473206501595209e-07
+        },
+        {
+          "index": [
+            1,
+            0,
+            1
+          ],
+          "decay_rate": 1.9739208802178716,
+          "observed_final_error": 0.00011530668043485874,
+          "integrated_residual_error": 0.00011503295820223587,
+          "identity_defect": 2.737222326228714e-07
+        },
+        {
+          "index": [
+            1,
+            1,
+            0
+          ],
+          "decay_rate": 1.9739208802178716,
+          "observed_final_error": -0.0004962292263319472,
+          "integrated_residual_error": -0.0004950752141576032,
+          "identity_defect": -1.1540121743439536e-06
+        },
+        {
+          "index": [
+            1,
+            1,
+            1
+          ],
+          "decay_rate": 2.9608813203268074,
+          "observed_final_error": -0.00016125133990327375,
+          "integrated_residual_error": -0.00015689226637639875,
+          "identity_defect": -4.3590735268749946e-06
+        }
+      ]
+    },
+    {
+      "space_points": 11,
+      "time_points": 13,
+      "total_evaluated_points": 19965,
+      "final_error_l2": 0.0008847643111110231,
+      "mean_bound": 0.0002746512592970906,
+      "nonconstant_bound": 0.004486699812363581,
+      "combined_bound": 0.004495098277067685,
+      "undamped_bound": 0.005570089232637441,
+      "largest_coefficient_identity_defect": 1.4891095347362333e-09,
+      "modes": [
+        {
+          "index": [
+            0,
+            0,
+            0
+          ],
+          "decay_rate": 0.0,
+          "observed_final_error": -8.420043384287332e-05,
+          "integrated_residual_error": -8.420186422695404e-05,
+          "identity_defect": 1.4303840807254132e-09
+        },
+        {
+          "index": [
+            0,
+            0,
+            1
+          ],
+          "decay_rate": 0.9869604401089358,
+          "observed_final_error": -5.5280553238807155e-05,
+          "integrated_residual_error": -5.528146231856737e-05,
+          "identity_defect": 9.090797602136257e-10
+        },
+        {
+          "index": [
+            0,
+            1,
+            0
+          ],
+          "decay_rate": 0.9869604401089358,
+          "observed_final_error": 6.246178292059403e-05,
+          "integrated_residual_error": 6.246073771093851e-05,
+          "identity_defect": 1.0452096555201322e-09
+        },
+        {
+          "index": [
+            0,
+            1,
+            1
+          ],
+          "decay_rate": 1.9739208802178716,
+          "observed_final_error": -0.0002685230496340909,
+          "integrated_residual_error": -0.00026852156052455616,
+          "identity_defect": -1.4891095347362333e-09
+        },
+        {
+          "index": [
+            1,
+            0,
+            0
+          ],
+          "decay_rate": 0.9869604401089358,
+          "observed_final_error": -0.0002423843646709782,
+          "integrated_residual_error": -0.00024238474883646712,
+          "identity_defect": 3.8416548891681557e-10
+        },
+        {
+          "index": [
+            1,
+            0,
+            1
+          ],
+          "decay_rate": 1.9739208802178716,
+          "observed_final_error": 0.00011526806861764612,
+          "integrated_residual_error": 0.00011526880658708524,
+          "identity_defect": -7.379694391245742e-10
+        },
+        {
+          "index": [
+            1,
+            1,
+            0
+          ],
+          "decay_rate": 1.9739208802178716,
+          "observed_final_error": -0.0004964079395225809,
+          "integrated_residual_error": -0.0004964076945535412,
+          "identity_defect": -2.44969039627993e-10
+        },
+        {
+          "index": [
+            1,
+            1,
+            1
+          ],
+          "decay_rate": 2.9608813203268074,
+          "observed_final_error": -0.00016235231271323738,
+          "integrated_residual_error": -0.00016235189210359442,
+          "identity_defect": -4.206096429536319e-10
+        }
+      ]
+    },
+    {
+      "space_points": 15,
+      "time_points": 17,
+      "total_evaluated_points": 64125,
+      "final_error_l2": 0.0008847663297437898,
+      "mean_bound": 0.0002939394326082117,
+      "nonconstant_bound": 0.00448671485615293,
+      "combined_bound": 0.004496333015965948,
+      "undamped_bound": 0.005570068245702968,
+      "largest_coefficient_identity_defect": 1.3136777364704255e-12,
+      "modes": [
+        {
+          "index": [
+            0,
+            0,
+            0
+          ],
+          "decay_rate": 0.0,
+          "observed_final_error": -8.420042300490027e-05,
+          "integrated_residual_error": -8.420042404016579e-05,
+          "identity_defect": 1.0352655148079815e-12
+        },
+        {
+          "index": [
+            0,
+            0,
+            1
+          ],
+          "decay_rate": 0.9869604401089358,
+          "observed_final_error": -5.528050897930655e-05,
+          "integrated_residual_error": -5.528050867601984e-05,
+          "identity_defect": -3.0328671296380935e-13
+        },
+        {
+          "index": [
+            0,
+            1,
+            0
+          ],
+          "decay_rate": 0.9869604401089358,
+          "observed_final_error": 6.246183427639602e-05,
+          "integrated_residual_error": 6.246183331687306e-05,
+          "identity_defect": 9.59522961302764e-13
+        },
+        {
+          "index": [
+            0,
+            1,
+            1
+          ],
+          "decay_rate": 1.9739208802178716,
+          "observed_final_error": -0.0002685230900457545,
+          "integrated_residual_error": -0.00026852308873207676,
+          "identity_defect": -1.3136777364704255e-12
+        },
+        {
+          "index": [
+            1,
+            0,
+            0
+          ],
+          "decay_rate": 0.9869604401089358,
+          "observed_final_error": -0.00024238436602367144,
+          "integrated_residual_error": -0.00024238436616300785,
+          "identity_defect": 1.3933640482730048e-13
+        },
+        {
+          "index": [
+            1,
+            0,
+            1
+          ],
+          "decay_rate": 1.9739208802178716,
+          "observed_final_error": 0.00011526802068647809,
+          "integrated_residual_error": 0.00011526802186902484,
+          "identity_defect": -1.1825467498673484e-12
+        },
+        {
+          "index": [
+            1,
+            1,
+            0
+          ],
+          "decay_rate": 1.9739208802178716,
+          "observed_final_error": -0.0004964079428831761,
+          "integrated_residual_error": -0.0004964079428866719,
+          "identity_defect": 3.495793064745012e-15
+        },
+        {
+          "index": [
+            1,
+            1,
+            1
+          ],
+          "decay_rate": 2.9608813203268074,
+          "observed_final_error": -0.00016235235780373049,
+          "integrated_residual_error": -0.0001623523582029903,
+          "identity_defect": 3.9925980815751216e-13
+        }
+      ]
+    }
+  ],
+  "analysis_seconds": 37.55527141701896,
+  "limitations": "No training, no CUDA acceptance/performance. Independent Cartesian space and time Gauss quadratures, eager physical PDE derivatives. Bounds are quadrature estimates, not certified continuous bounds; one frozen checkpoint only. Modal identities test consistency of observed error and history of residual; not a proof of absence of all implementation bugs.",
+  "analysis_source": "import hashlib,json,sys,time\nfrom pathlib import Path\nsys.path.insert(0,str(Path.cwd()))\nimport numpy as np\nimport torch\nfrom benchmarks.cases import CASES\nfrom benchmarks.neumann_projection import project_neumann_error\nfrom scripts.benchmark_robin_execution import load_model\ntrial=Path('numerical-reports/actual-cuda-checkpoint')\noriginal=json.loads((trial/'result.json').read_text());case=CASES[original['case']]\ntorch.set_num_threads(1)\nfactory,model=load_model(trial,'eager',original.get('hard_lifting','recursive'),'cpu')\nmodel=model.double().requires_grad_(False)\nT=.5;d=case.dimensions;rate=.1*d*np.pi**2\nmeasurements=[]\nstarted=time.perf_counter()\nfor ns,nt in ((7,9),(11,13),(15,17)):\n z,w=np.polynomial.legendre.leggauss(ns);nodes=tuple((z+1)/2 for _ in range(d));weights=tuple(w/2 for _ in range(d))\n tz,tw=np.polynomial.legendre.leggauss(nt);times=np.concatenate(([0.],T*(tz+1)/2,[T]));timeweights=T*tw/2\n mesh=np.meshgrid(*nodes,times,indexing='ij');features=[a.reshape(-1,1) for a in mesh]\n predictions=[];residuals=[]\n for start in range(0,len(features[0]),256):\n  columns=[torch.tensor(a[start:start+256],dtype=torch.float64,requires_grad=True) for a in features]\n  with torch.enable_grad():\n   output=dict(model(columns[:-1],columns[-1]));r=factory.adapter.residuals(output,*columns)['heat']\n  predictions.append(output['u'].detach().numpy());residuals.append(r.detach().numpy())\n values=np.concatenate(predictions).reshape(-1,len(times));residual=np.concatenate(residuals).reshape(values.shape)\n space_mesh=np.meshgrid(*nodes,indexing='ij');spatial={a:x.reshape(-1,1) for a,x in zip(factory.settings.domain.space,space_mesh)}\n error=values-case.reference(spatial,times.reshape(1,-1))\n ep=project_neumann_error(nodes,weights,((0.,1.),)*d,error,rate)\n rp=project_neumann_error(nodes,weights,((0.,1.),)*d,residual,rate)\n kernel=np.exp(-ep.rates[:,None]*(T-times[None,1:-1]))\n predicted=np.exp(-ep.rates*T)*ep.coefficients[:,0]+np.sum(kernel*rp.coefficients[:,1:-1]*timeweights,axis=1)\n actual=ep.coefficients[:,-1]\n rows=[dict(index=list(idx),decay_rate=float(decay),observed_final_error=float(a),integrated_residual_error=float(b),identity_defect=float(a-b)) for idx,decay,a,b in zip(ep.indices,ep.rates,actual,predicted)]\n mean_bound=abs(ep.coefficients[0,0])+float(np.dot(timeweights,np.abs(rp.coefficients[0,1:-1])))\n initial_perp=float(np.sqrt(max(0.,ep.total[0]-ep.groups['constant'][0])))\n residual_perp=np.sqrt(np.maximum(0.,rp.total[1:-1]-rp.groups['constant'][1:-1]))\n perp_bound=np.exp(-.1*np.pi**2*T)*initial_perp+float(np.dot(timeweights,np.exp(-.1*np.pi**2*(T-times[1:-1]))*residual_perp))\n full_bound=float(np.dot(timeweights,np.sqrt(rp.total[1:-1])))+float(np.sqrt(ep.total[0]))\n measurements.append(dict(space_points=ns,time_points=nt,total_evaluated_points=len(features[0]),final_error_l2=float(np.sqrt(ep.total[-1])),mean_bound=mean_bound,nonconstant_bound=perp_bound,combined_bound=float(np.hypot(mean_bound,perp_bound)),undamped_bound=full_bound,largest_coefficient_identity_defect=float(np.max(np.abs(actual-predicted))),modes=rows))\n print('COMPLETED',ns,nt,measurements[-1]['largest_coefficient_identity_defect'],flush=True)\nreport=dict(contract=1,case=case.name,seed=original['seed'],device='cpu',precision='float64 evaluation of fixed float32-trained weights',torch=torch.__version__,cpu_threads=1,checkpoint_sha256=hashlib.sha256((trial/'training/checkpoints/final.ckpt').read_bytes()).hexdigest(),measurements=measurements,analysis_seconds=time.perf_counter()-started,limitations='No training, no CUDA acceptance/performance. Independent Cartesian space and time Gauss quadratures, eager physical PDE derivatives. Bounds are quadrature estimates, not certified continuous bounds; one frozen checkpoint only. Modal identities test consistency of observed error and history of residual; not a proof of absence of all implementation bugs.')\nreport['analysis_source']=Path(__file__).read_text()\nPath('docs/experiments/2026-10-16-duhamel-diagnosis-cpu.json').write_text(json.dumps(report,indent=2,allow_nan=False))\nprint(json.dumps({k:v for k,v in report.items() if k!='analysis_source'},indent=2))\n"
+}

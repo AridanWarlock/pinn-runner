@@ -1,0 +1,80 @@
+{
+  "float32_matmul_precision": "highest",
+  "cuda_matmul_allow_tf32": false,
+  "contract": 1,
+  "case": "heat_neumann3d",
+  "seed": 19,
+  "checkpoint_sha256": "65217e1680c46f5150a149eff38b214a9e95683f108957de6b26d63394fbd330",
+  "device": "cuda",
+  "torch": "2.1.0+cu118",
+  "points_per_time": 128,
+  "times": [
+    0.0,
+    0.125,
+    0.25,
+    0.375,
+    0.5
+  ],
+  "coordinate_seed": 20261016,
+  "rows": [
+    {
+      "time": 0.0,
+      "temperature_fp32_fp64_rms": 5.7377997627706645e-08,
+      "temperature_fp32_fp64_max": 1.5295834143724818e-07,
+      "temperature_error_fp32_rms": 5.7377997621120553e-08,
+      "temperature_error_fp64_rms": 3.8005887153050735e-17,
+      "residual_fp32_rms": 0.018380276816749544,
+      "residual_fp64_rms": 0.018380171744847122,
+      "residual_fp32_fp64_rms": 4.271561818574225e-07,
+      "residual_fp32_fp64_max": 1.2840868679475648e-06
+    },
+    {
+      "time": 0.125,
+      "temperature_fp32_fp64_rms": 9.020271211771127e-08,
+      "temperature_fp32_fp64_max": 2.769692100113019e-07,
+      "temperature_error_fp32_rms": 0.0005894622369870098,
+      "temperature_error_fp64_rms": 0.0005894660720476016,
+      "residual_fp32_rms": 0.008562902026794134,
+      "residual_fp64_rms": 0.008562981682955866,
+      "residual_fp32_fp64_rms": 5.621616393315449e-07,
+      "residual_fp32_fp64_max": 2.9880291485540056e-06
+    },
+    {
+      "time": 0.25,
+      "temperature_fp32_fp64_rms": 1.1162897936589293e-07,
+      "temperature_fp32_fp64_max": 2.9588531247348726e-07,
+      "temperature_error_fp32_rms": 0.0005767889834803947,
+      "temperature_error_fp64_rms": 0.0005767919761949597,
+      "residual_fp32_rms": 0.00898900571816277,
+      "residual_fp64_rms": 0.008988995597324348,
+      "residual_fp32_fp64_rms": 4.613480167325999e-07,
+      "residual_fp32_fp64_max": 1.491392235486444e-06
+    },
+    {
+      "time": 0.375,
+      "temperature_fp32_fp64_rms": 1.5380024841055286e-07,
+      "temperature_fp32_fp64_max": 6.438963926491681e-07,
+      "temperature_error_fp32_rms": 0.0006037303454080128,
+      "temperature_error_fp64_rms": 0.0006037439240738169,
+      "residual_fp32_rms": 0.010289738827572179,
+      "residual_fp64_rms": 0.01028975870273577,
+      "residual_fp32_fp64_rms": 5.101923825342257e-07,
+      "residual_fp32_fp64_max": 2.4739701918186086e-06
+    },
+    {
+      "time": 0.5,
+      "temperature_fp32_fp64_rms": 2.0160048992088827e-07,
+      "temperature_fp32_fp64_max": 5.991489975265551e-07,
+      "temperature_error_fp32_rms": 0.000793730541683263,
+      "temperature_error_fp64_rms": 0.0007936903619963697,
+      "residual_fp32_rms": 0.015599248220200111,
+      "residual_fp64_rms": 0.015599190152131483,
+      "residual_fp32_fp64_rms": 6.130245676756324e-07,
+      "residual_fp32_fp64_max": 1.6180055726344733e-06
+    }
+  ],
+  "analysis_seconds": 1.862153499998385,
+  "limitations": "CUDA arithmetic diagnosis of one frozen CUDA-trained checkpoint; not a performance benchmark or acceptance. FP32 weights converted exactly to FP64, coordinates generated once in FP32 then cast exactly. Independent eager physical derivatives. Finite random spatial sample, not a global bound; FP64 evaluation is not FP64 training and does not explain CUDA optimization trajectory differences.",
+  "analysis_source": "import hashlib,json,sys,time\nfrom pathlib import Path\nsys.path.insert(0,str(Path.cwd()))\nimport numpy as np\nimport torch\nfrom benchmarks.cases import CASES\nfrom scripts.benchmark_robin_execution import load_model\n\ntrial=Path('numerical-reports/robin-sampling-2048-001/heat_neumann3d-19')\noriginal=json.loads((trial/'result.json').read_text());case=CASES[original['case']]\ntorch.set_num_threads(1)\nfactory,model=load_model(trial,'eager',original.get('hard_lifting','recursive'),'cuda')\ngenerator=torch.Generator().manual_seed(20261016)\nx=torch.rand((128,case.dimensions),generator=generator)\ntimes=(0.,0.125,0.25,0.375,0.5)\nvalues={};residuals={};references={}\ntorch.backends.cuda.matmul.allow_tf32=False\ntorch.backends.cudnn.allow_tf32=False\ntorch.set_float32_matmul_precision('highest')\nstarted=time.perf_counter()\nfor name,dtype in (('float32',torch.float32),('float64',torch.float64)):\n model=model.to(dtype=dtype)\n values[name]=[];residuals[name]=[]\n for clock in times:\n  columns=[x[:,i:i+1].to(device='cuda',dtype=dtype).detach().requires_grad_() for i in range(case.dimensions)]\n  t=torch.full((len(x),1),clock,dtype=dtype,device='cuda',requires_grad=True)\n  with torch.enable_grad():\n   output=dict(model(columns,t))\n   r=factory.adapter.residuals(output,*columns,t)['heat']\n  values[name].append(output['u'].detach().cpu().double().numpy())\n  residuals[name].append(r.detach().cpu().double().numpy())\n  if name=='float32':\n   references[clock]=case.reference({a:x[:,i:i+1].double().numpy() for i,a in enumerate(factory.settings.domain.space)},np.full((len(x),1),clock))\nrows=[]\nfor i,clock in enumerate(times):\n a,b=values['float32'][i],values['float64'][i]\n ra,rb=residuals['float32'][i],residuals['float64'][i]\n rms=lambda v:float(np.sqrt(np.mean(v**2)))\n rows.append(dict(time=clock,temperature_fp32_fp64_rms=rms(a-b),temperature_fp32_fp64_max=float(np.max(np.abs(a-b))),temperature_error_fp32_rms=rms(a-references[clock]),temperature_error_fp64_rms=rms(b-references[clock]),residual_fp32_rms=rms(ra),residual_fp64_rms=rms(rb),residual_fp32_fp64_rms=rms(ra-rb),residual_fp32_fp64_max=float(np.max(np.abs(ra-rb)))))\nreport=dict(float32_matmul_precision=torch.get_float32_matmul_precision(),cuda_matmul_allow_tf32=torch.backends.cuda.matmul.allow_tf32,contract=1,case=case.name,seed=original['seed'],checkpoint_sha256=hashlib.sha256((trial/'training/checkpoints/final.ckpt').read_bytes()).hexdigest(),device='cuda',torch=torch.__version__,points_per_time=len(x),times=times,coordinate_seed=20261016,rows=rows,analysis_seconds=time.perf_counter()-started,limitations='CUDA arithmetic diagnosis of one frozen CUDA-trained checkpoint; not a performance benchmark or acceptance. FP32 weights converted exactly to FP64, coordinates generated once in FP32 then cast exactly. Independent eager physical derivatives. Finite random spatial sample, not a global bound; FP64 evaluation is not FP64 training and does not explain CUDA optimization trajectory differences.')\nPath('numerical-reports/precision-diagnosis-cuda-001.json').write_text(json.dumps(report,indent=2,allow_nan=False))\nprint(json.dumps(report,indent=2))\n",
+  "source_revision": "1d8df88"
+}

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "device": "cuda",
+  "torch": "2.1.0+cu118",
+  "precision": "FP32, TF32 off",
+  "rows": [
+    {
+      "seed": 19,
+      "boundary_points": 256,
+      "boundary_operator_rmse": 5.0725283529118315e-08,
+      "boundary_operator_max_error": 2.437736839056015e-07
+    },
+    {
+      "seed": 1234,
+      "boundary_points": 256,
+      "boundary_operator_rmse": 4.382292928539755e-08,
+      "boundary_operator_max_error": 1.9744038581848145e-07
+    }
+  ],
+  "limitations": "Independent physical normal derivatives at 64 points per face, including t=0 and t=0.5. Prescribed normal derivative zero. Separate from boundary_rmse, which measures temperature error on faces. Finite sample, not a global certificate; no training or optimizer updates.",
+  "analysis_source": "import json\nfrom pathlib import Path\nimport torch\nfrom pinnstorch.api import Coordinates,Equation\nfrom scripts.benchmark_robin_execution import load_model\ntorch.set_num_threads(1)\ntorch.backends.cuda.matmul.allow_tf32=False\ntorch.backends.cudnn.allow_tf32=False\ntorch.set_float32_matmul_precision('highest')\nrows=[]\ngenerator=torch.Generator().manual_seed(20261016)\nfor seed in (19,1234):\n trial=Path(f'numerical-reports/polynomial-neumann-baseline-001/seed-{seed}/heat_neumann_polynomial2d-{seed}')\n factory,model=load_model(trial,'robin_grouped','recursive','cuda')\n assert all(b.kind=='neumann' and b.value==0 and b.value_function is None for b in factory.settings.boundaries)\n derivatives=[]\n for axis,name in enumerate('xy'):\n  for side in (0.,1.):\n   raw=torch.rand((64,3),generator=generator).to('cuda');raw[:,-1]*=.5;raw[0,-1]=0;raw[1,-1]=.5\n   columns=[raw[:,i:i+1].detach().requires_grad_() for i in range(3)]\n   columns[axis]=torch.full_like(columns[axis],side,requires_grad=True)\n   output=dict(model(columns[:-1],columns[-1]))\n   normal=Equation(output,Coordinates(dict(zip('xy',columns[:-1])),columns[-1])).diff('u',name)*(-1 if side==0 else 1)\n   derivatives.append(normal.detach())\n values=torch.cat(derivatives)\n rows.append(dict(seed=seed,boundary_points=len(values),boundary_operator_rmse=float(values.square().mean().sqrt()),boundary_operator_max_error=float(values.abs().max())))\nreport=dict(contract=1,device='cuda',torch=torch.__version__,precision='FP32, TF32 off',rows=rows,limitations='Independent physical normal derivatives at 64 points per face, including t=0 and t=0.5. Prescribed normal derivative zero. Separate from boundary_rmse, which measures temperature error on faces. Finite sample, not a global certificate; no training or optimizer updates.')\nPath('numerical-reports/polynomial-neumann-boundary-001.json').write_text(json.dumps(report,indent=2))\nprint(json.dumps(report))"
+}

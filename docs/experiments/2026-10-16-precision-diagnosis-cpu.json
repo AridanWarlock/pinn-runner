@@ -1,0 +1,80 @@
+{
+  "contract": 1,
+  "case": "heat_neumann3d",
+  "seed": 19,
+  "checkpoint_sha256": "65217e1680c46f5150a149eff38b214a9e95683f108957de6b26d63394fbd330",
+  "device": "cpu",
+  "torch": "2.1.0",
+  "points_per_time": 128,
+  "times": [
+    0.0,
+    0.125,
+    0.25,
+    0.375,
+    0.5
+  ],
+  "coordinate_seed": 20261016,
+  "rows": [
+    {
+      "time": 0.0,
+      "temperature_fp32_fp64_rms": 5.422450468700296e-08,
+      "temperature_fp32_fp64_max": 1.5295834143724818e-07,
+      "temperature_error_fp32_rms": 5.422450468700296e-08,
+      "temperature_error_fp64_rms": 0.0,
+      "residual_fp32_rms": 0.01838025151201895,
+      "residual_fp64_rms": 0.01838017174484714,
+      "residual_fp32_fp64_rms": 3.8046119146477925e-07,
+      "residual_fp32_fp64_max": 9.543065857542388e-07
+    },
+    {
+      "time": 0.125,
+      "temperature_fp32_fp64_rms": 7.651345745992586e-08,
+      "temperature_fp32_fp64_max": 2.1203583355777766e-07,
+      "temperature_error_fp32_rms": 0.0005894567711775165,
+      "temperature_error_fp64_rms": 0.0005894660720476058,
+      "residual_fp32_rms": 0.008562923178816888,
+      "residual_fp64_rms": 0.008562981682955974,
+      "residual_fp32_fp64_rms": 5.016567850130167e-07,
+      "residual_fp32_fp64_max": 1.825775760799786e-06
+    },
+    {
+      "time": 0.25,
+      "temperature_fp32_fp64_rms": 1.0702497202369553e-07,
+      "temperature_fp32_fp64_max": 2.4144074384224723e-07,
+      "temperature_error_fp32_rms": 0.0005767982229335171,
+      "temperature_error_fp64_rms": 0.0005767919761949499,
+      "residual_fp32_rms": 0.008988984772054088,
+      "residual_fp64_rms": 0.008988995597324332,
+      "residual_fp32_fp64_rms": 4.7158105176356716e-07,
+      "residual_fp32_fp64_max": 1.4736564200035218e-06
+    },
+    {
+      "time": 0.375,
+      "temperature_fp32_fp64_rms": 1.423531992230607e-07,
+      "temperature_fp32_fp64_max": 3.92300945506463e-07,
+      "temperature_error_fp32_rms": 0.0006037520895253781,
+      "temperature_error_fp64_rms": 0.0006037439240738486,
+      "residual_fp32_rms": 0.010289816218796573,
+      "residual_fp64_rms": 0.010289758702735734,
+      "residual_fp32_fp64_rms": 4.7546716327034326e-07,
+      "residual_fp32_fp64_max": 1.3132940428484119e-06
+    },
+    {
+      "time": 0.5,
+      "temperature_fp32_fp64_rms": 1.944067954135825e-07,
+      "temperature_fp32_fp64_max": 5.529523900982269e-07,
+      "temperature_error_fp32_rms": 0.0007937155756010716,
+      "temperature_error_fp64_rms": 0.0007936903619963399,
+      "residual_fp32_rms": 0.015599252455790623,
+      "residual_fp64_rms": 0.01559919015213147,
+      "residual_fp32_fp64_rms": 5.477710699547056e-07,
+      "residual_fp32_fp64_max": 1.1988748800373372e-06
+    }
+  ],
+  "analysis_seconds": 0.6926169580547139,
+  "limitations": "CPU arithmetic diagnosis of one frozen CUDA-trained checkpoint; not CUDA performance or acceptance. FP32 weights converted exactly to FP64, coordinates generated once in FP32 then cast exactly. Independent eager physical derivatives. Finite random spatial sample, not a global bound; FP64 evaluation is not FP64 training and does not explain CUDA optimization trajectory differences.",
+  "analysis_source": "import hashlib,json,sys,time\nfrom pathlib import Path\nsys.path.insert(0,str(Path.cwd()))\nimport numpy as np\nimport torch\nfrom benchmarks.cases import CASES\nfrom scripts.benchmark_robin_execution import load_model\n\ntrial=Path('numerical-reports/actual-cuda-checkpoint')\noriginal=json.loads((trial/'result.json').read_text());case=CASES[original['case']]\ntorch.set_num_threads(1)\nfactory,model=load_model(trial,'eager',original.get('hard_lifting','recursive'),'cpu')\ngenerator=torch.Generator().manual_seed(20261016)\nx=torch.rand((128,case.dimensions),generator=generator)\ntimes=(0.,0.125,0.25,0.375,0.5)\nvalues={};residuals={};references={}\nstarted=time.perf_counter()\nfor name,dtype in (('float32',torch.float32),('float64',torch.float64)):\n model=model.to(dtype=dtype)\n values[name]=[];residuals[name]=[]\n for clock in times:\n  columns=[x[:,i:i+1].to(dtype=dtype).detach().requires_grad_() for i in range(case.dimensions)]\n  t=torch.full((len(x),1),clock,dtype=dtype,requires_grad=True)\n  with torch.enable_grad():\n   output=dict(model(columns,t))\n   r=factory.adapter.residuals(output,*columns,t)['heat']\n  values[name].append(output['u'].detach().double().numpy())\n  residuals[name].append(r.detach().double().numpy())\n  if name=='float32':\n   references[clock]=case.reference({a:x[:,i:i+1].double().numpy() for i,a in enumerate(factory.settings.domain.space)},np.full((len(x),1),clock))\nrows=[]\nfor i,clock in enumerate(times):\n a,b=values['float32'][i],values['float64'][i]\n ra,rb=residuals['float32'][i],residuals['float64'][i]\n rms=lambda v:float(np.sqrt(np.mean(v**2)))\n rows.append(dict(time=clock,temperature_fp32_fp64_rms=rms(a-b),temperature_fp32_fp64_max=float(np.max(np.abs(a-b))),temperature_error_fp32_rms=rms(a-references[clock]),temperature_error_fp64_rms=rms(b-references[clock]),residual_fp32_rms=rms(ra),residual_fp64_rms=rms(rb),residual_fp32_fp64_rms=rms(ra-rb),residual_fp32_fp64_max=float(np.max(np.abs(ra-rb)))))\nreport=dict(contract=1,case=case.name,seed=original['seed'],checkpoint_sha256=hashlib.sha256((trial/'training/checkpoints/final.ckpt').read_bytes()).hexdigest(),device='cpu',torch=torch.__version__,points_per_time=len(x),times=times,coordinate_seed=20261016,rows=rows,analysis_seconds=time.perf_counter()-started,limitations='CPU arithmetic diagnosis of one frozen CUDA-trained checkpoint; not CUDA performance or acceptance. FP32 weights converted exactly to FP64, coordinates generated once in FP32 then cast exactly. Independent eager physical derivatives. Finite random spatial sample, not a global bound; FP64 evaluation is not FP64 training and does not explain CUDA optimization trajectory differences.')\nPath('/private/tmp/pinn-precision-analysis.json').write_text(json.dumps(report,indent=2,allow_nan=False))\nprint(json.dumps(report,indent=2))\n",
+  "cpu_threads": 1,
+  "evaluation_execution": "eager",
+  "source_file_sha256": "ad15181ec006674e02b4085651049d4d4be7eae95981b30cc7d8614d99d007a8"
+}

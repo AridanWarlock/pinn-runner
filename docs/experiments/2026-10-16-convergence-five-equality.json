@@ -1,0 +1,464 @@
+{
+  "historical_lb150_comparisons": [
+    {
+      "seed": 19,
+      "backward": "all",
+      "status": "compared",
+      "weights_exact": true,
+      "max_abs_weight_difference": 0
+    },
+    {
+      "seed": 19,
+      "backward": "parameters",
+      "status": "compared",
+      "weights_exact": true,
+      "max_abs_weight_difference": 0
+    },
+    {
+      "seed": 1234,
+      "backward": "all",
+      "status": "compared",
+      "weights_exact": true,
+      "max_abs_weight_difference": 0
+    },
+    {
+      "seed": 1234,
+      "backward": "parameters",
+      "status": "compared",
+      "weights_exact": true,
+      "max_abs_weight_difference": 0
+    },
+    {
+      "seed": 4321,
+      "backward": "all",
+      "status": "compared",
+      "weights_exact": true,
+      "max_abs_weight_difference": 0
+    },
+    {
+      "seed": 4321,
+      "backward": "parameters",
+      "status": "compared",
+      "weights_exact": true,
+      "max_abs_weight_difference": 0
+    },
+    {
+      "seed": 2026,
+      "backward": "all",
+      "status": "compared",
+      "weights_exact": true,
+      "max_abs_weight_difference": 0
+    },
+    {
+      "seed": 2026,
+      "backward": "parameters",
+      "status": "compared",
+      "weights_exact": true,
+      "max_abs_weight_difference": 0
+    },
+    {
+      "seed": 73,
+      "backward": "all",
+      "status": "compared",
+      "weights_exact": true,
+      "max_abs_weight_difference": 0
+    },
+    {
+      "seed": 73,
+      "backward": "parameters",
+      "status": "compared",
+      "weights_exact": true,
+      "max_abs_weight_difference": 0
+    }
+  ],
+  "contract": 1,
+  "map_location": "cpu",
+  "cuda_initialized": false,
+  "pairs": [
+    {
+      "seed": 19,
+      "snapshots": [
+        {
+          "lb_steps": 0,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 25,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 50,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 75,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 100,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 125,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 150,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 175,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 200,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        }
+      ]
+    },
+    {
+      "seed": 1234,
+      "snapshots": [
+        {
+          "lb_steps": 0,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 25,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 50,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 75,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 100,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 125,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 150,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 175,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 200,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        }
+      ]
+    },
+    {
+      "seed": 4321,
+      "snapshots": [
+        {
+          "lb_steps": 0,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 25,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 50,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 75,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 100,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 125,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 150,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 175,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 200,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        }
+      ]
+    },
+    {
+      "seed": 2026,
+      "snapshots": [
+        {
+          "lb_steps": 0,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 25,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 50,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 75,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 100,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 125,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 150,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 175,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 200,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        }
+      ]
+    },
+    {
+      "seed": 73,
+      "snapshots": [
+        {
+          "lb_steps": 0,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 25,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 50,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 75,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 100,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 125,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 150,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 175,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        },
+        {
+          "lb_steps": 200,
+          "weights_exact": true,
+          "max_abs_weight_difference": 0,
+          "metrics_exact": true,
+          "temporal_exact": true,
+          "work_exact": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "contract": 1,
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "torch": "2.1.0+cu118",
+  "checkpoint_sha256": "46feda4338226cbd6cb59b1578947833fd86020e60773575ec12e17ad882a9dd",
+  "comparisons": {
+    "reference_self_exact": true,
+    "all_tensors_exact": true,
+    "max_abs_difference": 0.0
+  },
+  "measurements": [
+    {
+      "repetition": 0,
+      "variant": "recursive",
+      "objective_backward_seconds_median": 0.028463599999668077,
+      "objective_backward_min_seconds": 0.02813410002272576,
+      "objective_backward_max_seconds": 0.028768899996066466
+    },
+    {
+      "repetition": 0,
+      "variant": "static_background",
+      "objective_backward_seconds_median": 0.024010099994484335,
+      "objective_backward_min_seconds": 0.02372040000045672,
+      "objective_backward_max_seconds": 0.024301800003740937
+    },
+    {
+      "repetition": 1,
+      "variant": "static_background",
+      "objective_backward_seconds_median": 0.0241976999968756,
+      "objective_backward_min_seconds": 0.024082799995085225,
+      "objective_backward_max_seconds": 0.024431400001049042
+    },
+    {
+      "repetition": 1,
+      "variant": "recursive",
+      "objective_backward_seconds_median": 0.028550899995025247,
+      "objective_backward_min_seconds": 0.028505800000857562,
+      "objective_backward_max_seconds": 0.028848000016296282
+    },
+    {
+      "repetition": 2,
+      "variant": "recursive",
+      "objective_backward_seconds_median": 0.028684299992164597,
+      "objective_backward_min_seconds": 0.02826429999549873,
+      "objective_backward_max_seconds": 0.02887809998355806
+    },
+    {
+      "repetition": 2,
+      "variant": "static_background",
+      "objective_backward_seconds_median": 0.024046100006671622,
+      "objective_backward_min_seconds": 0.023771199979819357,
+      "objective_backward_max_seconds": 0.024608300009276718
+    },
+    {
+      "repetition": 0,
+      "variant": "recursive",
+      "warm_prediction_seconds": 0.04248380000353791,
+      "warm_prediction_points_per_second": 96413.22103152022,
+      "warm_prediction_min_seconds": 0.042195399990305305,
+      "warm_prediction_max_seconds": 0.04310010001063347,
+      "prediction_points": 4096,
+      "prediction_batch_size": 512,
+      "prediction_warmup_passes": 3,
+      "prediction_measurement_passes": 7
+    },
+    {
+      "repetition": 0,
+      "variant": "static_background",
+      "warm_prediction_seconds": 0.028074400004697964,
+      "warm_prediction_points_per_second": 145898.04232021258,
+      "warm_prediction_min_seconds": 0.0279918999876827,
+      "warm_prediction_max_seconds": 0.02842290000990033,
+      "prediction_points": 4096,
+      "prediction_batch_size": 512,
+      "prediction_warmup_passes": 3,
+      "prediction_measurement_passes": 7
+    },
+    {
+      "repetition": 1,
+      "variant": "static_background",
+      "warm_prediction_seconds": 0.027958399994531646,
+      "warm_prediction_points_per_second": 146503.37647365846,
+      "warm_prediction_min_seconds": 0.02775320000364445,
+      "warm_prediction_max_seconds": 0.028125999990152195,
+      "prediction_points": 4096,
+      "prediction_batch_size": 512,
+      "prediction_warmup_passes": 3,
+      "prediction_measurement_passes": 7
+    },
+    {
+      "repetition": 1,
+      "variant": "recursive",
+      "warm_prediction_seconds": 0.04228659998625517,
+      "warm_prediction_points_per_second": 96862.83601262252,
+      "warm_prediction_min_seconds": 0.042005600000265986,
+      "warm_prediction_max_seconds": 0.042836800013901666,
+      "prediction_points": 4096,
+      "prediction_batch_size": 512,
+      "prediction_warmup_passes": 3,
+      "prediction_measurement_passes": 7
+    },
+    {
+      "repetition": 2,
+      "variant": "recursive",
+      "warm_prediction_seconds": 0.0425563000026159,
+      "warm_prediction_points_per_second": 96248.96900689727,
+      "warm_prediction_min_seconds": 0.04221089999191463,
+      "warm_prediction_max_seconds": 0.04285189998336136,
+      "prediction_points": 4096,
+      "prediction_batch_size": 512,
+      "prediction_warmup_passes": 3,
+      "prediction_measurement_passes": 7
+    },
+    {
+      "repetition": 2,
+      "variant": "static_background",
+      "warm_prediction_seconds": 0.028020499972626567,
+      "warm_prediction_points_per_second": 146178.69074432692,
+      "warm_prediction_min_seconds": 0.027537999994819984,
+      "warm_prediction_max_seconds": 0.02904839999973774,
+      "prediction_points": 4096,
+      "prediction_batch_size": 512,
+      "prediction_warmup_passes": 3,
+      "prediction_measurement_passes": 7
+    }
+  ],
+  "points": 256,
+  "precision": "FP32, TF32 off",
+  "backward": "parameters",
+  "limitations": "Experimental explicit-constant operator-data background override on one frozen polynomial 2D checkpoint. No training/optimizer update; not a time-to-quality test. Three alternating repetitions, three warmups/seven measurements. Not integrated into production. Numeric data verified, arbitrary callbacks rejected.",
+  "prototype_source": "from __future__ import annotations\nimport json,sys\nfrom dataclasses import fields,replace\nfrom pathlib import Path\nfrom typing import Any\nsys.path.insert(0,str(Path.cwd()))\nimport torch\nfrom benchmarks.cases import CASES\nfrom pinnstorch.api import Coordinates,Equation,TensorFields\nfrom pinnstorch.runner.factory import SolverFactory\nfrom pinnstorch.runner.problem import load_problem\nfrom pinnstorch.runner.settings import TaskSettings\nfrom pinnstorch.training.robin_box import BoxRobinInitial,BoundBoxRobinInitial\nfrom pinnstorch.training.robin_initial import IntervalRobinInitial,BoundRobinInitial\n\nclass StaticBoxBackground(BoxRobinInitial):\n def background(self,spatial:list[torch.Tensor],time:torch.Tensor)->TensorFields:\n  return self.initial(spatial,torch.full_like(time,self.time_interval[0]))\n\nclass StaticIntervalBackground(IntervalRobinInitial):\n def background(self,x:torch.Tensor,time:torch.Tensor)->TensorFields:\n  return self.initial([x],torch.full_like(time,self.time_interval[0]))\n\ndef constant_initial(c:Coordinates)->TensorFields:\n return {'u':torch.ones_like(c.t)}\n\ndef flux_initial(c:Coordinates)->TensorFields:\n value=torch.ones_like(c.t)\n for x in c.spatial.values():value=value+x\n return {'u':value}\n\ndef static_transform(settings:TaskSettings,bound:Any)->Any:\n if any(b.value_function is not None for b in settings.boundaries):\n  raise ValueError('Static numeric data required; callbacks cannot be inferred constant')\n if not isinstance(bound,(BoundRobinInitial,BoundBoxRobinInitial)):\n  raise ValueError('Exact Robin/Neumann transform required')\n recipe=bound.recipe\n kwargs={f.name:getattr(recipe,f.name) for f in fields(recipe) if f.init}\n cls=StaticBoxBackground if isinstance(recipe,BoxRobinInitial) else StaticIntervalBackground\n return cls(**kwargs).bind(bound.network)\n\nimport hashlib,statistics,time\nfrom scripts.benchmark_robin_execution import load_model,objective\nfrom benchmarks.performance import prediction_speed\n\ntorch.set_num_threads(1)\ntorch.backends.cuda.matmul.allow_tf32=False\ntorch.backends.cudnn.allow_tf32=False\ntorch.set_float32_matmul_precision('highest')\ntrial=Path('numerical-reports/polynomial-neumann-baseline-001/seed-19/heat_neumann_polynomial2d-19')\nfactory,model=load_model(trial,'robin_grouped','recursive','cuda')\noriginal=model.output_fn\nshortcut=static_transform(factory.settings,original)\ntransforms={'recursive':original,'static_background':shortcut}\ngenerator=torch.Generator().manual_seed(20261016)\npoints=torch.rand((256,3),generator=generator).to('cuda');points[:,-1]*=.5\n\ndef evaluate(transform:Any)->tuple[torch.Tensor,...]:\n model.output_fn=transform\n columns=[points[:,i:i+1].detach().requires_grad_() for i in range(3)]\n output=dict(model(columns[:-1],columns[-1]))\n e=Equation(output,Coordinates(dict(zip('xy',columns[:-1])),columns[-1]))\n residual=factory.adapter.residuals(output,*columns)['heat']\n derivatives=(output['u'],e.dt('u'),e.laplacian('u'),residual)\n gradients=torch.autograd.grad(residual.square().mean(),tuple(model.parameters()))\n return tuple(x.detach().clone() for x in (*derivatives,*gradients))\n\nfor _ in range(3):\n for transform in transforms.values():evaluate(transform)\na=evaluate(original);a_repeat=evaluate(original);b=evaluate(shortcut)\nfor x,y in zip(a,b):torch.testing.assert_close(x,y,rtol=3e-5,atol=3e-5)\ncomparisons=dict(reference_self_exact=all(torch.equal(x,y) for x,y in zip(a,a_repeat)),all_tensors_exact=all(torch.equal(x,y) for x,y in zip(a,b)),max_abs_difference=max(float((x-y).abs().max()) for x,y in zip(a,b)))\nmeasurements=[]\nfor index in range(3):\n for name in (list(transforms) if index%2==0 else list(reversed(transforms))):\n  model.output_fn=transforms[name];durations=[]\n  for iteration in range(10):\n   model.zero_grad(set_to_none=True);torch.cuda.synchronize();started=time.perf_counter()\n   torch.autograd.backward(objective(factory,model,points),inputs=tuple(model.parameters()))\n   torch.cuda.synchronize()\n   if iteration>=3:durations.append(time.perf_counter()-started)\n  measurements.append(dict(repetition=index,variant=name,objective_backward_seconds_median=statistics.median(durations),objective_backward_min_seconds=min(durations),objective_backward_max_seconds=max(durations)))\nprediction_points=torch.rand((4096,3),generator=generator).to('cuda');prediction_points[:,-1]*=.5\nfor index in range(3):\n for name in (list(transforms) if index%2==0 else list(reversed(transforms))):\n  model.output_fn=transforms[name]\n  performance=prediction_speed(model,[prediction_points[:,:1],prediction_points[:,1:2]],prediction_points[:,2:3],512)\n  measurements.append(dict(repetition=index,variant=name,**performance))\nreport=dict(contract=1,device='cuda',gpu=torch.cuda.get_device_name(0),torch=torch.__version__,checkpoint_sha256=hashlib.sha256((trial/'training/checkpoints/final.ckpt').read_bytes()).hexdigest(),comparisons=comparisons,measurements=measurements,points=256,precision='FP32, TF32 off',backward='parameters',limitations='Experimental explicit-constant operator-data background override on one frozen polynomial 2D checkpoint. No training/optimizer update; not a time-to-quality test. Three alternating repetitions, three warmups/seven measurements. Not integrated into production. Numeric data verified, arbitrary callbacks rejected.')\nPath('numerical-reports/static-background-gpu-probe-001.json').write_text(json.dumps(report,indent=2,allow_nan=False))\nprint(json.dumps(report,indent=2))\n",
+  "preregistered_tracking_commit": "1ea592f",
+  "summary": {
+    "recursive": {
+      "objective_backward_seconds_median": 0.028550899995025247,
+      "warm_prediction_seconds": 0.04248380000353791
+    },
+    "static_background": {
+      "objective_backward_seconds_median": 0.024046100006671622,
+      "warm_prediction_seconds": 0.028020499972626567
+    }
+  }
+}
