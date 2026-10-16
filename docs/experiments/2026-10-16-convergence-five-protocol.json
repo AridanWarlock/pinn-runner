@@ -1,0 +1,49 @@
+{
+  "contract": 1,
+  "case": "heat_neumann3d",
+  "seeds": [
+    19,
+    1234,
+    4321,
+    2026,
+    73
+  ],
+  "arms": [
+    "all",
+    "parameters"
+  ],
+  "lifecycle": "one fresh Python process per seed/arm",
+  "order": "all/parameters on even seed positions, reversed on odd positions",
+  "constraints": "hard_initial_robin",
+  "execution": "robin_grouped",
+  "lifting": "recursive",
+  "adam_steps": 2000,
+  "lbfgs_snapshots": [
+    0,
+    25,
+    50,
+    75,
+    100,
+    125,
+    150,
+    175,
+    200
+  ],
+  "points": 2048,
+  "precision": "32-true",
+  "tf32": false,
+  "limits": {
+    "relative_l2": 0.001,
+    "final_relative_l2": 0.002,
+    "pde_rmse": 0.015
+  },
+  "confirmation": "two adjacent passing snapshots; no interpolation; report non-confirmations and left censoring",
+  "timing": "snapshot timestamps include previous snapshot I/O, exclude later analytical evaluation; warm prediction is eager control, not deployment executor",
+  "analysis": [
+    "paired intervals and confirmed observations",
+    "all snapshot model tensor values",
+    "quality and independent physical residual at each snapshot",
+    "training wall time, closure counts, peak memory, independent-control prediction cost"
+  ],
+  "limitations": "New preregistered protocol, not a reinterpretation of the previous negative seed19 result. More snapshots and an increased common L-BFGS budget of 200 instead of 150. No threshold changes after outcomes. No analytic teacher or early stopping. All ten trials use one pinned revision."
+}
