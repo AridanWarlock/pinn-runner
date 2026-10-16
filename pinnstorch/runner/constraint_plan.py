@@ -13,6 +13,7 @@ from pinnstorch.api import Problem
 from pinnstorch.contracts import FieldFunction
 from pinnstorch.training.constraints import HardBoxInitial
 from pinnstorch.training.hard_execution import hard_executor
+from pinnstorch.training.neumann_features import FeatureNeumannInitial
 from pinnstorch.training.robin_box import BoxRobinInitial
 from pinnstorch.training.robin_initial import IntervalRobinInitial, NetworkField
 
@@ -41,7 +42,7 @@ class ConstraintPlan:
     exact_faces: tuple[ExactFace, ...]
     remaining_losses: tuple[str, ...]
     signature: str
-    recipe: HardBoxInitial | IntervalRobinInitial | BoxRobinInitial | None
+    recipe: HardBoxInitial | IntervalRobinInitial | BoxRobinInitial | FeatureNeumannInitial | None
     output: FieldFunction | None
 
     def bind(self, network: NetworkField) -> FieldFunction | None:
@@ -53,6 +54,7 @@ class ConstraintPlan:
     def resolve(
         cls, settings: TaskSettings, problem: Problem, adapter: ProblemAdapter, directory: Path
     ) -> ConstraintPlan:
+        settings.validate_spatial_encoding()
         if settings.training.constraints == "soft":
             losses = ("initial", "equations") + (("boundaries",) if settings.boundaries else ())
             return cls(
@@ -118,14 +120,28 @@ class ConstraintPlan:
         source = (directory / "functions.py").read_bytes() + json.dumps(
             sorted(robin_definition)
         ).encode()
+        output: FieldFunction | None = None
+        recipe: IntervalRobinInitial | BoxRobinInitial | FeatureNeumannInitial = robin
+        if settings.network.spatial_encoding != "identity":
+            source += json.dumps(
+                {
+                    "spatial_encoding": settings.network.spatial_encoding,
+                    "version": 1,
+                    "space": [axis.interval for axis in settings.domain.space.values()],
+                    "time": settings.domain.time.interval,
+                },
+                sort_keys=True,
+            ).encode()
+            recipe = FeatureNeumannInitial(robin)
+            output = recipe
         return cls(
             settings.training.constraints,
             tuple(problem.fields),
             faces,
             ("equations",),
             hashlib.sha256(source).hexdigest(),
-            robin,
-            None,
+            recipe,
+            output,
         )
 
 

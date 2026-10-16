@@ -266,7 +266,7 @@ class Training:
     hard_background: str = "general"
 
     @classmethod
-    def read(cls, reader: Reader) -> Training:
+    def read(cls, reader: Reader, *, spatial_encoding: str = "identity") -> Training:
         reader.only(
             "epochs",
             "steps",
@@ -305,7 +305,9 @@ class Training:
         )
         hard_execution = reader.choice(
             "hard_execution",
-            "robin_grouped" if constraints == "hard_initial_robin" else "eager",
+            "robin_grouped"
+            if constraints == "hard_initial_robin" and spatial_encoding == "identity"
+            else "eager",
             ("eager", "fused_predict", "product_rule", "robin_batch", "robin_grouped"),
         )
         if constraints == "hard_initial_robin" and hard_execution not in (
@@ -355,10 +357,11 @@ class Training:
 @dataclass(frozen=True)
 class Network:
     hidden_layers: tuple[int, ...]
+    spatial_encoding: str = "identity"
 
     @classmethod
     def read(cls, reader: Reader) -> Network:
-        reader.only("hidden_layers")
+        reader.only("hidden_layers", "spatial_encoding")
         layers = reader.values.get("hidden_layers", [32, 32])
         if (
             not isinstance(layers, list)
@@ -368,7 +371,10 @@ class Network:
             )
         ):
             raise ValueError("network.hidden_layers must be a nonempty list of positive integers")
-        return cls(tuple(cast(list[int], layers)))
+        encoding = reader.choice(
+            "spatial_encoding", "identity", ("identity", "neumann_cosine", "neumann_polynomial")
+        )
+        return cls(tuple(cast(list[int], layers)), encoding)
 
 
 @dataclass(frozen=True)
@@ -573,10 +579,11 @@ class TaskSettings:
         boundaries = reader.values.get("boundaries", [])
         if not isinstance(boundaries, list):
             raise ValueError("boundaries must be a list")
+        network = Network.read(reader.section("network"))
         result = cls(
             Domain.read(reader.section("domain")),
-            Network.read(reader.section("network")),
-            Training.read(reader.section("training")),
+            network,
+            Training.read(reader.section("training"), spatial_encoding=network.spatial_encoding),
             None
             if validation is None or validation is False
             else Sampling.read(Reader(validation, "validation")),
@@ -591,7 +598,20 @@ class TaskSettings:
         result._validate_links()
         return result
 
+    def validate_spatial_encoding(self) -> None:
+        if self.network.spatial_encoding != "identity":
+            if (
+                self.training.constraints != "hard_initial_robin"
+                or self.training.hard_execution != "eager"
+                or any(b.kind != "neumann" for b in self.boundaries)
+            ):
+                raise ValueError(
+                    "Neumann spatial encoding requires hard_initial_robin, eager execution "
+                    "and Neumann conditions on every face"
+                )
+
     def _validate_links(self) -> None:
+        self.validate_spatial_encoding()
         if set(self.coefficients) & set(self.domain.input_names):
             raise ValueError("Coefficient names must differ from coordinates and parameters")
         unknown = set(self.prediction.parameters) - set(self.domain.parameters)

@@ -68,15 +68,29 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     parser.add_argument(
         "--hard-background", choices=("general", "static", "auto"), nargs="+", default=["general"]
     )
+    parser.add_argument(
+        "--spatial-encoding",
+        choices=("identity", "neumann_cosine", "neumann_polynomial"),
+        nargs="+",
+        default=["identity"],
+        help="Neumann feature representations always use eager execution without projection",
+    )
     parser.add_argument("--relative-l2", type=float, default=LIMITS["relative_l2"])
     parser.add_argument("--final-relative-l2", type=float, default=LIMITS["final_relative_l2"])
     parser.add_argument("--pde-rmse", type=float, default=LIMITS["pde_rmse"])
+    parser.add_argument("--mode-relative-l2", type=float, default=None)
     args = parser.parse_args()
     if min(args.seeds) < 0 or len(set(args.seeds)) != len(args.seeds):
         parser.error("Unique nonnegative seeds required")
     if any(
         len(set(values)) != len(values)
-        for values in (args.hard_execution, args.hard_lifting, args.backward, args.hard_background)
+        for values in (
+            args.hard_execution,
+            args.hard_lifting,
+            args.backward,
+            args.hard_background,
+            args.spatial_encoding,
+        )
     ):
         parser.error("Duplicate experiment arms are not allowed")
     limits = {
@@ -84,15 +98,29 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
         "final_relative_l2": args.final_relative_l2,
         "pde_rmse": args.pde_rmse,
     }
+    if args.mode_relative_l2 is not None:
+        limits["mode_relative_l2"] = args.mode_relative_l2
     plan = ConvergencePlan(
         CASES[args.case], args.steps, tuple(args.snapshots), limits, args.constraints, args.points
     )
-    arms = [
-        ConvergenceArm(*values)
-        for values in itertools.product(
-            args.hard_execution, args.hard_lifting, args.backward, args.hard_background
+    arms = list(
+        dict.fromkeys(
+            ConvergenceArm(
+                execution if encoding == "identity" else "eager",
+                lifting,
+                backward,
+                background,
+                encoding,
+            )
+            for execution, lifting, backward, background, encoding in itertools.product(
+                args.hard_execution,
+                args.hard_lifting,
+                args.backward,
+                args.hard_background,
+                args.spatial_encoding,
+            )
         )
-    ]
+    )
     # Validate combinations before creating files or allocating CUDA models.
     for arm in arms:
         TaskSettings.read(plan.config(args.seeds[0], arm))

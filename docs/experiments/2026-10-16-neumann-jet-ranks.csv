@@ -1,0 +1,6 @@
+max_derivative,constraints,feature_polynomial_degree,polynomial_pair_rank,single_q_rank
+2,4,2,4,3
+3,6,3,6,4
+4,8,4,8,5
+6,12,6,12,7
+8,16,8,16,9

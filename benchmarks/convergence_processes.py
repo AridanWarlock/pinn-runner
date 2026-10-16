@@ -39,6 +39,8 @@ def trial_command(
         arm.backward,
         "--hard-background",
         arm.background,
+        "--spatial-encoding",
+        arm.encoding,
     ]
     for name, limit in plan.limits.items():
         command.extend(["--" + name.replace("_", "-"), str(limit)])
@@ -78,6 +80,8 @@ def read_trial(
     }
     if any(trial.get(k) != v for k, v in identity.items()):
         raise ValueError("Child returned a different seed or experiment arm")
+    if trial.get("spatial_encoding", "identity") != arm.encoding:
+        raise ValueError("Child returned a different spatial representation")
     if not isinstance(report.get("environment"), dict) or not report["environment"].get(
         "revision"
     ):

@@ -50,6 +50,7 @@ class PINNModule(LightningModule):
         hard_lifting: str = "recursive",
         backward_mode: str = "all",
         hard_background: str = "general",
+        spatial_encoding: str = "identity",
     ) -> None:
         super().__init__()
         if loss_fn not in ("mse", "sse"):

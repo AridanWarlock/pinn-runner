@@ -21,6 +21,7 @@ from pinnstorch.data import (
 )
 from pinnstorch.data.sampler.sampler_base import SamplerBase
 from pinnstorch.models import FCN, PINNModule
+from pinnstorch.models.net.spatial_features import FeatureFCN
 from pinnstorch.training.sampling import ResampledLHS, TimePower
 
 from .backward import resolve_backward
@@ -164,14 +165,26 @@ class SolverFactory:
             ),
         )
 
-    def _model(self, mesh: PointCloud) -> PINNModule:
+    def _network(self, mesh: PointCloud) -> FCN | FeatureFCN:
         settings = self.settings
         layers = [
             len(settings.domain.input_names),
             *settings.network.hidden_layers,
             len(self.problem.outputs),
         ]
-        net = FCN(layers, mesh.lb, mesh.ub, self.problem.outputs)
+        if settings.network.spatial_encoding == "identity":
+            return FCN(layers, mesh.lb, mesh.ub, self.problem.outputs)
+        return FeatureFCN(
+            layers,
+            tuple(axis.interval for axis in settings.domain.space.values()),
+            settings.domain.time.interval,
+            self.problem.outputs,
+            settings.network.spatial_encoding,
+        )
+
+    def _model(self, mesh: PointCloud) -> PINNModule:
+        settings = self.settings
+        net = self._network(mesh)
         optimizer = settings.training.optimizer
         optimizer_class = torch.optim.AdamW if optimizer.name == "adamw" else torch.optim.Adam
         output = self.constraints.bind(net.forward)
@@ -182,6 +195,7 @@ class SolverFactory:
             constraint_kind=settings.training.constraints,
             hard_execution=settings.training.hard_execution,
             hard_lifting=settings.training.hard_lifting,
+            spatial_encoding=settings.network.spatial_encoding,
             backward_mode=resolve_backward(settings.training, settings.runtime),
             hard_background=(
                 "static"

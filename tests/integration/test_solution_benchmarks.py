@@ -16,6 +16,7 @@ from benchmarks.cases import (
     BoxNeumannHeatCase,
     DirichletHeatCase,
     HeatCase,
+    HomogeneousNeumannHeatCase,
     NeumannHeatCase,
     PolynomialNeumannHeatCase,
     RobinHeatCase,
@@ -110,7 +111,8 @@ def analytical_tensor(case: BenchmarkCase, coordinates: Coordinates) -> torch.Te
         for axis, column in coordinates.spatial.items():
             definition = case.mode_for(axis)
             mode = mode * torch.cos(definition.frequency * (column - definition.shift))
-            background = background + time * column
+            if not isinstance(case, HomogeneousNeumannHeatCase):
+                background = background + time * column
             decay += definition.frequency**2
         field = background + mode * torch.exp(-0.1 * decay * time)
     elif isinstance(case, RobinHeatCase):

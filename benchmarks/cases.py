@@ -192,6 +192,18 @@ class BoxRobinHeatCase(BoxNeumannHeatCase):
         return HeatAxisMode(float(np.pi / 2), 0.5, float(np.pi / 2))
 
 
+class HomogeneousNeumannHeatCase(BoxNeumannHeatCase):
+    @property
+    def source(self) -> Path:
+        return PROBLEMS / "heat_neumann_homogeneous" / "functions.py"
+
+    def boundaries(self, axes: tuple[str, ...]) -> list[dict[str, Any]]:
+        return [{"kind": "neumann", "field": "u", "axis": axis, "value": 0} for axis in axes]
+
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        return cast(Array, 1 + self.mode(spatial, time))
+
+
 class PolynomialNeumannHeatCase(BenchmarkCase):
     """Manufactured smooth solution with nonzero third boundary derivatives."""
 
@@ -257,6 +269,9 @@ CASES: dict[str, BenchmarkCase] = {
         BoxRobinHeatCase("heat_robin3d", 3, grid=CartesianGrid((6, 9))),
         MixedBoxHeatCase("heat_mixed3d", 3, grid=CartesianGrid((6, 9))),
         PolynomialNeumannHeatCase("heat_neumann_polynomial1d", 1),
+        HomogeneousNeumannHeatCase("heat_neumann_homogeneous1d", 1),
+        HomogeneousNeumannHeatCase("heat_neumann_homogeneous2d", 2, grid=CartesianGrid((8, 17))),
+        HomogeneousNeumannHeatCase("heat_neumann_homogeneous3d", 3, grid=CartesianGrid((6, 9))),
         PolynomialNeumannHeatCase("heat_neumann_polynomial2d", 2, grid=CartesianGrid((8, 17))),
         PolynomialNeumannHeatCase("heat_neumann_polynomial3d", 3, grid=CartesianGrid((6, 9))),
         AdvectionCase("advection", 1),

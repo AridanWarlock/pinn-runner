@@ -115,6 +115,11 @@ def test_child_report_cannot_silently_change_protocol(tmp_path: Path, child_scri
     report_path.write_text(json.dumps(modified))
     with pytest.raises(ValueError, match="different seed"):
         read_trial(child, plan(), arm, 19)
+    modified = json.loads(json.dumps(original))
+    modified["trials"][0]["spatial_encoding"] = "neumann_polynomial"
+    report_path.write_text(json.dumps(modified))
+    with pytest.raises(ValueError, match="different spatial"):
+        read_trial(child, plan(), arm, 19)
 
 
 def test_default_cli_coordinator_never_queries_cuda(
@@ -164,3 +169,77 @@ def test_coordinator_rejects_environment_change_before_appending(
     assert report["status"] == "running"
     assert len(report["trials"]) == 1
     assert report["environment"]["revision"] == "fixture"
+
+
+def test_encoding_cli_deduplicates_projection_free_arms(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import sys
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_time_to_quality.py",
+            "--output",
+            str(tmp_path / "out"),
+            "--case",
+            "heat_neumann_polynomial1d",
+            "--seeds",
+            "19",
+            "--steps",
+            "3",
+            "--snapshots",
+            "0",
+            "1",
+            "2",
+            "--points",
+            "7",
+            "--constraints",
+            "hard_initial_robin",
+            "--hard-execution",
+            "eager",
+            "robin_grouped",
+            "--spatial-encoding",
+            "identity",
+            "neumann_cosine",
+            "neumann_polynomial",
+        ],
+    )
+    _, _, arms = cli.arguments()
+    assert len(arms) == 4
+    assert {a.execution for a in arms if a.encoding != "identity"} == {"eager"}
+    assert len({a.name for a in arms}) == 4
+
+
+def test_mode_quality_limit_is_forwarded_to_fresh_worker(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import sys
+
+    from benchmarks.convergence_processes import trial_command
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark_time_to_quality.py",
+            "--output",
+            str(tmp_path / "study"),
+            "--case",
+            "heat_neumann_homogeneous1d",
+            "--seeds",
+            "19",
+            "--constraints",
+            "hard_initial_robin",
+            "--mode-relative-l2",
+            "0.02",
+            "--spatial-encoding",
+            "neumann_polynomial",
+        ],
+    )
+    _, selected, arms = cli.arguments()
+    assert selected.limits["mode_relative_l2"] == 0.02
+    command = trial_command(Path("benchmark.py"), selected, arms[0], 19, tmp_path / "child")
+    assert command[command.index("--mode-relative-l2") + 1] == "0.02"
+    assert command[command.index("--spatial-encoding") + 1] == "neumann_polynomial"

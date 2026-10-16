@@ -114,6 +114,14 @@ class HardBackground:
 
 
 @dataclass(frozen=True)
+class SpatialEncoding:
+    kind: str = "identity"
+
+    def apply(self, config: dict[str, Any]) -> None:
+        config["network"]["spatial_encoding"] = self.kind
+
+
+@dataclass(frozen=True)
 class TrainingComposition:
     adapters: tuple[TrainingAdapter, ...]
 

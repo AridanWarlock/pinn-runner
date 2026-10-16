@@ -1,0 +1,79 @@
+{
+  "contract": 1,
+  "status": "registered_before_cuda_training",
+  "phase1": {
+    "cases": [
+      "heat_neumann_homogeneous1d",
+      "heat_neumann_polynomial1d"
+    ],
+    "seeds": [
+      19
+    ],
+    "representations": [
+      "identity",
+      "neumann_cosine",
+      "neumann_polynomial"
+    ],
+    "adam_steps": 1000,
+    "lbfgs_snapshots": [
+      0,
+      25,
+      50,
+      75,
+      100
+    ],
+    "collocation_points": 512
+  },
+  "phase2": {
+    "cases": [
+      "heat_neumann_homogeneous2d",
+      "heat_neumann_polynomial2d"
+    ],
+    "seeds": [
+      19,
+      1234,
+      4321
+    ],
+    "representations": [
+      "identity",
+      "neumann_cosine",
+      "neumann_polynomial"
+    ],
+    "adam_steps": 2000,
+    "lbfgs_snapshots": [
+      0,
+      25,
+      50,
+      75,
+      100,
+      125,
+      150
+    ],
+    "collocation_points": 1024
+  },
+  "advance_gate": "Continue from phase1 only if polynomial representation is finite, initial RMS <=1e-6 and boundary operator maximum <=1e-5 on both problems; and either its global/final errors pass the fixed quality thresholds or both are no more than twice baseline. A failed gate stays negative, without threshold changes.",
+  "quality_limits": {
+    "relative_l2": 0.005,
+    "final_relative_l2": 0.01,
+    "pde_rmse": 0.02
+  },
+  "homogeneous_extra_limit": {
+    "mode_relative_l2": 0.02
+  },
+  "fixed_settings": "Windows RTX4070Ti, current Torch2.1/cu118, FP32 without TF32, hidden32x32x32, recursive lifting, background auto, backward parameters. Identity uses robin_grouped; feature representations use eager without projection. New Python process per trial, alternate order, one pinned source, no concurrent GPU jobs.",
+  "measurements": "Global/final/worst-time L2, independent physical PDE residual, initial/face temperature errors, per-face Neumann operator, work counters, training/process/prediction time, allocated/reserved memory, trainable parameter count, initial/objective hashes. Time-to-quality requires two adjacent successes; no interpolation or teacher in training.",
+  "scope": "Exploratory comparison of different finite representations. Same seed does not imply equal initial weights or capacity. No default promotion from this screening. 3D and five-seed acceptance require a separate next decision after these outcomes.",
+  "storage": "Only final rows, control snapshots and a concise result report go into Git. Raw repeated temporal profiles remain in numerical-reports on Windows. Mathematical derivations stay complete.",
+  "registered_utc": "2026-10-16T15:34:48.484238+00:00",
+  "symbolic_checks": {
+    "sympy": "1.14.0",
+    "rational_polynomials": 10,
+    "jet_orders": [
+      2,
+      3,
+      4,
+      6,
+      8
+    ]
+  }
+}
