@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "registered_at_utc": "2026-10-16T13:31:46Z",
+  "scope": "Диагностический повтор после всех 20 основных обучений, перед обновлением Windows. Не новое независимое состояние и не замена исходных результатов.",
+  "source_revision": "0d374ab1d60f166c5003ca79c405dfc6dbb1f9b5",
+  "case": "heat_neumann_polynomial2d",
+  "seed": 19,
+  "backgrounds": ["general", "static"],
+  "reason": "В первой паре наблюдалось различие плато L-BFGS. Проверить воспроизводимость каждого режима с самим собой.",
+  "steps": 2000,
+  "snapshots": [0, 25, 50, 75, 100, 125, 150],
+  "points": 1024,
+  "precision": "FP32, TF32 off",
+  "constraints": "hard_initial_robin",
+  "hard_execution": "robin_grouped",
+  "hard_lifting": "recursive",
+  "backward": "parameters",
+  "process_policy": "Новый процесс на каждый режим; без обновления исходников и параллельной GPU-работы.",
+  "comparison": "С исходным опытом того же режима: точное равенство всех весов, метрик, closure/residual counters на семи сохранениях. При любом исходе сохранить результат, критерии основной серии не менять.",
+  "limits": {"last_start_utc": "2026-10-16T14:30:00Z", "seconds_per_training": 240}
+}
