@@ -43,5 +43,89 @@
   "general_two_feature_chain_rule_difference": "0",
   "shifted_scaled_polynomial_chain_rule_difference": "0",
   "counterexample_V_equals_q_difference": "0",
-  "limitations": "Only endpoint derivative freedom through third order and exact chain rule are proved. No claim of universal approximation or measured optimization/accuracy improvement."
+  "limitations": "Only endpoint derivative freedom through third order and exact chain rule are proved. No claim of universal approximation or measured optimization/accuracy improvement.",
+  "cosine_counterexample_coefficients": [
+    {
+      "n": 1,
+      "coefficient": "-48/pi**4"
+    },
+    {
+      "n": 2,
+      "coefficient": "0"
+    },
+    {
+      "n": 3,
+      "coefficient": "-16/(27*pi**4)"
+    },
+    {
+      "n": 4,
+      "coefficient": "0"
+    },
+    {
+      "n": 5,
+      "coefficient": "-48/(625*pi**4)"
+    }
+  ],
+  "exact_cosine_truncation_errors": [
+    {
+      "maximum_cosine_index": 1,
+      "temperature_l2_error": 0.004340534960891913,
+      "second_derivative_l2_error": 0.41663946356969817
+    },
+    {
+      "maximum_cosine_index": 3,
+      "temperature_l2_error": 0.0005792094793843142,
+      "second_derivative_l2_error": 0.16608239415463433
+    },
+    {
+      "maximum_cosine_index": 7,
+      "temperature_l2_error": 6.011809160314267e-05,
+      "second_derivative_l2_error": 0.061118606130714355
+    },
+    {
+      "maximum_cosine_index": 15,
+      "temperature_l2_error": 5.583386656914542e-06,
+      "second_derivative_l2_error": 0.02185197148689102
+    },
+    {
+      "maximum_cosine_index": 31,
+      "temperature_l2_error": 5.001148289928702e-07,
+      "second_derivative_l2_error": 0.0077482355536464915
+    },
+    {
+      "maximum_cosine_index": 63,
+      "temperature_l2_error": 4.4354605689189574e-08,
+      "second_derivative_l2_error": 0.002741416003274702
+    }
+  ],
+  "series_error_squared_temperature": "1152/pi**8 * sum_{n>N, odd} n**(-8)",
+  "series_error_squared_second_derivative": "1152/pi**4 * sum_{n>N, odd} n**(-4)",
+  "manufactured_heat_controls": [
+    {
+      "dimensions": 2,
+      "pde_residual": "0",
+      "outward_normal_boundary_residuals": [
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "heat_balance_defect": "0",
+      "mass": "exp(-sigma*t)/4"
+    },
+    {
+      "dimensions": 3,
+      "pde_residual": "0",
+      "outward_normal_boundary_residuals": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0"
+      ],
+      "heat_balance_defect": "0",
+      "mass": "exp(-sigma*t)/8"
+    }
+  ]
 }
