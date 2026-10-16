@@ -1,144 +1,18 @@
 {
-  "environment": {
-    "revision": "4bcd54cecfc908ffd885300741358c565c5d2a8c",
-    "working_tree_dirty": true,
-    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
-    "platform": "Windows-10-10.0.26200-SP0",
-    "torch": "2.1.0+cu118",
-    "cuda_runtime": "11.8",
-    "cpu_threads": 6,
-    "float32_matmul_precision": "highest",
-    "cuda_matmul_allow_tf32": false,
-    "device": "cuda",
-    "gpu": "NVIDIA GeForce RTX 4070 Ti",
-    "packages": {
-      "numpy": "1.26.4",
-      "lightning": "2.1.0"
-    }
-  },
-  "limits": {
-    "relative_l2": 0.001,
-    "final_relative_l2": 0.002,
-    "pde_rmse": 0.005
-  },
+  "environment_ref": 0,
+  "limits": {"relative_l2": 0.001, "final_relative_l2": 0.002, "pde_rmse": 0.005},
   "trials": [
     {
       "backend": "eager",
       "seed": 1234,
-      "snapshots": [
-        {
-          "lb_steps": 0,
-          "seconds": 37.72141839994583,
-          "closures": 0,
-          "metrics": {
-            "relative_l2": 0.003379861202185411,
-            "rmse": 0.0006240579602254617,
-            "max_error": 0.003854083913536699,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.008889197328514783,
-            "pde_rmse": 0.01084517315030098
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 25,
-          "seconds": 38.39347349992022,
-          "closures": 52,
-          "metrics": {
-            "relative_l2": 0.001851121548061554,
-            "rmse": 0.0003417912950584296,
-            "max_error": 0.0017529722262184522,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.00518371490323907,
-            "pde_rmse": 0.007747051306068897
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 50,
-          "seconds": 39.09272059996147,
-          "closures": 102,
-          "metrics": {
-            "relative_l2": 0.0015110744920272404,
-            "rmse": 0.00027900496761035774,
-            "max_error": 0.0013880190895569078,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.004107858092312003,
-            "pde_rmse": 0.006222240626811981
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 100,
-          "seconds": 40.58524259994738,
-          "closures": 203,
-          "metrics": {
-            "relative_l2": 0.0008608821460475413,
-            "rmse": 0.00015895337823623292,
-            "max_error": 0.0009282580567644139,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.00317290994217518,
-            "pde_rmse": 0.0042079356499016285
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 150,
-          "seconds": 42.08270829997491,
-          "closures": 304,
-          "metrics": {
-            "relative_l2": 0.0006296047649231805,
-            "rmse": 0.00011625029604533365,
-            "max_error": 0.0006711078806496407,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0021519348660629252,
-            "pde_rmse": 0.0030789775773882866
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 200,
-          "seconds": 43.61699689994566,
-          "closures": 408,
-          "metrics": {
-            "relative_l2": 0.0005300075025004088,
-            "rmse": 9.78606460823689e-05,
-            "max_error": 0.0005567788700241855,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0017777219549680874,
-            "pde_rmse": 0.0024379247333854437
-          },
-          "passed": true
-        },
-        {
-          "lb_steps": 300,
-          "seconds": 46.65862320002634,
-          "closures": 614,
-          "metrics": {
-            "relative_l2": 0.00033460060951608767,
-            "rmse": 6.17806949379429e-05,
-            "max_error": 0.0003857859419538756,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0011278385884956395,
-            "pde_rmse": 0.0017570076743140817
-          },
-          "passed": true
-        }
-      ],
-      "crossing": {
-        "status": "observed",
-        "lower_seconds": 42.08270829997491,
-        "upper_seconds": 43.61699689994566,
-        "confirmed_seconds": 46.65862320002634,
-        "left_censored": false
+      "snapshots": {
+        "csv": "2026-10-13-time-quality-screening.data.csv",
+        "table": 0,
+        "kind": "records",
+        "rows": 7,
+        "columns": ["lb_steps", "seconds", "closures", "metrics.relative_l2", "metrics.rmse", "metrics.max_error", "metrics.initial_rmse", "metrics.boundary_rmse", "metrics.final_relative_l2", "metrics.pde_rmse", "passed"]
       },
+      "crossing": {"status": "observed", "lower_seconds": 42.08270829997491, "upper_seconds": 43.61699689994566, "confirmed_seconds": 46.65862320002634, "left_censored": false},
       "snapshot_seconds": 0.010033600381575525,
       "training_seconds_with_snapshots": 46.65970920003019,
       "adam_steps": 3000
@@ -146,120 +20,14 @@
     {
       "backend": "product_rule",
       "seed": 1234,
-      "snapshots": [
-        {
-          "lb_steps": 0,
-          "seconds": 36.73217580001801,
-          "closures": 0,
-          "metrics": {
-            "relative_l2": 0.0033798666595719526,
-            "rmse": 0.0006240589678779389,
-            "max_error": 0.003853964704247148,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.008889273226414229,
-            "pde_rmse": 0.010845168493688107
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 25,
-          "seconds": 37.29979660001118,
-          "closures": 52,
-          "metrics": {
-            "relative_l2": 0.0018628894936850208,
-            "rmse": 0.00034396412988877003,
-            "max_error": 0.0017078217078010938,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.005281858504393409,
-            "pde_rmse": 0.007762306835502386
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 50,
-          "seconds": 37.93099450005684,
-          "closures": 102,
-          "metrics": {
-            "relative_l2": 0.0013473809263970299,
-            "rmse": 0.0002487805688678386,
-            "max_error": 0.0012737557092585422,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0043378304386635265,
-            "pde_rmse": 0.005827239714562893
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 100,
-          "seconds": 39.28171570005361,
-          "closures": 204,
-          "metrics": {
-            "relative_l2": 0.0008458772345185621,
-            "rmse": 0.0001561828696496426,
-            "max_error": 0.0009994856072710057,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0032560046018501104,
-            "pde_rmse": 0.004184013232588768
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 150,
-          "seconds": 40.66085480002221,
-          "closures": 310,
-          "metrics": {
-            "relative_l2": 0.0006309253261934497,
-            "rmse": 0.00011649412462981635,
-            "max_error": 0.0007238877935982491,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0022179991552571613,
-            "pde_rmse": 0.0030218742322176695
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 200,
-          "seconds": 42.0528441000497,
-          "closures": 414,
-          "metrics": {
-            "relative_l2": 0.0005195132696464532,
-            "rmse": 9.592298972395513e-05,
-            "max_error": 0.0005849718670029452,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0018248528030837344,
-            "pde_rmse": 0.0023808260448276997
-          },
-          "passed": true
-        },
-        {
-          "lb_steps": 300,
-          "seconds": 44.75448770006187,
-          "closures": 622,
-          "metrics": {
-            "relative_l2": 0.0003388818968575207,
-            "rmse": 6.257119232396167e-05,
-            "max_error": 0.0003756531523420592,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0011434331621088228,
-            "pde_rmse": 0.0017626163316890597
-          },
-          "passed": true
-        }
-      ],
-      "crossing": {
-        "status": "observed",
-        "lower_seconds": 40.66085480002221,
-        "upper_seconds": 42.0528441000497,
-        "confirmed_seconds": 44.75448770006187,
-        "left_censored": false
+      "snapshots": {
+        "csv": "2026-10-13-time-quality-screening.data.csv",
+        "table": 1,
+        "kind": "records",
+        "rows": 7,
+        "columns": ["lb_steps", "seconds", "closures", "metrics.relative_l2", "metrics.rmse", "metrics.max_error", "metrics.initial_rmse", "metrics.boundary_rmse", "metrics.final_relative_l2", "metrics.pde_rmse", "passed"]
       },
+      "crossing": {"status": "observed", "lower_seconds": 40.66085480002221, "upper_seconds": 42.0528441000497, "confirmed_seconds": 44.75448770006187, "left_censored": false},
       "snapshot_seconds": 0.009290199959650636,
       "training_seconds_with_snapshots": 44.75559359998442,
       "adam_steps": 3000
@@ -267,120 +35,14 @@
     {
       "backend": "product_rule",
       "seed": 19,
-      "snapshots": [
-        {
-          "lb_steps": 0,
-          "seconds": 32.304121499997564,
-          "closures": 0,
-          "metrics": {
-            "relative_l2": 0.0036509560368455114,
-            "rmse": 0.0006741129416064279,
-            "max_error": 0.004756294806607497,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.01546724013194676,
-            "pde_rmse": 0.012457347474992275
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 25,
-          "seconds": 32.84657439996954,
-          "closures": 51,
-          "metrics": {
-            "relative_l2": 0.0018477856783798814,
-            "rmse": 0.0003411753596975998,
-            "max_error": 0.0020782977932380375,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.005903409508232498,
-            "pde_rmse": 0.00803991686552763
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 50,
-          "seconds": 33.459451999980956,
-          "closures": 101,
-          "metrics": {
-            "relative_l2": 0.001486897941005892,
-            "rmse": 0.0002745410064554103,
-            "max_error": 0.0017344429906198111,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.004394095948144035,
-            "pde_rmse": 0.0065912348218262196
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 100,
-          "seconds": 34.781133299926296,
-          "closures": 204,
-          "metrics": {
-            "relative_l2": 0.0009319339240402249,
-            "rmse": 0.00017207238667830624,
-            "max_error": 0.000840468006628875,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0026780081264184278,
-            "pde_rmse": 0.004173525143414736
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 150,
-          "seconds": 36.13037119992077,
-          "closures": 306,
-          "metrics": {
-            "relative_l2": 0.000641189372454507,
-            "rmse": 0.00011838927930930247,
-            "max_error": 0.000623360771444148,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.001819938822399732,
-            "pde_rmse": 0.003103408729657531
-          },
-          "passed": true
-        },
-        {
-          "lb_steps": 200,
-          "seconds": 37.47521840000991,
-          "closures": 411,
-          "metrics": {
-            "relative_l2": 0.0005419552561187124,
-            "rmse": 0.00010006668068150975,
-            "max_error": 0.0005596655118501603,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.001459902456666866,
-            "pde_rmse": 0.0024763394612818956
-          },
-          "passed": true
-        },
-        {
-          "lb_steps": 300,
-          "seconds": 40.17421369999647,
-          "closures": 622,
-          "metrics": {
-            "relative_l2": 0.0004029594690950974,
-            "rmse": 7.440248261509124e-05,
-            "max_error": 0.0005146546458007911,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0011122786173380353,
-            "pde_rmse": 0.0019031359115615487
-          },
-          "passed": true
-        }
-      ],
-      "crossing": {
-        "status": "observed",
-        "lower_seconds": 34.781133299926296,
-        "upper_seconds": 36.13037119992077,
-        "confirmed_seconds": 37.47521840000991,
-        "left_censored": false
+      "snapshots": {
+        "csv": "2026-10-13-time-quality-screening.data.csv",
+        "table": 2,
+        "kind": "records",
+        "rows": 7,
+        "columns": ["lb_steps", "seconds", "closures", "metrics.relative_l2", "metrics.rmse", "metrics.max_error", "metrics.initial_rmse", "metrics.boundary_rmse", "metrics.final_relative_l2", "metrics.pde_rmse", "passed"]
       },
+      "crossing": {"status": "observed", "lower_seconds": 34.781133299926296, "upper_seconds": 36.13037119992077, "confirmed_seconds": 37.47521840000991, "left_censored": false},
       "snapshot_seconds": 0.008271099999547005,
       "training_seconds_with_snapshots": 40.17521559994202,
       "adam_steps": 3000
@@ -388,123 +50,41 @@
     {
       "backend": "eager",
       "seed": 19,
-      "snapshots": [
-        {
-          "lb_steps": 0,
-          "seconds": 37.161849900032394,
-          "closures": 0,
-          "metrics": {
-            "relative_l2": 0.0036509283156890976,
-            "rmse": 0.0006741078231689266,
-            "max_error": 0.004756235201962722,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.01546702461516637,
-            "pde_rmse": 0.012457347474992275
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 25,
-          "seconds": 37.79547170002479,
-          "closures": 51,
-          "metrics": {
-            "relative_l2": 0.0018478765886625107,
-            "rmse": 0.0003411921453826169,
-            "max_error": 0.002086582838861817,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.005963090417105971,
-            "pde_rmse": 0.0080630574375391
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 50,
-          "seconds": 38.49348569998983,
-          "closures": 101,
-          "metrics": {
-            "relative_l2": 0.0015835838829732134,
-            "rmse": 0.00029239310987539384,
-            "max_error": 0.0018342175880613487,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.004364468672597727,
-            "pde_rmse": 0.007075561676174402
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 100,
-          "seconds": 39.99744189996272,
-          "closures": 203,
-          "metrics": {
-            "relative_l2": 0.0009489470823120336,
-            "rmse": 0.00017521369817394782,
-            "max_error": 0.0009169056828805533,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.0026636967889885946,
-            "pde_rmse": 0.004632793832570314
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 150,
-          "seconds": 41.535547900013626,
-          "closures": 308,
-          "metrics": {
-            "relative_l2": 0.0007474636826441686,
-            "rmse": 0.00013801178013816637,
-            "max_error": 0.0007946505122177205,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.002252918722242173,
-            "pde_rmse": 0.00320578389801085
-          },
-          "passed": false
-        },
-        {
-          "lb_steps": 200,
-          "seconds": 43.05116369994357,
-          "closures": 411,
-          "metrics": {
-            "relative_l2": 0.000537669659915567,
-            "rmse": 9.927538770677e-05,
-            "max_error": 0.0005475125945507697,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.001412392506291159,
-            "pde_rmse": 0.0024698497727513313
-          },
-          "passed": true
-        },
-        {
-          "lb_steps": 300,
-          "seconds": 46.100412099971436,
-          "closures": 620,
-          "metrics": {
-            "relative_l2": 0.00035783996437233333,
-            "rmse": 6.607161208541835e-05,
-            "max_error": 0.0004143996332885841,
-            "initial_rmse": 4.569907432288443e-08,
-            "boundary_rmse": 3.088851570128604e-08,
-            "final_relative_l2": 0.001044523945478145,
-            "pde_rmse": 0.0017375779571011662
-          },
-          "passed": true
-        }
-      ],
-      "crossing": {
-        "status": "observed",
-        "lower_seconds": 41.535547900013626,
-        "upper_seconds": 43.05116369994357,
-        "confirmed_seconds": 46.100412099971436,
-        "left_censored": false
+      "snapshots": {
+        "csv": "2026-10-13-time-quality-screening.data.csv",
+        "table": 3,
+        "kind": "records",
+        "rows": 7,
+        "columns": ["lb_steps", "seconds", "closures", "metrics.relative_l2", "metrics.rmse", "metrics.max_error", "metrics.initial_rmse", "metrics.boundary_rmse", "metrics.final_relative_l2", "metrics.pde_rmse", "passed"]
       },
+      "crossing": {"status": "observed", "lower_seconds": 41.535547900013626, "upper_seconds": 43.05116369994357, "confirmed_seconds": 46.100412099971436, "left_censored": false},
       "snapshot_seconds": 0.008838299894705415,
       "training_seconds_with_snapshots": 46.10156580002513,
       "adam_steps": 3000
     }
-  ]
+  ],
+  "_storage": {
+    "archive_revision": "67731e6d76c9ebf921127a2b771a39053673a0fc",
+    "original_sha256": "880b011f523370d371884a6992bd365deff573a8b5fa7004c48974f091215ffd",
+    "temporal_profiles_summarized": 0,
+    "table_format": "CSV table + row indexes; JSON-encoded scalar cells, dot-separated nested column names. See docs/numerical-benchmarks.md.",
+    "environments": [
+      {
+        "revision": "4bcd54cecfc908ffd885300741358c565c5d2a8c",
+        "working_tree_dirty": true,
+        "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "torch": "2.1.0+cu118",
+        "cuda_runtime": "11.8",
+        "cpu_threads": 6,
+        "float32_matmul_precision": "highest",
+        "cuda_matmul_allow_tf32": false,
+        "device": "cuda",
+        "gpu": "NVIDIA GeForce RTX 4070 Ti",
+        "packages": {"numpy": "1.26.4", "lightning": "2.1.0"}
+      }
+    ],
+    "derived_trial_summaries_removed": 0,
+    "format": "compact-evidence-v1"
+  }
 }
