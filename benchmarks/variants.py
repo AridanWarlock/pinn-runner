@@ -1,6 +1,7 @@
 """Compose a benchmark with a training experiment, preserving its PDE identity."""
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Protocol
 
 import numpy as np
@@ -123,6 +124,10 @@ class BenchmarkVariant(BenchmarkCase):
         object.__setattr__(self, "grid", self.base.grid)
         object.__setattr__(self, "budget", self.base.budget)
         object.__setattr__(self, "quality", self.base.quality)
+
+    @property
+    def source(self) -> Path:
+        return self.base.source
 
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
         return self.base.reference(spatial, time)

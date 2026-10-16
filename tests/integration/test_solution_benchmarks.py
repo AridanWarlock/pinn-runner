@@ -17,6 +17,7 @@ from benchmarks.cases import (
     DirichletHeatCase,
     HeatCase,
     NeumannHeatCase,
+    PolynomialNeumannHeatCase,
     RobinHeatCase,
 )
 from benchmarks.execution import fingerprint, validate_refinement
@@ -80,6 +81,14 @@ def test_variant_preserves_custom_grid_budget_and_acceptance() -> None:
     assert not quality_failures(CASES["heat2d"], metrics)
 
 
+def test_variant_delegates_polymorphic_problem_source() -> None:
+    base = CASES["heat_neumann_polynomial3d"]
+    variant = BenchmarkVariant(base.name, base.dimensions, base=base, adapter=BoundaryWeight(2))
+    assert variant.source == base.source
+    assert variant.source.is_file()
+    assert fingerprint(variant, "cpu", 2, 19)
+
+
 def analytical_tensor(case: BenchmarkCase, coordinates: Coordinates) -> torch.Tensor:
     x, time = coordinates.x, coordinates.t
     if isinstance(case, HeatCase):
@@ -90,6 +99,10 @@ def analytical_tensor(case: BenchmarkCase, coordinates: Coordinates) -> torch.Te
             field = field + 1 + 0.2 * case.dimensions * time
             for column in coordinates.spatial.values():
                 field = field + column.square()
+    elif isinstance(case, PolynomialNeumannHeatCase):
+        field = torch.exp(-time)
+        for column in coordinates.spatial.values():
+            field = field * (3 * column.square() - 2 * column.pow(3))
     elif isinstance(case, BoxNeumannHeatCase):
         mode = torch.ones_like(time)
         background = torch.ones_like(time)
