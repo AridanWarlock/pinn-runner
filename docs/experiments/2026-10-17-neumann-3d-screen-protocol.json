@@ -1,0 +1,43 @@
+{
+  "contract": 1,
+  "status": "registered_before_3d_screen",
+  "registered_utc": "2026-10-17T07:00:57.443157+00:00",
+  "hypothesis": "Check whether the Neumann representations remain numerically valid and useful in 3D before any default promotion. This is a short screen, not multi-seed acceptance.",
+  "phase1": {
+    "cases": [
+      "heat_neumann_homogeneous3d",
+      "heat_neumann_polynomial3d"
+    ],
+    "seeds": [
+      19
+    ],
+    "representations": [
+      "identity",
+      "neumann_cosine",
+      "neumann_polynomial"
+    ],
+    "adam_steps": 1000,
+    "lbfgs_snapshots": [
+      0,
+      25,
+      50,
+      75,
+      100
+    ],
+    "collocation_points": 512
+  },
+  "quality_limits": {
+    "relative_l2": 0.005,
+    "final_relative_l2": 0.01,
+    "pde_rmse": 0.02
+  },
+  "homogeneous_extra_limit": {
+    "mode_relative_l2": 0.02
+  },
+  "lbfgs_tolerance_change": 1e-09,
+  "derivative_rule": "ordinary autograd for all representations; no analytic prototype in this screen",
+  "fixed_settings": "Current Torch2.1/cu118 RTX4070Ti FP32 TF32off; hard_initial_robin; recursive; auto background; backward parameters; identity robin_grouped and feature eager; one fresh process per trial; global GPU lock after pullback006.",
+  "measurements": "Independent global/final/PDE/mode errors and face operators, train/prediction/process time, counters, peak allocated/reserved memory, hashes and parameter count.",
+  "scope": "Record all finite failures against absolute thresholds. No tuning or default promotion from one seed. 3D support tests are not proof of accurate training; this screen adds actual solutions.",
+  "storage": "Compact final/snapshot CSV; raw temporal profiles and weights remain Windows."
+}
