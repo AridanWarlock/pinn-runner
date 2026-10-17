@@ -12,6 +12,7 @@ import numpy as np
 import torch
 import yaml
 
+from pinnstorch.models.net.spatial_features import FeatureFCN
 from pinnstorch.models.pinn_module import PINNModule
 from pinnstorch.runner.checkpoint_io import load_checkpoint
 from pinnstorch.runner.factory import ExecutionObjects, SolverFactory
@@ -299,6 +300,12 @@ def convergence_trial(
         "backward": arm.backward,
         "background": arm.background,
         "spatial_encoding": arm.encoding,
+        "feature_derivatives": objects.model.net.features.derivative_rule
+        if isinstance(objects.model.net, FeatureFCN)
+        else None,
+        "control_feature_derivatives": evaluator.model.net.features.derivative_rule
+        if isinstance(evaluator.model.net, FeatureFCN)
+        else None,
         "trainable_parameters": sum(
             p.numel() for p in objects.model.parameters() if p.requires_grad
         ),

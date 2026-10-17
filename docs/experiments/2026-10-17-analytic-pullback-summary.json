@@ -1,0 +1,183 @@
+{
+  "contract": 1,
+  "status": {
+    "state": "completed",
+    "started_at": "2026-10-17T07:01:07.601005+00:00",
+    "completed": [
+      {
+        "case": "heat_neumann_homogeneous2d",
+        "repeat": 0,
+        "rule": "autograd"
+      },
+      {
+        "case": "heat_neumann_homogeneous2d",
+        "repeat": 0,
+        "rule": "analytic"
+      },
+      {
+        "case": "heat_neumann_homogeneous2d",
+        "repeat": 1,
+        "rule": "analytic"
+      },
+      {
+        "case": "heat_neumann_homogeneous2d",
+        "repeat": 1,
+        "rule": "autograd"
+      },
+      {
+        "case": "heat_neumann_homogeneous2d",
+        "repeat": 2,
+        "rule": "autograd"
+      },
+      {
+        "case": "heat_neumann_homogeneous2d",
+        "repeat": 2,
+        "rule": "analytic"
+      },
+      {
+        "case": "heat_neumann_polynomial2d",
+        "repeat": 0,
+        "rule": "analytic"
+      },
+      {
+        "case": "heat_neumann_polynomial2d",
+        "repeat": 0,
+        "rule": "autograd"
+      },
+      {
+        "case": "heat_neumann_polynomial2d",
+        "repeat": 1,
+        "rule": "autograd"
+      },
+      {
+        "case": "heat_neumann_polynomial2d",
+        "repeat": 1,
+        "rule": "analytic"
+      },
+      {
+        "case": "heat_neumann_polynomial2d",
+        "repeat": 2,
+        "rule": "analytic"
+      },
+      {
+        "case": "heat_neumann_polynomial2d",
+        "repeat": 2,
+        "rule": "autograd"
+      }
+    ],
+    "commit": "2488111aa8e95ddfca5250507c6b9099eaee53ca",
+    "phase": "heat_neumann_polynomial2d",
+    "performance_gates": [
+      {
+        "case": "heat_neumann_homogeneous2d",
+        "passed": true,
+        "training_ratios": [
+          0.8366184644873725,
+          0.8077851540302786,
+          0.8237088497737756
+        ],
+        "prediction_ratios": [
+          1.0326984786641655,
+          1.0148079275393416,
+          1.0507393233561024
+        ],
+        "median_training_ratio": 0.8237088497737756,
+        "worst_training_ratio": 0.8366184644873725,
+        "median_prediction_ratio": 1.0326984786641655
+      },
+      {
+        "case": "heat_neumann_polynomial2d",
+        "passed": true,
+        "training_ratios": [
+          0.8396297494241782,
+          0.8398548983144156,
+          0.8319601288277463
+        ],
+        "prediction_ratios": [
+          0.9792300533991999,
+          1.053363520468014,
+          1.006699024905512
+        ],
+        "median_training_ratio": 0.8396297494241782,
+        "worst_training_ratio": 0.8398548983144156,
+        "median_prediction_ratio": 1.006699024905512
+      }
+    ],
+    "finished_at": "2026-10-17T07:07:32.090681+00:00"
+  },
+  "tests": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "69",
+      "time": "35.615",
+      "timestamp": "2026-10-17T10:06:20.371058+03:00",
+      "hostname": "AridanWarlock"
+    }
+  ],
+  "gates": [
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "passed": true,
+      "training_ratios": [
+        0.8366184644873725,
+        0.8077851540302786,
+        0.8237088497737756
+      ],
+      "prediction_ratios": [
+        1.0326984786641655,
+        1.0148079275393416,
+        1.0507393233561024
+      ],
+      "median_training_ratio": 0.8237088497737756,
+      "worst_training_ratio": 0.8366184644873725,
+      "median_prediction_ratio": 1.0326984786641655
+    },
+    {
+      "case": "heat_neumann_polynomial2d",
+      "passed": true,
+      "training_ratios": [
+        0.8396297494241782,
+        0.8398548983144156,
+        0.8319601288277463
+      ],
+      "prediction_ratios": [
+        0.9792300533991999,
+        1.053363520468014,
+        1.006699024905512
+      ],
+      "median_training_ratio": 0.8396297494241782,
+      "worst_training_ratio": 0.8398548983144156,
+      "median_prediction_ratio": 1.006699024905512
+    }
+  ],
+  "states": {
+    "heat_neumann_homogeneous2d": {
+      "weights_sha256": "3e98fe569b73335de6dccc9367f00604cf1b932d05805d4f11511027ad094aa5",
+      "state_sha256": "4fb08e16b7d7c8fdff16f4dca75d613f290fcd8d19f9cf19afe8e2964c5b9de7",
+      "revision": "2488111aa8e95ddfca5250507c6b9099eaee53ca"
+    },
+    "heat_neumann_polynomial2d": {
+      "weights_sha256": "54757ac6ffe33bd6c38a5a31fa2907309f9f1fee7e7535d707eb13c0053903bb",
+      "state_sha256": "404935d2726b754e67a953cff87938c60e4f2b9670729a9fb50048e4563c8854",
+      "revision": "2488111aa8e95ddfca5250507c6b9099eaee53ca"
+    }
+  },
+  "operator_selection": [
+    "aten::add",
+    "aten::addmm",
+    "aten::cat",
+    "aten::copy_",
+    "aten::div",
+    "aten::mm",
+    "aten::mul",
+    "aten::neg",
+    "aten::pow",
+    "aten::sub",
+    "aten::sum",
+    "aten::tanh"
+  ],
+  "limitations": "Only repeat0 selected operator counts are retained here; full operator tables/traces and all reports stay Windows. CUDA profiling activities unsupported. No optimizer update; no long-training quality conclusion."
+}

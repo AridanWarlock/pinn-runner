@@ -91,6 +91,8 @@ def read_trial(
         raise ValueError("Child returned a different seed or experiment arm")
     if trial.get("spatial_encoding", "identity") != arm.encoding:
         raise ValueError("Child returned a different spatial representation")
+    if arm.execution == "neumann_analytic" and trial.get("feature_derivatives") != "analytic":
+        raise ValueError("Child report did not execute analytic feature derivatives")
     if not isinstance(report.get("environment"), dict) or not report["environment"].get(
         "revision"
     ):

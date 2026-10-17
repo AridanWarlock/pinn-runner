@@ -55,7 +55,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     )
     parser.add_argument(
         "--hard-execution",
-        choices=("eager", "product_rule", "robin_batch", "robin_grouped"),
+        choices=("eager", "product_rule", "robin_batch", "robin_grouped", "neumann_analytic"),
         nargs="+",
         default=["eager", "product_rule"],
     )
@@ -73,7 +73,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
         choices=("identity", "neumann_cosine", "neumann_polynomial"),
         nargs="+",
         default=["identity"],
-        help="Neumann feature representations always use eager execution without projection",
+        help="Neumann features use eager or analytic derivatives without projection",
     )
     parser.add_argument("--relative-l2", type=float, default=LIMITS["relative_l2"])
     parser.add_argument("--final-relative-l2", type=float, default=LIMITS["final_relative_l2"])
@@ -115,7 +115,9 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     arms = list(
         dict.fromkeys(
             ConvergenceArm(
-                execution if encoding == "identity" else "eager",
+                execution
+                if encoding == "identity" or execution == "neumann_analytic"
+                else "eager",
                 lifting,
                 backward,
                 background,

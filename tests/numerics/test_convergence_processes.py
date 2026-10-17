@@ -29,9 +29,10 @@ p.add_argument('--constraints');p.add_argument('--hard-execution');p.add_argumen
 p.add_argument('--relative-l2',type=float);p.add_argument('--final-relative-l2',type=float);p.add_argument('--pde-rmse',type=float)
 p.add_argument('--points',type=int);p.add_argument('--hard-background',default='general')
 p.add_argument('--lbfgs-tolerance-change',type=float,default=1e-9)
+p.add_argument('--spatial-encoding',default='identity')
 a,_=p.parse_known_args()
 a.output.mkdir(parents=True)
-trial=dict(case=a.case,seed=a.seeds,backend=a.hard_execution,lifting=a.hard_lifting,backward=a.backward,background=a.hard_background,pid=os.getpid())
+trial=dict(case=a.case,seed=a.seeds,backend=a.hard_execution,lifting=a.hard_lifting,backward=a.backward,background=a.hard_background,pid=os.getpid(),spatial_encoding=a.spatial_encoding,feature_derivatives='analytic' if a.hard_execution=='neumann_analytic' else 'autograd')
 r=dict(contract=3,status='completed',execution_lifecycle='single_trial',case=a.case,environment=dict(revision='fixture',device='cpu'),limits=dict(relative_l2=a.relative_l2,final_relative_l2=a.final_relative_l2,pde_rmse=a.pde_rmse),adam_steps=a.steps,lbfgs_snapshots=a.snapshots,constraints=a.constraints,points_override=a.points,lbfgs_tolerance_change=a.lbfgs_tolerance_change,trials=[trial])
 (a.output/'report.json').write_text(json.dumps(r))
 """)
@@ -269,3 +270,48 @@ def test_tolerance_is_preserved_in_config_worker_and_report(
 def test_invalid_tolerance_is_rejected_before_cuda(value: float) -> None:
     with pytest.raises(ValueError, match="tolerance_change"):
         replace(plan(), tolerance_change=value)
+
+
+def test_coordinator_rejects_analytic_flag_without_actual_execution(
+    tmp_path: Path, child_script: Path
+) -> None:
+    arm = ConvergenceArm(
+        "neumann_analytic", "recursive", "parameters", "auto", "neumann_polynomial"
+    )
+    output = tmp_path / "analytic"
+    run_isolated(plan(), [arm], [19], output, child_script)
+    child = output / "processes" / f"{arm.name}-19"
+    path = child / "report.json"
+    report = json.loads(path.read_text())
+    report["trials"][0]["feature_derivatives"] = "autograd"
+    path.write_text(json.dumps(report))
+    with pytest.raises(ValueError, match="analytic feature derivatives"):
+        read_trial(child, plan(), arm, 19)
+
+
+def test_analytic_cli_preserves_two_explicit_executors(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import sys
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark.py",
+            "--output",
+            str(tmp_path),
+            "--case",
+            "heat_neumann_homogeneous2d",
+            "--constraints",
+            "hard_initial_robin",
+            "--hard-execution",
+            "eager",
+            "neumann_analytic",
+            "--spatial-encoding",
+            "neumann_polynomial",
+        ],
+    )
+    _, _, arms = cli.arguments()
+    assert {a.execution for a in arms} == {"eager", "neumann_analytic"}
+    assert len({a.name for a in arms}) == 2

@@ -67,9 +67,10 @@ class FeatureFCN(nn.Module):
         time_interval: tuple[float, float],
         output_names: Sequence[str],
         encoding: str,
+        derivative_rule: Literal["autograd", "analytic"] = "autograd",
     ) -> None:
         super().__init__()
-        self.features = NeumannFeatures(bounds, encoding)
+        self.features = NeumannFeatures(bounds, encoding, derivative_rule)
         lower, upper = self.features.feature_interval
         width = self.features.width
         self.network = FCN(

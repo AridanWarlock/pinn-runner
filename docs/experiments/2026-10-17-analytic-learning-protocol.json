@@ -1,0 +1,62 @@
+{
+  "contract": 1,
+  "status": "registered_before_learning_comparison",
+  "registered_utc": "2026-10-17T07:16:29.673013+00:00",
+  "hypothesis": "The analytic pullback reduced fixed-state step cost16-18%; check whether full training retains physical quality and wall-time benefit despite FP32 trajectory changes.",
+  "phase1": {
+    "cases": [
+      "heat_neumann_homogeneous2d",
+      "heat_neumann_polynomial2d"
+    ],
+    "seeds": [
+      19,
+      1234,
+      4321
+    ],
+    "representations": [
+      "neumann_polynomial"
+    ],
+    "adam_steps": 2000,
+    "lbfgs_snapshots": [
+      0,
+      25,
+      50,
+      75,
+      100,
+      125,
+      150,
+      200,
+      300,
+      400,
+      500,
+      600
+    ],
+    "collocation_points": 1024
+  },
+  "quality_limits": {
+    "relative_l2": 0.0002,
+    "final_relative_l2": 0.0004,
+    "pde_rmse": 0.003
+  },
+  "homogeneous_extra_limit": {
+    "mode_relative_l2": 0.001
+  },
+  "fixed_settings": "Current Torch2.1/cu118 RTX4070Ti, FP32 TF32off, hidden32x32x32, hard_initial_robin, recursive, auto background, backward parameters. Same polynomial encoding; only eager versus neumann_analytic execution differs within each pair. Fresh Python process per trial, balanced order, shared GPU lock. Independent quality evaluation always eager/general/ordinary-autograd.",
+  "measurements": "Global/final/worst-time L2, independent physical PDE residual, initial/face temperature errors, per-face Neumann operator, work counters, training/process/prediction time, allocated/reserved memory, trainable parameter count, initial/objective hashes. Time-to-quality requires two adjacent successes; no interpolation or teacher in training.",
+  "storage": "Only final rows, control snapshots and a concise result report go into Git. Raw repeated temporal profiles remain in numerical-reports on Windows. Mathematical derivations stay complete.",
+  "interpretation": "Keep failed/censored trials. Require two adjacent successful snapshots. Compare reported intervals, never interpolated exact crossing times. Fixed step budget is not equal wall time; crossing intervals test the time-to-quality hypothesis. No default promotion and no dependency upgrades.",
+  "training_code_revision": "explicit analytic executor; exact source revision recorded by worker",
+  "lbfgs_tolerance_change": 1e-12,
+  "informed_by": "pullback006 fixed-state profile and tolerance005; exploratory follow-up",
+  "baseline_study": "fresh eager control with identical seed/config/weights shape/points in every pair",
+  "executors": [
+    "eager",
+    "neumann_analytic"
+  ],
+  "gates": {
+    "physical": "finite, initial RMS<=1e-6 and face operator max<=1e-5",
+    "quality": "each candidate final global/final/PDE/mode metric <=max(1.5*paired eager, corresponding registered strict threshold); preserve any eager confirmed quality crossing in candidate budget",
+    "timing": "median paired full training ratio<=0.95 percase and worst<=1.10; report time-to-quality intervals separately",
+    "scope": "No automatic default promotion; independent evaluator uses ordinary autograd. Record all failures and closure counts."
+  }
+}

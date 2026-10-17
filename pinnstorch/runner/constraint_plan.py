@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -98,7 +98,13 @@ class ConstraintPlan:
     def _robin(
         cls, settings: TaskSettings, problem: Problem, adapter: ProblemAdapter, directory: Path
     ) -> ConstraintPlan:
-        robin = compile_robin(settings, problem, adapter)
+        # Feature networks need the established background, not a network projection.
+        background_settings = (
+            replace(settings, training=replace(settings.training, hard_execution="eager"))
+            if settings.network.spatial_encoding != "identity"
+            else settings
+        )
+        robin = compile_robin(background_settings, problem, adapter)
         faces = tuple(
             ExactFace(
                 b.field,

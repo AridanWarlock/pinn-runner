@@ -1,0 +1,55 @@
+{
+  "contract": 1,
+  "status": "registered_before_extended_3d_learning",
+  "registered_utc": "2026-10-17T07:16:29.673517+00:00",
+  "hypothesis": "The short3D feature screen failed accuracy; use a larger fixed budget and denser collocation, comparing ordinary and exact analytic derivative execution on the same polynomial representation.",
+  "phase1": {
+    "cases": [
+      "heat_neumann_homogeneous3d",
+      "heat_neumann_polynomial3d"
+    ],
+    "seeds": [
+      19
+    ],
+    "representations": [
+      "neumann_polynomial"
+    ],
+    "adam_steps": 2000,
+    "lbfgs_snapshots": [
+      0,
+      50,
+      100,
+      150,
+      200,
+      300,
+      400,
+      500,
+      600
+    ],
+    "collocation_points": 1024
+  },
+  "quality_limits": {
+    "relative_l2": 0.005,
+    "final_relative_l2": 0.01,
+    "pde_rmse": 0.02
+  },
+  "homogeneous_extra_limit": {
+    "mode_relative_l2": 0.02
+  },
+  "lbfgs_tolerance_change": 1e-12,
+  "derivative_rule": "controlled eager versus neumann_analytic, with independent ordinary-autograd quality evaluation",
+  "fixed_settings": "Current Torch2.1/cu118 RTX4070Ti, FP32 TF32off, hidden32x32x32, hard_initial_robin, recursive, auto background, backward parameters. Same polynomial encoding; only eager versus neumann_analytic execution differs within each pair. Fresh Python process per trial, balanced order, shared GPU lock. Independent quality evaluation always eager/general/ordinary-autograd.",
+  "measurements": "Independent global/final/PDE/mode errors and face operators, train/prediction/process time, counters, peak allocated/reserved memory, hashes and parameter count.",
+  "scope": "Four exploratory trainings at seed19. Larger budget/data and tolerance differ from screen007; do not call their speed ratio an isolated executor effect. Within each new pair only executor differs. No default promotion.",
+  "storage": "Compact final/snapshot CSV; raw temporal profiles and weights remain Windows.",
+  "executors": [
+    "eager",
+    "neumann_analytic"
+  ],
+  "informed_by": "3Dscreen007 and fixed-state pullback006",
+  "gates": {
+    "physical": "finite, initial RMS<=1e-6, boundary operator max<=1e-5",
+    "quality": "report registered loose3D criteria for both executors and paired final errors; all final states must pass before calling these solutions valid to this target",
+    "scope": "one seed, no default promotion"
+  }
+}

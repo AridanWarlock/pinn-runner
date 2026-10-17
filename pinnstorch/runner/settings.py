@@ -308,18 +308,26 @@ class Training:
             "robin_grouped"
             if constraints == "hard_initial_robin" and spatial_encoding == "identity"
             else "eager",
-            ("eager", "fused_predict", "product_rule", "robin_batch", "robin_grouped"),
+            (
+                "eager",
+                "fused_predict",
+                "product_rule",
+                "robin_batch",
+                "robin_grouped",
+                "neumann_analytic",
+            ),
         )
         if constraints == "hard_initial_robin" and hard_execution not in (
             "eager",
             "robin_batch",
             "robin_grouped",
+            "neumann_analytic",
         ):
             raise ValueError(
-                "hard_initial_robin requires eager, robin_batch or robin_grouped execution"
+                "hard_initial_robin requires eager, robin_batch, robin_grouped or neumann_analytic execution"
             )
         if (
-            hard_execution in ("robin_batch", "robin_grouped")
+            hard_execution in ("robin_batch", "robin_grouped", "neumann_analytic")
             and constraints != "hard_initial_robin"
         ):
             raise ValueError("Robin execution adapters require hard_initial_robin")
@@ -599,14 +607,19 @@ class TaskSettings:
         return result
 
     def validate_spatial_encoding(self) -> None:
+        if (
+            self.training.hard_execution == "neumann_analytic"
+            and self.network.spatial_encoding != "neumann_polynomial"
+        ):
+            raise ValueError("neumann_analytic execution requires neumann_polynomial encoding")
         if self.network.spatial_encoding != "identity":
             if (
                 self.training.constraints != "hard_initial_robin"
-                or self.training.hard_execution != "eager"
+                or self.training.hard_execution not in ("eager", "neumann_analytic")
                 or any(b.kind != "neumann" for b in self.boundaries)
             ):
                 raise ValueError(
-                    "Neumann spatial encoding requires hard_initial_robin, eager execution "
+                    "Neumann spatial encoding requires hard_initial_robin, eager or neumann_analytic execution "
                     "and Neumann conditions on every face"
                 )
 

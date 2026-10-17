@@ -180,6 +180,7 @@ class SolverFactory:
             settings.domain.time.interval,
             self.problem.outputs,
             settings.network.spatial_encoding,
+            "analytic" if settings.training.hard_execution == "neumann_analytic" else "autograd",
         )
 
     def _model(self, mesh: PointCloud) -> PINNModule:

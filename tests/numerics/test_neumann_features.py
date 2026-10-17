@@ -287,7 +287,10 @@ def test_exact_last_bias_gradient_of_physical_heat_loss(
     torch.testing.assert_close(bias.grad, expected.reshape_as(bias), atol=2e-11, rtol=2e-11)
 
 
-def test_encoded_convergence_evaluates_the_same_representation(tmp_path: Path) -> None:
+@pytest.mark.parametrize("execution", ["eager", "neumann_analytic"])
+def test_encoded_convergence_evaluates_the_same_representation(
+    tmp_path: Path, execution: str
+) -> None:
     from benchmarks.convergence import ConvergenceArm, ConvergencePlan, convergence_trial
     from benchmarks.policies import CartesianGrid, TrainingBudget
 
@@ -297,11 +300,15 @@ def test_encoded_convergence_evaluates_the_same_representation(tmp_path: Path) -
         budget=TrainingBudget(layers=(4, 4), collocation_points=7),
     )
     plan = ConvergencePlan(case, 3, (0, 1, 2), {"relative_l2": 1}, "hard_initial_robin", 7, "cpu")
-    arm = ConvergenceArm("eager", "recursive", "parameters", "auto", "neumann_polynomial")
+    arm = ConvergenceArm(execution, "recursive", "parameters", "auto", "neumann_polynomial")
     result = convergence_trial(plan, arm, 19, tmp_path / arm.name)
     assert result["spatial_encoding"] == "neumann_polynomial"
     assert result["resolved_background"] == "static"
     assert result["control_prediction_background"] == "general"
-    assert result["prediction_execution"] == "eager"
+    assert result["prediction_execution"] == execution
+    assert result["feature_derivatives"] == (
+        "analytic" if execution == "neumann_analytic" else "autograd"
+    )
+    assert result["control_feature_derivatives"] == "autograd"
     assert result["trainable_parameters"] > 0
     assert len(result["snapshots"][-1]["boundary_operators"]) == 4

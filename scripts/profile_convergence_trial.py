@@ -79,6 +79,7 @@ def enable_analytic_features(
 ) -> dict[str, float]:
     if not isinstance(model.net, FeatureFCN) or model.net.features.kind != "neumann_polynomial":
         raise ValueError("Analytic pullback requires a polynomial Neumann feature network")
+    model.net.features = replace(model.net.features, derivative_rule="autograd")
     reference_loss = training_step(factory, model, points)
     reference_gradient = parameter_gradient(model)
     model.net.features = replace(model.net.features, derivative_rule="analytic")
@@ -140,9 +141,7 @@ def main() -> None:
     parser.add_argument("--weights", default="lb-150.pt")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--points", type=int, default=1024)
-    parser.add_argument(
-        "--feature-derivatives", choices=("autograd", "analytic"), default="autograd"
-    )
+    parser.add_argument("--feature-derivatives", choices=("autograd", "analytic"), default=None)
     args = parser.parse_args()
     if args.points < 1 or args.output.exists():
         parser.error("Positive point count and a new output directory required")
@@ -166,10 +165,13 @@ def main() -> None:
     points = torch.cat(
         [unit[:, i : i + 1] * (b - a) + a for i, (a, b) in enumerate(intervals)], dim=1
     ).to("cuda")
+    derivative_rule = args.feature_derivatives or (
+        model.net.features.derivative_rule if isinstance(model.net, FeatureFCN) else "autograd"
+    )
+    if derivative_rule == "autograd" and isinstance(model.net, FeatureFCN):
+        model.net.features = replace(model.net.features, derivative_rule="autograd")
     control = (
-        enable_analytic_features(factory, model, points)
-        if args.feature_derivatives == "analytic"
-        else None
+        enable_analytic_features(factory, model, points) if derivative_rule == "analytic" else None
     )
 
     def operation() -> torch.Tensor:
@@ -196,7 +198,7 @@ def main() -> None:
         "weights_unchanged": True,
         "case": args.case,
         "spatial_encoding": settings.network.spatial_encoding,
-        "feature_derivatives": args.feature_derivatives,
+        "feature_derivatives": derivative_rule,
         "independent_autograd_control": control,
         "hard_execution": settings.training.hard_execution,
         "points": args.points,

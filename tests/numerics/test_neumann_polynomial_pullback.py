@@ -63,12 +63,13 @@ def test_frozen_physical_field_pde_and_parameter_gradient_match_autograd(
     case = CASES[f"heat_neumann_homogeneous{dimensions}d"]
     config = case.config(device(), 1, 19)
     config["network"].update(hidden_layers=[6, 6], spatial_encoding="neumann_polynomial")
-    config["training"].update(constraints="hard_initial_robin", hard_execution="eager")
+    config["training"].update(constraints="hard_initial_robin", hard_execution="neumann_analytic")
     factory = SolverFactory(
         TaskSettings.read(config), load_problem(case.source), tmp_path, case.source.parent
     )
     model = factory.build(predicting=True).model.to(device=device(), dtype=dtype)
     assert isinstance(model.net, FeatureFCN)
+    assert model.net.features.derivative_rule == "analytic"
     results: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]] = []
     for rule in ("autograd", "analytic"):
         model.net.features = replace(model.net.features, derivative_rule=rule)
@@ -121,3 +122,12 @@ def test_analytic_features_remain_no_grad_during_prediction() -> None:
 def test_analytic_rule_rejects_nonpolynomial_encoding() -> None:
     with pytest.raises(ValueError, match="polynomial"):
         NeumannFeatures(((0.0, 1.0),), "neumann_cosine", "analytic")
+
+
+@pytest.mark.parametrize("encoding", ["identity", "neumann_cosine"])
+def test_analytic_execution_requires_polynomial_representation(encoding: str) -> None:
+    config = CASES["heat_neumann_homogeneous1d"].config("cpu", 1, 19)
+    config["network"]["spatial_encoding"] = encoding
+    config["training"].update(constraints="hard_initial_robin", hard_execution="neumann_analytic")
+    with pytest.raises(ValueError, match="neumann_polynomial"):
+        TaskSettings.read(config)
