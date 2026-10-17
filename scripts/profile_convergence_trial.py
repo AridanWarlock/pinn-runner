@@ -11,7 +11,7 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any, cast
 
@@ -23,6 +23,8 @@ sys.path.insert(0, str(ROOT))
 from benchmarks.cases import CASES  # noqa: E402
 from benchmarks.fingerprints import tensor_fingerprint  # noqa: E402
 from benchmarks.network_work import count_network_work  # noqa: E402
+from benchmarks.performance import prediction_speed  # noqa: E402
+from pinnstorch.models.net.spatial_features import FeatureFCN  # noqa: E402
 from pinnstorch.models.pinn_module import PINNModule  # noqa: E402
 from pinnstorch.runner.checkpoint_io import load_checkpoint  # noqa: E402
 from pinnstorch.runner.factory import SolverFactory  # noqa: E402
@@ -60,6 +62,39 @@ def timed_steps(operation: Callable[[], torch.Tensor]) -> dict[str, float | int]
         "max_seconds": max(durations),
         "warmup": 3,
         "measurements": len(durations),
+    }
+
+
+def parameter_gradient(model: PINNModule) -> torch.Tensor:
+    return cast(
+        torch.Tensor,
+        torch.cat(
+            [p.grad.detach().reshape(-1) for p in model.parameters() if p.grad is not None]
+        ).clone(),
+    )
+
+
+def enable_analytic_features(
+    factory: SolverFactory, model: PINNModule, points: torch.Tensor
+) -> dict[str, float]:
+    if not isinstance(model.net, FeatureFCN) or model.net.features.kind != "neumann_polynomial":
+        raise ValueError("Analytic pullback requires a polynomial Neumann feature network")
+    reference_loss = training_step(factory, model, points)
+    reference_gradient = parameter_gradient(model)
+    model.net.features = replace(model.net.features, derivative_rule="analytic")
+    loss = training_step(factory, model, points)
+    gradient = parameter_gradient(model)
+    difference = gradient - reference_gradient
+    relative = float(difference.norm() / reference_gradient.norm().clamp_min(1e-30))
+    maximum = float(difference.abs().max())
+    if not torch.allclose(loss, reference_loss, rtol=2e-4, atol=1e-8) or (
+        relative > 2e-4 and maximum > 2e-7
+    ):
+        raise ValueError("Analytic pullback differs from the independent autograd control")
+    return {
+        "loss_absolute_difference": float((loss - reference_loss).abs()),
+        "gradient_max_absolute_difference": maximum,
+        "gradient_relative_l2_difference": relative,
     }
 
 
@@ -105,6 +140,9 @@ def main() -> None:
     parser.add_argument("--weights", default="lb-150.pt")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--points", type=int, default=1024)
+    parser.add_argument(
+        "--feature-derivatives", choices=("autograd", "analytic"), default="autograd"
+    )
     args = parser.parse_args()
     if args.points < 1 or args.output.exists():
         parser.error("Positive point count and a new output directory required")
@@ -128,12 +166,20 @@ def main() -> None:
     points = torch.cat(
         [unit[:, i : i + 1] * (b - a) + a for i, (a, b) in enumerate(intervals)], dim=1
     ).to("cuda")
+    control = (
+        enable_analytic_features(factory, model, points)
+        if args.feature_derivatives == "analytic"
+        else None
+    )
 
     def operation() -> torch.Tensor:
         return training_step(factory, model, points)
 
     work = count_network_work(model, operation)
     timing = timed_steps(operation)
+    prediction = prediction_speed(
+        model, [points[:, i : i + 1] for i in range(points.shape[1] - 1)], points[:, -1:], 2048
+    )
     args.output.mkdir(parents=True)
     profiling = operator_profile(operation, args.output)
     model.zero_grad(set_to_none=True)
@@ -150,10 +196,13 @@ def main() -> None:
         "weights_unchanged": True,
         "case": args.case,
         "spatial_encoding": settings.network.spatial_encoding,
+        "feature_derivatives": args.feature_derivatives,
+        "independent_autograd_control": control,
         "hard_execution": settings.training.hard_execution,
         "points": args.points,
         "network_work": asdict(work),
         "timing": timing,
+        "prediction": prediction,
         "profiler": profiling,
         "limitations": "One saved state, fixed independent points, no optimizer update. FCN hooks removed before timing. Profiling is separate from synchronized unprofiled timing. CUDA activity support does not guarantee that CUDA events were captured; inspect operators/trace before kernel conclusions. Raw trace stays outside Git.",
     }

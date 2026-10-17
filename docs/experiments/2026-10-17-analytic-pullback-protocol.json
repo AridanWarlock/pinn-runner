@@ -1,0 +1,28 @@
+{
+  "contract": 1,
+  "status": "registered_before_cuda_profile",
+  "registered_utc": "2026-10-17T06:55:35.328938+00:00",
+  "hypothesis": "An exact analytic pullback for q,P can reduce the derivative graph without changing represented functions or saved weights. FP32 arithmetic may differ; no default promotion.",
+  "source_states": "neumann-features-001 phase2 final lb-150 polynomial encoding, seed19",
+  "cases": [
+    "heat_neumann_homogeneous2d",
+    "heat_neumann_polynomial2d"
+  ],
+  "rules": [
+    "autograd",
+    "analytic"
+  ],
+  "repeats": 3,
+  "order": "alternate rule order across repeats; fresh Python process per profile; shared GPU lock after neumann-tolerance-005",
+  "points": 1024,
+  "point_seed": 19,
+  "precision": "FP32, no TF32, current Torch2.1/cu118",
+  "profile": "3 warmups +9 synchronized training-objective/parameter-gradient timings; 3+7 warm prediction timings; separate CPU-operator trace because CUDA activities unavailable",
+  "gates": {
+    "new_cuda_derivative_tests": "all pass",
+    "frozen_control": "loss allclose rtol2e-4 atol1e-8; gradient relative L2<=2e-4 OR max absolute<=2e-7; unchanged state hash",
+    "performance_interest": "median paired training-time ratio<=0.95 on each case; worst<=1.10; median prediction ratio<=1.10"
+  },
+  "scope": "No full training in this profile. The standard runner and independent convergence evaluator retain ordinary autograd. No physical checkpoint signature changes.",
+  "storage": "Compact timing CSV for all repeats; operator counts for one pair per case; raw traces and all reports remain Windows."
+}

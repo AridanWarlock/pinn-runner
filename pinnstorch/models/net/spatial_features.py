@@ -3,12 +3,14 @@
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Literal, cast
 
 import torch
 from torch import nn
 
 from pinnstorch.contracts import TensorOutputs
 
+from .neumann_polynomial import analytic_polynomial_features, polynomial_features
 from .neural_net import FCN
 
 
@@ -16,10 +18,15 @@ from .neural_net import FCN
 class NeumannFeatures:
     bounds: tuple[tuple[float, float], ...]
     kind: str
+    derivative_rule: Literal["autograd", "analytic"] = "autograd"
 
     def __post_init__(self) -> None:
         if self.kind not in ("neumann_cosine", "neumann_polynomial"):
             raise ValueError("Unknown Neumann spatial encoding")
+        if self.derivative_rule not in ("autograd", "analytic") or (
+            self.derivative_rule == "analytic" and self.kind != "neumann_polynomial"
+        ):
+            raise ValueError("Analytic feature derivatives require polynomial Neumann encoding")
         if not self.bounds or any(
             not (math.isfinite(lower) and math.isfinite(upper) and lower < upper)
             for lower, upper in self.bounds
@@ -43,9 +50,12 @@ class NeumannFeatures:
             if self.kind == "neumann_cosine":
                 result.append(x.mul(math.pi).cos())
             else:
-                result.extend(
-                    [x.square().mul(3 - 2 * x), x.square().mul((1 - x).square()).mul(16)]
+                features = (
+                    analytic_polynomial_features(x)
+                    if self.derivative_rule == "analytic" and x.requires_grad
+                    else polynomial_features(x)
                 )
+                result.extend(features)
         return result
 
 
@@ -70,4 +80,4 @@ class FeatureFCN(nn.Module):
         )
 
     def forward(self, spatial: list[torch.Tensor], time: torch.Tensor) -> TensorOutputs:
-        return self.network(self.features(spatial), time)
+        return cast(TensorOutputs, self.network(self.features(spatial), time))
