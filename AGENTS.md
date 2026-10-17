@@ -131,6 +131,8 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
 
 # Контекст исследовательского агента
 
+- Проектные скиллы находятся в `.agents/skills/`: `pinn-research` для исследований
+  модели, `pinn-gpu-experiments` для удалённых CUDA-опытов.
 - Для передачи сессии используйте `docs/agent-start.md`; текущие математические
   инварианты — `docs/agent-research-context.md`. Учебные объяснения и историю
   не загружайте автоматически: открывайте по конкретному вопросу.
