@@ -1,0 +1,99 @@
+{
+  "contract": 1,
+  "job_id": "analytic012",
+  "trials": 20,
+  "snapshots": 240,
+  "source_revision": "1a4c22fcbdb27bb68a67319ac3236e2f27ebd6f7",
+  "provenance": {
+    "protocol_commit": "e27f96ecac6781ced5cb662015fab39e3c7b4456",
+    "protocol_sha256": "17f72c35613c3e9e604889cc1c220711c01a5eac2a03be6a8db5831223e42d78"
+  },
+  "environment": {
+    "revision": "1a4c22fcbdb27bb68a67319ac3236e2f27ebd6f7",
+    "working_tree_dirty": false,
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "cpu_threads": 6,
+    "default_dtype": "torch.float32",
+    "cudnn_allow_tf32": false,
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti",
+    "packages": {
+      "numpy": "1.26.4",
+      "lightning": "2.1.0"
+    }
+  },
+  "sources": [
+    {
+      "path": "c0/report.json",
+      "sha256": "4c01ec6a658c81fd00557f0b363df15817bbc8bcd0dc91a09737419cfefdf9c9"
+    },
+    {
+      "path": "c1/report.json",
+      "sha256": "d48fbf59a1a10adaf84fddbb5b28155bda9c03ec37f6c53d230f5e1e9169fe59"
+    }
+  ],
+  "comparison_passed": true,
+  "cases": [
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "pairs": 5,
+      "physical_passed": true,
+      "paired_quality_passed": true,
+      "confirmed_crossing_preserved": true,
+      "candidate_final_target_passed": 5,
+      "candidate_confirmed": 5,
+      "median_training_ratio": 0.8719315440798738,
+      "worst_training_ratio": 0.8771942669558848,
+      "timing_passed": true,
+      "prefix600": {
+        "eager": {
+          "final_passed": 2,
+          "confirmed": 0
+        },
+        "neumann_analytic": {
+          "final_passed": 1,
+          "confirmed": 0
+        }
+      },
+      "baseline_confirmed": 5,
+      "memory_ratio_median": 0.9943024648032699,
+      "memory_ratio_worst": 0.9943275577557755,
+      "memory_passed": true
+    },
+    {
+      "case": "heat_neumann_polynomial2d",
+      "pairs": 5,
+      "physical_passed": true,
+      "paired_quality_passed": true,
+      "confirmed_crossing_preserved": true,
+      "candidate_final_target_passed": 5,
+      "candidate_confirmed": 5,
+      "median_training_ratio": 0.7668388814810004,
+      "worst_training_ratio": 0.9348355182525688,
+      "timing_passed": true,
+      "prefix600": {
+        "eager": {
+          "final_passed": 5,
+          "confirmed": 5
+        },
+        "neumann_analytic": {
+          "final_passed": 5,
+          "confirmed": 5
+        }
+      },
+      "baseline_confirmed": 5,
+      "memory_ratio_median": 0.9947534102833159,
+      "memory_ratio_worst": 0.9952449567723343,
+      "memory_passed": true
+    }
+  ],
+  "derived_csv_sha256": {
+    "2026-10-17-analytic012-summary.csv": "ec32189d8b5f499d05027e2394290c7fe3c7b678025b13b76f9e6f942aaecad1",
+    "2026-10-17-analytic012-snapshots.csv": "e89d567b1e1996bb2486f95e62f892677bd1ce5fab41c3de6f0039b06e40e070"
+  }
+}
