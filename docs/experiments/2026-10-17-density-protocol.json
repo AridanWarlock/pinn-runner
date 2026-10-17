@@ -1,0 +1,204 @@
+{
+  "contract": 2,
+  "registration": "prospective",
+  "revision": "fdbc37c627d140d71d9ae8094412f52dfa70a57a",
+  "reports": [
+    "c0/report.json"
+  ],
+  "expected_trials": [
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 1234,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 1024
+    },
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 1234,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 4096
+    },
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 4321,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 1024
+    },
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 4321,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 4096
+    },
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 19,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 1024
+    },
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 19,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 4096
+    },
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 2026,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 1024
+    },
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 2026,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 4096
+    },
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 73,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 1024
+    },
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 73,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 4096
+    }
+  ],
+  "report_parameters": {
+    "adam_steps": 2000,
+    "lbfgs_snapshots": [
+      0,
+      20000
+    ],
+    "constraints": "hard_initial_robin",
+    "points_override": null,
+    "lbfgs_tolerance_change": 1e-12,
+    "execution_lifecycle": "isolated_trials"
+  },
+  "case_limits": {
+    "heat_neumann_homogeneous2d": {
+      "relative_l2": 0.0002,
+      "final_relative_l2": 0.0004,
+      "pde_rmse": 0.003,
+      "mode_relative_l2": 0.001
+    }
+  },
+  "physical_limits": {
+    "initial_rmse": 1e-06,
+    "boundary_max": 1e-05
+  },
+  "comparison": {
+    "baseline": {
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 1024
+    },
+    "candidate": {
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial",
+      "points_override": 4096
+    },
+    "quality_factor": 1.5,
+    "median_training_ratio_max": 1.05,
+    "worst_training_ratio_max": 1.1
+  },
+  "case_faces": {
+    "heat_neumann_homogeneous2d": [
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "x",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "x",
+        "side": "upper"
+      },
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "y",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "y",
+        "side": "upper"
+      }
+    ]
+  },
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "network": {
+    "hidden_layers": [
+      32,
+      32,
+      32
+    ],
+    "spatial_encoding": "neumann_polynomial"
+  },
+  "density": {
+    "training_seconds": 60,
+    "snapshot_seconds": 5,
+    "sampling": "nested_uniform",
+    "prefix_points": 1024
+  }
+}
