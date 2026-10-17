@@ -1,0 +1,208 @@
+{
+  "contract": 1,
+  "study": {
+    "state": "completed",
+    "commit": "8b0f73f66fd36dd14fc0075d2930c5953fc59beb",
+    "started_at": "2026-10-16T15:38:17.966230+00:00",
+    "completed_cases": [
+      {
+        "phase": "phase1",
+        "case": "heat_neumann_homogeneous1d",
+        "seconds": 40.341376199998194,
+        "trials": 3
+      },
+      {
+        "phase": "phase1",
+        "case": "heat_neumann_polynomial1d",
+        "seconds": 40.74550570000429,
+        "trials": 3
+      },
+      {
+        "phase": "phase2",
+        "case": "heat_neumann_homogeneous2d",
+        "seconds": 341.623734599998,
+        "trials": 9
+      },
+      {
+        "phase": "phase2",
+        "case": "heat_neumann_polynomial2d",
+        "seconds": 355.420612899994,
+        "trials": 9
+      }
+    ],
+    "phase": "phase2",
+    "phase1_gates": [
+      {
+        "case": "heat_neumann_homogeneous1d",
+        "passed": true,
+        "finite": true,
+        "initial_rmse": 7.451017538879875e-08,
+        "boundary_max": 2.7464676577437785e-07,
+        "absolute_errors_pass": true,
+        "paired_errors_pass": true
+      },
+      {
+        "case": "heat_neumann_polynomial1d",
+        "passed": true,
+        "finite": true,
+        "initial_rmse": 4.502394750138233e-08,
+        "boundary_max": 0.0,
+        "absolute_errors_pass": true,
+        "paired_errors_pass": false
+      }
+    ],
+    "finished_at": "2026-10-16T15:51:52.029828+00:00"
+  },
+  "tests": [
+    {
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "57",
+      "time": "35.259",
+      "timestamp": "2026-10-16T18:38:18.231543+03:00",
+      "hostname": "AridanWarlock"
+    }
+  ],
+  "environment": {
+    "revision": "8b0f73f66fd36dd14fc0075d2930c5953fc59beb",
+    "working_tree_dirty": true,
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "cpu_threads": 6,
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti",
+    "packages": {
+      "numpy": "1.26.4",
+      "lightning": "2.1.0"
+    }
+  },
+  "working_tree_note": "Tracked files and staged index were clean before checkout. Environment dirty flag includes pre-existing untracked user files; they were preserved. Exact source revision checked before each case.",
+  "spectrum": {
+    "device": "cpu",
+    "training_device": "cuda",
+    "case": "heat_neumann_homogeneous2d",
+    "time_interval": [
+      0,
+      0.5
+    ],
+    "counts": [
+      9,
+      13,
+      17
+    ],
+    "time_points": 11,
+    "source_states": [
+      {
+        "seed": 19,
+        "encoding": "identity",
+        "path": "C:\\Projects\\pinn-runner\\numerical-reports\\neumann-features-001\\phase2\\heat_neumann_homogeneous2d\\processes\\robin_grouped-recursive-parameters-auto-19\\robin_grouped-recursive-parameters-auto-19\\lb-150.pt",
+        "sha256": "5e358cf8cb487198c778049f82b7d30dd646bc45b44ced277aa8498f6cfb2537",
+        "cpu_gpu_metric_absolute_difference": {
+          "relative_l2": 2.8412105669746186e-09,
+          "final_relative_l2": 2.2987337085916826e-09,
+          "pde_rmse": 1.0477378964424133e-08
+        }
+      },
+      {
+        "seed": 19,
+        "encoding": "neumann_cosine",
+        "path": "C:\\Projects\\pinn-runner\\numerical-reports\\neumann-features-001\\phase2\\heat_neumann_homogeneous2d\\processes\\eager-recursive-parameters-auto-neumann_cosine-19\\eager-recursive-parameters-auto-neumann_cosine-19\\lb-150.pt",
+        "sha256": "5310cc8a8aa966a81679232b8f06d84b8a527b6d1d89a7edb358077c7ebd8389",
+        "cpu_gpu_metric_absolute_difference": {
+          "relative_l2": 2.1744425092971864e-09,
+          "final_relative_l2": 5.978742318850936e-09,
+          "pde_rmse": 0.0
+        }
+      },
+      {
+        "seed": 19,
+        "encoding": "neumann_polynomial",
+        "path": "C:\\Projects\\pinn-runner\\numerical-reports\\neumann-features-001\\phase2\\heat_neumann_homogeneous2d\\processes\\eager-recursive-parameters-auto-neumann_polynomial-19\\eager-recursive-parameters-auto-neumann_polynomial-19\\lb-150.pt",
+        "sha256": "3e98fe569b73335de6dccc9367f00604cf1b932d05805d4f11511027ad094aa5",
+        "cpu_gpu_metric_absolute_difference": {
+          "relative_l2": 7.310305117811614e-09,
+          "final_relative_l2": 3.9709113197053045e-09,
+          "pde_rmse": 1.862645149230957e-09
+        }
+      },
+      {
+        "seed": 1234,
+        "encoding": "neumann_polynomial",
+        "path": "C:\\Projects\\pinn-runner\\numerical-reports\\neumann-features-001\\phase2\\heat_neumann_homogeneous2d\\processes\\eager-recursive-parameters-auto-neumann_polynomial-1234\\eager-recursive-parameters-auto-neumann_polynomial-1234\\lb-150.pt",
+        "sha256": "c6eaae5ef369be6e63218a671dd235b76dc8522b99ee9730d0d6dbc0a3f9643e",
+        "cpu_gpu_metric_absolute_difference": {
+          "relative_l2": 9.320751910687954e-09,
+          "final_relative_l2": 9.11140094335362e-09,
+          "pde_rmse": 1.862645149230957e-09
+        }
+      },
+      {
+        "seed": 1234,
+        "encoding": "neumann_cosine",
+        "path": "C:\\Projects\\pinn-runner\\numerical-reports\\neumann-features-001\\phase2\\heat_neumann_homogeneous2d\\processes\\eager-recursive-parameters-auto-neumann_cosine-1234\\eager-recursive-parameters-auto-neumann_cosine-1234\\lb-150.pt",
+        "sha256": "2cd5d39cad021091107e4fcf1e67d1c70c581ba7bf7c67a1159cbcf118960671",
+        "cpu_gpu_metric_absolute_difference": {
+          "relative_l2": 2.3650540971443482e-09,
+          "final_relative_l2": 1.7103203398839955e-08,
+          "pde_rmse": 1.3504177331924438e-08
+        }
+      },
+      {
+        "seed": 1234,
+        "encoding": "identity",
+        "path": "C:\\Projects\\pinn-runner\\numerical-reports\\neumann-features-001\\phase2\\heat_neumann_homogeneous2d\\processes\\robin_grouped-recursive-parameters-auto-1234\\robin_grouped-recursive-parameters-auto-1234\\lb-150.pt",
+        "sha256": "5cfa71945c1e509f6bc1cc9b8a1bc8cce0899197ccbaad25233965136f1f2325",
+        "cpu_gpu_metric_absolute_difference": {
+          "relative_l2": 2.067282588982724e-09,
+          "final_relative_l2": 4.437884441768451e-09,
+          "pde_rmse": 1.4435499906539917e-08
+        }
+      },
+      {
+        "seed": 4321,
+        "encoding": "identity",
+        "path": "C:\\Projects\\pinn-runner\\numerical-reports\\neumann-features-001\\phase2\\heat_neumann_homogeneous2d\\processes\\robin_grouped-recursive-parameters-auto-4321\\robin_grouped-recursive-parameters-auto-4321\\lb-150.pt",
+        "sha256": "ce8197716ac5ff4763290a6a4b2c24fdc8732449f98e2284bd86d227e8afcb41",
+        "cpu_gpu_metric_absolute_difference": {
+          "relative_l2": 6.686191163229882e-09,
+          "final_relative_l2": 2.264167893141966e-08,
+          "pde_rmse": 9.778887033462524e-09
+        }
+      },
+      {
+        "seed": 4321,
+        "encoding": "neumann_cosine",
+        "path": "C:\\Projects\\pinn-runner\\numerical-reports\\neumann-features-001\\phase2\\heat_neumann_homogeneous2d\\processes\\eager-recursive-parameters-auto-neumann_cosine-4321\\eager-recursive-parameters-auto-neumann_cosine-4321\\lb-150.pt",
+        "sha256": "61277d3abd1f6e61d25a6e88788ef578fd2546cc4292ebe3951711d0ff38a454",
+        "cpu_gpu_metric_absolute_difference": {
+          "relative_l2": 3.4582888499233837e-09,
+          "final_relative_l2": 7.229393106291532e-10,
+          "pde_rmse": 1.7695128917694092e-08
+        }
+      },
+      {
+        "seed": 4321,
+        "encoding": "neumann_polynomial",
+        "path": "C:\\Projects\\pinn-runner\\numerical-reports\\neumann-features-001\\phase2\\heat_neumann_homogeneous2d\\processes\\eager-recursive-parameters-auto-neumann_polynomial-4321\\eager-recursive-parameters-auto-neumann_polynomial-4321\\lb-150.pt",
+        "sha256": "16143de8b2199c6241861795dffd0bb17394754787c881cfc26a2fdcef872fb8",
+        "cpu_gpu_metric_absolute_difference": {
+          "relative_l2": 5.224655695384127e-09,
+          "final_relative_l2": 1.681338691991892e-08,
+          "pde_rmse": 6.51925802230835e-09
+        }
+      }
+    ],
+    "limitations": "FP32 saved-state prediction on CPU. Original-grid metrics independently reproduced; this is not a GPU performance measurement. Positive Gauss quadrature approximates continuous error; initial near-zero errors do not yield stable fractions."
+  },
+  "tables_sha256": {
+    "docs/experiments/2026-10-16-neumann-features-final.csv": "f89cad83cc7435f8bdbf89a775d97d2a6e5868d40f9528c7e8700eef0860e439",
+    "docs/experiments/2026-10-16-neumann-features-snapshots.csv": "dea525d9823b5266d1462c87aa2a549ca7c0e9eac9a86c07955bff679ab2d661",
+    "docs/experiments/2026-10-17-neumann-feature-spectra.csv": "878c4e38f3e1b851118482d4eae90ceb23f9d1102f8076812e1785bd9a031102"
+  }
+}
