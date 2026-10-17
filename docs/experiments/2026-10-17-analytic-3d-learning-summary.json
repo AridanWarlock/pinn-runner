@@ -1,0 +1,48 @@
+{
+  "source_revision": "83f3c39716bf2b4ca98504e1843a8d4d0dd098c5",
+  "status": {
+    "state": "completed",
+    "commit": "83f3c39716bf2b4ca98504e1843a8d4d0dd098c5",
+    "started_at": "2026-10-17T07:23:40.568907+00:00",
+    "completed_cases": [
+      {
+        "phase": "phase1",
+        "case": "heat_neumann_homogeneous3d",
+        "seconds": 97.23631190002197,
+        "trials": 2
+      },
+      {
+        "phase": "phase1",
+        "case": "heat_neumann_polynomial3d",
+        "seconds": 106.27198250003858,
+        "trials": 2
+      }
+    ],
+    "updated_at": "2026-10-17T07:31:47.793016+00:00",
+    "waiting_for": "a008",
+    "profile_reused_from": "a008:75 passed on same source",
+    "study": "analytic-3d-learning-009",
+    "phase": "phase1",
+    "finished_at": "2026-10-17T07:35:16.676767+00:00"
+  },
+  "cases": [
+    {
+      "case": "heat_neumann_homogeneous3d",
+      "trials": 2,
+      "median_training_ratio": 0.852356135076638,
+      "worst_training_ratio": 0.852356135076638,
+      "paired_quality_gate_2d": null
+    },
+    {
+      "case": "heat_neumann_polynomial3d",
+      "trials": 2,
+      "median_training_ratio": 0.8628579837220774,
+      "worst_training_ratio": 0.8628579837220774,
+      "paired_quality_gate_2d": null
+    }
+  ],
+  "trials": 4,
+  "snapshots": 36,
+  "max_boundary_operator": 2.6650434392649913e-07,
+  "max_initial_rmse": 5.1474775671215556e-08
+}

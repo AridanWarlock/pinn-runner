@@ -1,0 +1,45 @@
+{
+  "source_revision": "83f3c39716bf2b4ca98504e1843a8d4d0dd098c5",
+  "status": {
+    "state": "completed",
+    "commit": "83f3c39716bf2b4ca98504e1843a8d4d0dd098c5",
+    "started_at": "2026-10-17T07:22:46.928318+00:00",
+    "completed_cases": [
+      {
+        "phase": "phase1",
+        "case": "heat_neumann_homogeneous2d",
+        "seconds": 221.83200499997474,
+        "trials": 6
+      },
+      {
+        "phase": "phase1",
+        "case": "heat_neumann_polynomial2d",
+        "seconds": 238.13889549998567,
+        "trials": 6
+      }
+    ],
+    "phase": "phase1",
+    "study": "analytic-learning-008",
+    "finished_at": "2026-10-17T07:31:49.289336+00:00"
+  },
+  "cases": [
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "trials": 6,
+      "median_training_ratio": 0.8673033348120175,
+      "worst_training_ratio": 0.868431797791985,
+      "paired_quality_gate_2d": true
+    },
+    {
+      "case": "heat_neumann_polynomial2d",
+      "trials": 6,
+      "median_training_ratio": 0.8765225904145431,
+      "worst_training_ratio": 0.8793484239596417,
+      "paired_quality_gate_2d": true
+    }
+  ],
+  "trials": 12,
+  "snapshots": 144,
+  "max_boundary_operator": 2.745883875832078e-07,
+  "max_initial_rmse": 6.232445611930452e-08
+}
