@@ -4,7 +4,7 @@ title: Подтвердить комбинацию стратегий и обн�
 status: To Do
 assignee: []
 created_date: '2026-10-13 08:37'
-updated_date: '2026-10-13 14:20'
+updated_date: '2026-10-17 08:34'
 labels:
   - acceptance
 milestone: m-0
@@ -15,7 +15,8 @@ dependencies:
   - TASK-10
   - TASK-11
 documentation:
-  - docs/model-accuracy-plan.md
+  - >-
+    https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/research-tasks/task-14.md
 priority: high
 ordinal: 14000
 ---
@@ -23,7 +24,7 @@ ordinal: 14000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Отдельные улучшения могут конфликтовать. В default включаем только выигрыш подтверждённой композиции.
+Требования и критерии: docs/research-tasks/task-14.md. Сначала прочитать этот документ; подробную историю загружать только для конкретного вопроса.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -37,7 +38,5 @@ ordinal: 14000
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-TASK10 now includes five-seed paired heat3d hard/soft validation. This is partial evidence only:all-PDE5seed composition/leave-one-out and Adam->LBFGS dependency remain pending. Do not mark AC1/AC3 or change defaults.
-
-Adam->LBFGS dependency complete. Preliminary hard+LB100 combination2seeds:heat3d global0.086/0.109%,final0.317/0.330%; matchedwall~43s controlsfinal0.952/0.761%. Heat2d/Burgers combinations improve; advectionsoft+LB tested. Memoryhard+49%,no defaultpromotion. Five-seedallPDE andleave-one-out/fullbatchAdam ablation pending.
+История сохранена в docs/research-history/task-14.md.
 <!-- SECTION:NOTES:END -->

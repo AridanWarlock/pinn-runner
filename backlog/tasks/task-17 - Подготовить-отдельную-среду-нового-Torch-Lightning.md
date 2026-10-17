@@ -4,6 +4,7 @@ title: Подготовить отдельную среду нового Torch/L
 status: Deferred
 assignee: []
 created_date: '2026-10-13 08:37'
+updated_date: '2026-10-17 08:34'
 labels:
   - runtime
 milestone: m-1
@@ -12,7 +13,8 @@ dependencies:
   - TASK-15
   - TASK-16
 documentation:
-  - docs/model-accuracy-plan.md
+  - >-
+    https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/research-tasks/task-17.md
 priority: low
 ordinal: 17000
 ---
@@ -20,7 +22,7 @@ ordinal: 17000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Текущий production stack остаётся доступным; Git pin не закрепляет shared venv.
+Требования и критерии: docs/research-tasks/task-17.md. Сначала прочитать этот документ; подробную историю загружать только для конкретного вопроса.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -29,3 +31,9 @@ ordinal: 17000
 - [ ] #2 Проверены Python/wheels/driver и macOS CPU + Windows CUDA compatibility
 - [ ] #3 Новая среда не меняет текущую .venv; рассмотрены load weights_only и Lightning loaders
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Подробности в документе требований; новые отчёты добавлять ссылками.
+<!-- SECTION:NOTES:END -->

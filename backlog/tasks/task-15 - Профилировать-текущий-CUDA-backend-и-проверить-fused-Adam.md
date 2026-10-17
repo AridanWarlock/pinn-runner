@@ -4,14 +4,15 @@ title: Профилировать текущий CUDA backend и провери�
 status: To Do
 assignee: []
 created_date: '2026-10-13 08:37'
-updated_date: '2026-10-13 14:20'
+updated_date: '2026-10-17 08:34'
 labels:
   - performance
 milestone: m-0
 dependencies:
   - TASK-1
 documentation:
-  - docs/model-accuracy-plan.md
+  - >-
+    https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/research-tasks/task-15.md
 priority: medium
 ordinal: 15000
 ---
@@ -19,7 +20,7 @@ ordinal: 15000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Ускорение не требует сначала обновлять Torch. Нужно найти долю kernel launch, derivatives и optimizer.
+Требования и критерии: docs/research-tasks/task-15.md. Сначала прочитать этот документ; подробную историю загружать только для конкретного вопроса.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -32,5 +33,5 @@ ordinal: 15000
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-LBFGS integration exposed LightningCPUteardown (fixed,actualdeviceguard added). CorrectGPUstage2.87s vsdiagnosticCPU~1.4s for smallheat3d100calls; not acceptedhybridstrategy. Profiling dispatch/synchronizations is a candidate; no profiler proof yet.
+История сохранена в docs/research-history/task-15.md.
 <!-- SECTION:NOTES:END -->

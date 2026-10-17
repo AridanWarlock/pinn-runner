@@ -4,6 +4,7 @@ title: Проверить CUDA Graphs на текущем стеке
 status: To Do
 assignee: []
 created_date: '2026-10-13 08:37'
+updated_date: '2026-10-17 08:34'
 labels:
   - performance
 milestone: m-0
@@ -11,7 +12,8 @@ dependencies:
   - TASK-7
   - TASK-15
 documentation:
-  - docs/model-accuracy-plan.md
+  - >-
+    https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/research-tasks/task-16.md
 priority: medium
 ordinal: 16000
 ---
@@ -19,7 +21,7 @@ ordinal: 16000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Маленькая MLP может ограничиваться launch overhead. Статические buffers не должны замораживать sampling.
+Требования и критерии: docs/research-tasks/task-16.md. Сначала прочитать этот документ; подробную историю загружать только для конкретного вопроса.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -28,3 +30,9 @@ ordinal: 16000
 - [ ] #2 Если training поддерживается, проверены вторые производные и parameter gradients
 - [ ] #3 Неполный batch и обновление sampling сохраняют численный смысл; effective mode отражён в отчёте
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Подробности в документе требований; новые отчёты добавлять ссылками.
+<!-- SECTION:NOTES:END -->
