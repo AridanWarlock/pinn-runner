@@ -1,11 +1,11 @@
 ---
 id: TASK-21
 title: Удешевить hard constraints после проверки Adam → L-BFGS
-status: Waiting CUDA
+status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-13 13:28'
-updated_date: '2026-10-17 19:43'
+updated_date: '2026-10-17 20:01'
 labels:
   - performance
   - hard-constraints
@@ -63,4 +63,6 @@ ordinal: 21000
 2026-10-17: подготовлена, но НЕ запущена серия analytic011: два контроля 3D, пять seed, eager/neumann_analytic, 20 обучений; бюджет и пороги 009. Код 1a4c22f, протокол 62bb738; обоснование docs/analytic-3d-replication-protocol-2026-10-17.md. CPU: 73 профильных passed; быстрый 745 passed, 50 e2e исключены; Ruff/mypy прошли. Автоматическая проверка отклонила git push в origin из-за неподтверждённого разрешения на передачу изменений в GitHub. Коммиты пока только локально; submit не выполнялся. Требуется явное разрешение пользователя на публикацию этих коммитов в AridanWarlock/pinn-runner, codex/research-tools.
 
 2026-10-17: пользователь явно разрешил push в AridanWarlock/pinn-runner; код 1a4c22f и протокол 62bb738 опубликованы. Очередь приняла analytic011, PID запуска 9244: 20 обучений, два контроля 3D, пять seed, eager/neumann_analytic. Ожидаются полный пакет и независимая оценка; численного вывода пока нет.
+
+2026-10-17: analytic011 завершена, собраны и проверены 20/20 обучений и 180 срезов на чистом снимке 1a4c22f. На двух контролях 3D обе ветви подтвердили прежние пороги 009 на 5/5 seed. Медианные отношения времени analytic/eager: 0,85295 (мода), 0,86395 (полином); память около 0,9923, все парные критерии пройдены. Defaults прежние; следующая граница — чистое сравнение исполнителей 2D, общая приёмка TASK-21 открыта. Отчёт: https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/analytic-3d-replication-result-2026-10-17.md (a759cdb). Наблюдения по расходу контекста: docs/research-context-efficiency-2026-10-17.md. Фоновых обучений серии нет.
 <!-- SECTION:NOTES:END -->
