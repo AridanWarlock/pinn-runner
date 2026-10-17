@@ -1,11 +1,11 @@
 ---
 id: TASK-21
 title: Удешевить hard constraints после проверки Adam → L-BFGS
-status: In Progress
+status: Waiting CUDA
 assignee:
   - '@codex'
 created_date: '2026-10-13 13:28'
-updated_date: '2026-10-17 19:40'
+updated_date: '2026-10-17 19:43'
 labels:
   - performance
   - hard-constraints
@@ -61,4 +61,6 @@ ordinal: 21000
 2026-10-17: density010 завершена, проверены 10/10 обучений и 100 срезов из чистого снимка fdbc37c; обе плотности 1024/4096 подтвердили строгую точность 5/5 за 60 с. Для 4096 медианное парное отношение PDE RMS 0,724, памяти 1,785; наблюдаемое подтверждение раньше в 4/5 пар, разрешение 5 с. Необходимость плотной выборки не доказана, defaults прежние, общая приёмка TASK-21 остаётся открытой. Полный отчёт и ограничения: https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/density-neumann-result-2026-10-17.md (результаты c12dfc4). Фоновых запусков серии нет.
 
 2026-10-17: подготовлена, но НЕ запущена серия analytic011: два контроля 3D, пять seed, eager/neumann_analytic, 20 обучений; бюджет и пороги 009. Код 1a4c22f, протокол 62bb738; обоснование docs/analytic-3d-replication-protocol-2026-10-17.md. CPU: 73 профильных passed; быстрый 745 passed, 50 e2e исключены; Ruff/mypy прошли. Автоматическая проверка отклонила git push в origin из-за неподтверждённого разрешения на передачу изменений в GitHub. Коммиты пока только локально; submit не выполнялся. Требуется явное разрешение пользователя на публикацию этих коммитов в AridanWarlock/pinn-runner, codex/research-tools.
+
+2026-10-17: пользователь явно разрешил push в AridanWarlock/pinn-runner; код 1a4c22f и протокол 62bb738 опубликованы. Очередь приняла analytic011, PID запуска 9244: 20 обучений, два контроля 3D, пять seed, eager/neumann_analytic. Ожидаются полный пакет и независимая оценка; численного вывода пока нет.
 <!-- SECTION:NOTES:END -->
