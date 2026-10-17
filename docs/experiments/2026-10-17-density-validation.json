@@ -1,0 +1,57 @@
+{
+  "contract": 1,
+  "job_id": "density010",
+  "state": "completed",
+  "trials": 10,
+  "source_revision": "fdbc37c627d140d71d9ae8094412f52dfa70a57a",
+  "provenance": {
+    "protocol_commit": "2fb0d0ad0d65c735e7e05e7e24d2710b9f0cb5ef",
+    "protocol_sha256": "e6af621a5e0928eb94cfa897dc013c0aebbe7e200964b61c3512acf14ff105cd"
+  },
+  "manifest_sha256": "e6af621a5e0928eb94cfa897dc013c0aebbe7e200964b61c3512acf14ff105cd",
+  "sources": [
+    {
+      "path": "c0/report.json",
+      "sha256": "075d2aaf1a853f14949ff342195280a8c30b55ff005a8470e31365d1d6233c28"
+    }
+  ],
+  "bundle_sha256": {
+    "evidence.json": "28a4f9dc7dc93a99f282f48ecc34ccac70ce33c2048d4c9331d5aefca3ebb177",
+    "final.csv": "820873eaab19a7f001ff3b44066f5486234b55f0d8ccf5534bd7c4e56764687e",
+    "snapshots.csv": "b8863d378f5228b0a6d81c51c96d873d8055cfee323e62b52b53026e05b5ce77"
+  },
+  "environment": {
+    "revision": "fdbc37c627d140d71d9ae8094412f52dfa70a57a",
+    "working_tree_dirty": false,
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "cpu_threads": 6,
+    "default_dtype": "torch.float32",
+    "cudnn_allow_tf32": false,
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti",
+    "packages": {
+      "numpy": "1.26.4",
+      "lightning": "2.1.0"
+    }
+  },
+  "checks": {
+    "complete_matrix": true,
+    "matching_initial_weights": true,
+    "nested_objectives": true,
+    "physical_gates": true,
+    "candidate_confirmed": 5,
+    "baseline_confirmed": 5,
+    "confirmation_deadline_seconds": 60,
+    "independent_evaluation": "eager/general/autograd"
+  },
+  "derived_csv_sha256": {
+    "2026-10-17-density-summary.csv": "266c55ee1675424f2928d6dd3f37682816fd210c5f072c61d2334b53f395d1ab",
+    "2026-10-17-density-snapshots.csv": "b8863d378f5228b0a6d81c51c96d873d8055cfee323e62b52b53026e05b5ce77"
+  },
+  "limitations": "Checks summarize the validated source bundle; hashes are not signatures. Both densities pass; confirmation is sampled every five seconds, not interpolated. No default promotion."
+}
