@@ -57,6 +57,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     parser.add_argument("--steps", type=int, default=3000)
     parser.add_argument("--snapshots", type=int, nargs="+", default=list(SNAPSHOTS))
     parser.add_argument("--points", type=int)
+    parser.add_argument("--density", type=json.loads)
     parser.add_argument(
         "--constraints",
         choices=CONSTRAINTS,
@@ -114,6 +115,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
         args.constraints,
         args.points,
         tolerance_change=args.lbfgs_tolerance_change,
+        density=args.density,
     )
     arms = list(
         dict.fromkeys(
@@ -125,6 +127,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
                 backward,
                 background,
                 encoding,
+                args.points if args.density is not None else None,
             )
             for execution, lifting, backward, background, encoding in itertools.product(
                 args.hard_execution,
@@ -153,6 +156,7 @@ def main() -> None:
     torch.set_float32_matmul_precision("highest")
     args.output.mkdir(parents=True, exist_ok=False)
     report: dict[str, Any] = {
+        **({"density": plan.density} if plan.density is not None else {}),
         "contract": 3,
         "status": "running",
         "execution_lifecycle": "single_trial"

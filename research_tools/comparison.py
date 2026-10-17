@@ -6,7 +6,7 @@ import statistics
 from pathlib import Path
 
 from .evidence import compact_trial
-from .schema import ARM_FIELDS, Json, identity, number, object_value, validate_manifest
+from .schema import Json, arm_fields, identity, number, object_value, validate_manifest
 
 
 def compare(evidence: Json) -> Json:
@@ -54,12 +54,19 @@ def compare(evidence: Json) -> Json:
         for seed in seeds:
             members = [t for t in trials if t["case"] == case and t["seed"] == seed]
             baseline, candidate = (
-                next(t for t in members if all(t[k] == settings[name][k] for k in ARM_FIELDS))
+                next(
+                    t
+                    for t in members
+                    if all(t[k] == settings[name][k] for k in arm_fields(manifest))
+                )
                 for name in ("baseline", "candidate")
+            )
+            fingerprint = (
+                "objective_prefix_sha256" if "density" in manifest else "fixed_objective_sha256"
             )
             for key in (
                 "initial_state_sha256",
-                "fixed_objective_sha256",
+                fingerprint,
                 "prediction_points",
                 "prediction_batch_size",
                 "prediction_warmup_passes",
@@ -67,6 +74,11 @@ def compare(evidence: Json) -> Json:
             ):
                 if baseline[key] != candidate[key]:
                     raise ValueError(f"{case}/{seed}: incomparable pair ({key})")
+            if (
+                "density" in manifest
+                and baseline["fixed_objective_sha256"] != candidate["objective_prefix_sha256"]
+            ):
+                raise ValueError(f"{case}/{seed}: baseline is not the candidate prefix")
             physical = True
             for trial in members:
                 for snap in trial["snapshots"]:
@@ -144,6 +156,10 @@ def compare(evidence: Json) -> Json:
                 "details": paired,
             }
         )
+        if "density" in manifest:
+            results[-1]["density_target_passed"] = results[-1]["physical_passed"] and results[-1][
+                "candidate_confirmed"
+            ] == len(paired)
     passed = all(
         all(
             case[key]
@@ -156,6 +172,8 @@ def compare(evidence: Json) -> Json:
         )
         for case in results
     )
+    if "density" in manifest:
+        passed = all(case["density_target_passed"] for case in results)
     return {
         "contract": 1,
         "kind": "research-comparison",

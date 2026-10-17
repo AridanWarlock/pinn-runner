@@ -315,3 +315,39 @@ def test_analytic_cli_preserves_two_explicit_executors(
     _, _, arms = cli.arguments()
     assert {a.execution for a in arms} == {"eager", "neumann_analytic"}
     assert len({a.name for a in arms}) == 2
+
+
+def test_density_budget_and_per_arm_points_reach_worker(tmp_path: Path) -> None:
+    from benchmarks.convergence_processes import trial_command
+
+    density = dict(
+        training_seconds=60, snapshot_seconds=5, sampling="nested_uniform", prefix_points=8
+    )
+    selected = replace(plan(), points=None, density=density)
+    arm = ConvergenceArm(
+        "neumann_analytic", "recursive", "parameters", "auto", "neumann_polynomial", 32
+    )
+    command = trial_command(Path("benchmark.py"), selected, arm, 19, tmp_path)
+    assert command[command.index("--points") + 1] == "32"
+    assert json.loads(command[command.index("--density") + 1]) == density
+    assert selected.config(19, arm)["training"]["collocation"]["points"] == 32
+
+
+def test_pinned_coordinator_keeps_mandatory_working_directory(
+    tmp_path: Path,
+    child_script: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import benchmarks.convergence_processes as module
+
+    original = module.subprocess.run
+    observed: list[Path] = []
+
+    def run(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[Any]:
+        observed.append(kwargs["cwd"])
+        return original(*args, **kwargs)
+
+    monkeypatch.setenv("PINN_WORKING_DIRECTORY", str(tmp_path))
+    monkeypatch.setattr(module.subprocess, "run", run)
+    run_isolated(plan(), [ConvergenceArm()], [19], tmp_path / "root-cwd", child_script)
+    assert observed == [tmp_path]

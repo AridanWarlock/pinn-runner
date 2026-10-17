@@ -119,6 +119,11 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
         )
     count = len(manifest["expected_trials"])
     return {
+        **(
+            {"density": manifest["density"], "budget_kind": "wall_time_with_step_caps"}
+            if "density" in manifest
+            else {}
+        ),
         "contract": 1,
         "kind": "research-plan",
         "revision": manifest["revision"],
@@ -130,7 +135,23 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
         "trials": count,
         "adam_steps_total": count * parameters["adam_steps"],
         "lbfgs_calls_total": count * parameters["lbfgs_snapshots"][-1],
-        "saved_states_total": count * len(parameters["lbfgs_snapshots"]),
+        "saved_states_total": count * len(parameters["lbfgs_snapshots"])
+        if "density" not in manifest
+        else None,
+        **(
+            {
+                "saved_states_upper_bound": count
+                * (
+                    int(
+                        manifest["density"]["training_seconds"]
+                        / manifest["density"]["snapshot_seconds"]
+                    )
+                    + 2
+                )
+            }
+            if "density" in manifest
+            else {}
+        ),
         "collocation_override": parameters["points_override"],
         "quality_confirmation_possible": len(parameters["lbfgs_snapshots"]) >= 2,
         "limitations": "Offline structural check only: runtime packages, callbacks and mathematical correctness still require worker validation. L-BFGS closures and time-to-quality cannot be inferred from the step budget.",

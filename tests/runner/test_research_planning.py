@@ -132,3 +132,27 @@ def test_invalid_submit_does_not_contact_windows(
     monkeypatch.setattr(control, "call", forbidden)
     with pytest.raises(ValueError, match="registered"):
         control.submit(ROOT, "a" * 40, "docs/protocol.json", "bad-plan", 60, False)
+
+
+def test_density_plan_declares_time_budget_and_only_one_changed_factor(
+    manifest: dict[str, Any],
+) -> None:
+    baseline = manifest["comparison"]["baseline"]
+    baseline.update(backend="neumann_analytic", points_override=8)
+    manifest["comparison"]["candidate"] = baseline | {"points_override": 32}
+    manifest["expected_trials"] = [
+        dict(case="heat_neumann_homogeneous2d", seed=19, **manifest["comparison"][name])
+        for name in ("baseline", "candidate")
+    ]
+    manifest["report_parameters"]["points_override"] = None
+    manifest["density"] = dict(
+        training_seconds=60, snapshot_seconds=5, sampling="nested_uniform", prefix_points=8
+    )
+    result = plan(manifest)
+    assert result["budget_kind"] == "wall_time_with_step_caps"
+    assert result["saved_states_total"] is None
+    assert result["saved_states_upper_bound"] == 28
+    manifest["comparison"]["candidate"]["background"] = "general"
+    manifest["expected_trials"][1]["background"] = "general"
+    with pytest.raises(ValueError, match="only point count"):
+        plan(manifest)

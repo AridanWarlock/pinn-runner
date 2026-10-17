@@ -38,7 +38,8 @@ def main() -> None:
             *(
                 manifest["comparison"][name][key]
                 for key in ("backend", "lifting", "backward", "background", "spatial_encoding")
-            )
+            ),
+            points=manifest["comparison"][name].get("points_override"),
         )
         for name in ("baseline", "candidate")
     ]
@@ -56,6 +57,7 @@ def main() -> None:
             parameters["constraints"],
             parameters["points_override"],
             tolerance_change=parameters["lbfgs_tolerance_change"],
+            density=manifest.get("density"),
         )
         for arm in arms:
             config = plan.config(seeds[0], arm)

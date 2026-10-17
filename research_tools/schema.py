@@ -49,7 +49,16 @@ def identity(trial: Json) -> tuple[str | int, ...]:
         elif not isinstance(value, str) or not value:
             raise ValueError(f"{key}: expected nonempty string")
         values.append(value)
+    if "points_override" in trial:
+        points = trial["points_override"]
+        if type(points) is not int or points <= 0:
+            raise ValueError("Trial points_override must be positive")
+        values.append(points)
     return tuple(values)
+
+
+def arm_fields(manifest: Json) -> tuple[str, ...]:
+    return (*ARM_FIELDS, "points_override") if "density" in manifest else ARM_FIELDS
 
 
 def inside(root: Path, relative: str) -> Path:
@@ -83,6 +92,8 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
     }
     if manifest.get("contract") == 2:
         required |= {"case_faces", "environment_requirements", "network"}
+        if "density" in manifest:
+            required.add("density")
     if set(manifest) != required or manifest["contract"] not in (1, 2):
         raise ValueError("Manifest contract 1/2 with exactly the documented fields required")
     if manifest["registration"] not in ("prospective", "retrospective_import"):
@@ -159,14 +170,17 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
         "worst_training_ratio_max",
     }:
         raise ValueError("Explicit paired comparison and timing gates required")
+    fields = arm_fields(manifest)
     for name in ("baseline", "candidate"):
         arm = object_value(comparison[name], name)
-        if set(arm) != set(ARM_FIELDS) or not all(isinstance(v, str) and v for v in arm.values()):
+        if set(arm) != set(fields) or not all(
+            isinstance(arm[k], str) and arm[k] for k in ARM_FIELDS
+        ):
             raise ValueError("Comparison arms must specify all arm fields")
     if comparison["baseline"] == comparison["candidate"]:
         raise ValueError("Baseline and candidate must differ")
     if any(
-        {k: t[k] for k in ARM_FIELDS} not in (comparison["baseline"], comparison["candidate"])
+        {k: t[k] for k in fields} not in (comparison["baseline"], comparison["candidate"])
         for t in expected
     ):
         raise ValueError("Every expected trial must belong to a declared comparison arm")
@@ -175,6 +189,28 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
             raise ValueError("Every case/seed must have exactly one baseline and one candidate")
     for key in ("quality_factor", "median_training_ratio_max", "worst_training_ratio_max"):
         number(comparison[key], key, positive=True)
+    if "density" in manifest:
+        density = object_value(manifest["density"], "density")
+        if set(density) != {"training_seconds", "snapshot_seconds", "sampling", "prefix_points"}:
+            raise ValueError("Density requires training/snapshot seconds and sampling")
+        budget = number(density["training_seconds"], "training_seconds", positive=True)
+        interval = number(density["snapshot_seconds"], "snapshot_seconds", positive=True)
+        if interval >= budget or density["sampling"] != "nested_uniform":
+            raise ValueError("Density requires nested_uniform and snapshots within budget")
+        left, right = (comparison[k] for k in ("baseline", "candidate"))
+        if any(left[k] != right[k] for k in ARM_FIELDS):
+            raise ValueError("Density comparison must change only point count")
+        if any(type(a["points_override"]) is not int for a in (left, right)) or not (
+            0 < left["points_override"] < right["points_override"]
+        ):
+            raise ValueError("Density requires increasing positive point counts")
+        if parameters["points_override"] is not None:
+            raise ValueError("Density point counts belong to arms, not shared parameters")
+        if (
+            type(density["prefix_points"]) is not int
+            or density["prefix_points"] != left["points_override"]
+        ):
+            raise ValueError("Density prefix must equal baseline point count")
     if manifest["contract"] == 2:
         faces = object_value(manifest["case_faces"], "case_faces")
         if set(faces) != set(case_limits):

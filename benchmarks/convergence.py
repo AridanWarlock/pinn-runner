@@ -43,13 +43,15 @@ class ConvergenceArm:
     backward: str = "all"
     background: str = "general"
     encoding: str = "identity"
+    points: int | None = None
 
     @property
     def name(self) -> str:
         base = f"{self.execution}-{self.lifting}-{self.backward}"
         if self.background != "general":
             base += f"-{self.background}"
-        return base if self.encoding == "identity" else f"{base}-{self.encoding}"
+        base = base if self.encoding == "identity" else f"{base}-{self.encoding}"
+        return base if self.points is None else f"{base}-n{self.points}"
 
     def apply(self, config: dict[str, Any]) -> None:
         TrainingComposition(
@@ -73,6 +75,7 @@ class ConvergencePlan:
     points: int | None = None
     device: str = "cuda"
     tolerance_change: float = Refinement().tolerance_change
+    density: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if (
@@ -100,8 +103,9 @@ class ConvergencePlan:
                 "tolerance_change": self.tolerance_change,
             },
         )
-        if self.points is not None:
-            config["training"]["collocation"].update(points=self.points, sampling="lhs")
+        points = self.points if arm.points is None else arm.points
+        if points is not None:
+            config["training"]["collocation"].update(points=points, sampling="lhs")
         arm.apply(config)
         return config
 
@@ -263,7 +267,12 @@ def convergence_trial(
     factory = SolverFactory(TaskSettings.read(config), problem, directory, plan.case.source.parent)
     objects = factory.build(predicting=False)
     setup_seconds = time.perf_counter() - started
-    rows, performance = SnapshotTraining(plan, objects, directory).run()
+    if plan.density is None:
+        rows, performance = SnapshotTraining(plan, objects, directory).run()
+    else:
+        from .density import density_training
+
+        rows, performance = density_training(plan, arm, seed, objects, directory)
     evaluation_started = time.perf_counter()
     # Separate evaluator: force physical-autograd control, preserve the actual lifting.
     evaluator_config = plan.config(
@@ -277,6 +286,12 @@ def convergence_trial(
     )
     for row in rows:
         metrics, diagnostics = evaluator.evaluate(directory / f"lb-{row['lb_steps']}.pt")
+        if plan.density is not None:
+            metrics["worst_time_relative_l2"] = max(
+                item["relative_l2"]
+                for item in diagnostics["temporal"]
+                if item["relative_l2"] is not None
+            )
         missing = plan.limits.keys() - metrics.keys()
         if missing:
             raise ValueError(f"Unknown quality metrics: {sorted(missing)}")
@@ -285,6 +300,8 @@ def convergence_trial(
             **diagnostics,
             passed=all(metrics[name] <= limit for name, limit in plan.limits.items()),
         )
+        if plan.density is not None:
+            row["passed"] &= row["seconds"] <= plan.density["training_seconds"]
     # Quality uses the independent control; deployment timing uses the trained executor.
     performance.update(evaluator.performance(objects.model.eval()))
     control_prediction = evaluator.performance()
@@ -294,6 +311,7 @@ def convergence_trial(
         trial_wall_seconds=time.perf_counter() - started,
     )
     return {
+        **({"points_override": arm.points} if plan.density is not None else {}),
         "case": plan.case.name,
         "backend": arm.execution,
         "lifting": arm.lifting,

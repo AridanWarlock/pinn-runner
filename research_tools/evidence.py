@@ -102,8 +102,41 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
         )
         for s in raw.get("snapshots", [])
     ]
-    if [s["lb_steps"] for s in snapshots] != manifest["report_parameters"]["lbfgs_snapshots"]:
-        raise ValueError("Trial snapshots do not match the complete declared schedule")
+    if "density" not in manifest:
+        if [s["lb_steps"] for s in snapshots] != manifest["report_parameters"]["lbfgs_snapshots"]:
+            raise ValueError("Trial snapshots do not match the complete declared schedule")
+    else:
+        density = manifest["density"]
+        steps = [s["lb_steps"] for s in snapshots]
+        if not steps or steps[0] != 0 or steps != sorted(set(steps)):
+            raise ValueError("Density snapshots must start at zero and increase")
+        if steps[-1] > manifest["report_parameters"]["lbfgs_snapshots"][-1]:
+            raise ValueError("Density exceeded registered step cap")
+        if raw.get("density") != density or raw.get("stop_reason") != "time_budget":
+            raise ValueError("Density trial did not finish its registered time budget")
+        if (
+            number(raw.get("training_seconds_with_snapshots"), "training seconds")
+            < density["training_seconds"]
+        ):
+            raise ValueError("Density trial ended before its time budget")
+        if (
+            type(raw.get("adam_steps")) is not int
+            or not 0 < raw["adam_steps"] <= manifest["report_parameters"]["adam_steps"]
+        ):
+            raise ValueError("Invalid completed Adam budget")
+        for snap in snapshots:
+            snap["passed"] &= (
+                snap["seconds"] <= density["training_seconds"]
+                and snap["metrics"]["initial_rmse"] <= manifest["physical_limits"]["initial_rmse"]
+                and snap["boundary_max"] <= manifest["physical_limits"]["boundary_max"]
+            )
+        for original, snap in zip(raw["snapshots"], snapshots):
+            for key in ("adam_residual_points", "lbfgs_residual_points"):
+                snap[key] = number(original.get(key), key)
+            if snap["lbfgs_residual_points"] != snap["closures"] * raw["points_override"]:
+                raise ValueError("Density residual counter differs from closure work")
+        if any(a["closures"] > b["closures"] for a, b in zip(snapshots, snapshots[1:])):
+            raise ValueError("Density closure counters go backwards")
     if any(a["seconds"] > b["seconds"] for a, b in zip(snapshots, snapshots[1:])):
         raise ValueError("Snapshot time goes backwards")
     if (
@@ -132,7 +165,11 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
             "control_prediction_background",
         )
     }
-    for key in ("initial_state_sha256", "fixed_objective_sha256"):
+    for key in (
+        "initial_state_sha256",
+        "fixed_objective_sha256",
+        *(("objective_prefix_sha256",) if "density" in manifest else ()),
+    ):
         value = raw.get(key)
         if (
             not isinstance(value, str)
@@ -156,6 +193,8 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
             raise ValueError(f"{key}: positive integer required")
         compact[key] = value
     for key in ("adam_steps", "lbfgs_tolerance_change"):
+        if key == "adam_steps" and "density" in manifest:
+            continue
         if raw.get(key) != manifest["report_parameters"][key]:
             raise ValueError(f"Trial {key} differs from declared protocol")
     if manifest["contract"] == 2:
@@ -168,6 +207,37 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
         snapshots=snapshots,
         crossing=crossing(snapshots),
     )
+    if "density" in manifest:
+        compact.update(
+            {
+                key: raw[key]
+                for key in (
+                    "points_override",
+                    "density",
+                    "stop_reason",
+                    "budget_overshoot_seconds",
+                    "peak_allocated_bytes",
+                    "peak_reserved_bytes",
+                    "density_preparation_seconds",
+                )
+            }
+        )
+        budget = manifest["density"]["training_seconds"]
+        if (
+            abs(
+                compact["budget_overshoot_seconds"]
+                - (compact["training_seconds_with_snapshots"] - budget)
+            )
+            > 1e-6
+        ):
+            raise ValueError("Density overshoot differs from measured training time")
+        for key in (
+            "budget_overshoot_seconds",
+            "peak_allocated_bytes",
+            "peak_reserved_bytes",
+            "density_preparation_seconds",
+        ):
+            number(compact[key], key)
     return compact
 
 
@@ -186,6 +256,8 @@ def collect(root: Path, manifest: Json, manifest_path: Path) -> Json:
             raise ValueError("Report quality limits differ from declared protocol")
         if any(report.get(key) != value for key, value in manifest["report_parameters"].items()):
             raise ValueError("Report budget/configuration differs from declared protocol")
+        if "density" in manifest and report.get("density") != manifest["density"]:
+            raise ValueError("Report density budget differs from declared protocol")
         current = object_value(report.get("environment"), "environment")
         if (
             manifest["registration"] == "prospective"
@@ -246,6 +318,8 @@ def write_bundle(output: Path, evidence: Json) -> None:
                 "spatial_encoding",
             )
         }
+        if "density" in evidence["manifest"]:
+            common["points_override"] = trial["points_override"]
         rows.append(
             common
             | trial["snapshots"][-1]["metrics"]

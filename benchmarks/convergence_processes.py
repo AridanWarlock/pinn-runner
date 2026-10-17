@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import time
@@ -48,8 +49,11 @@ def trial_command(
     ]
     for name, limit in plan.limits.items():
         command.extend(["--" + name.replace("_", "-"), str(limit)])
-    if plan.points is not None:
-        command.extend(["--points", str(plan.points)])
+    points = plan.points if arm.points is None else arm.points
+    if points is not None:
+        command.extend(["--points", str(points)])
+    if plan.density is not None:
+        command.extend(["--density", json.dumps(plan.density)])
     return command
 
 
@@ -64,12 +68,14 @@ def read_trial(
         "adam_steps": plan.steps,
         "lbfgs_snapshots": list(plan.snapshots),
         "constraints": plan.constraints,
-        "points_override": plan.points,
+        "points_override": plan.points if arm.points is None else arm.points,
         "execution_lifecycle": "single_trial",
         "status": "completed",
     }
     if not isinstance(report, dict) or any(report.get(k) != v for k, v in expected.items()):
         raise ValueError("Child report does not match the requested convergence protocol")
+    if plan.density is not None and report.get("density") != plan.density:
+        raise ValueError("Child density budget differs from protocol")
     if (
         report.get("lbfgs_tolerance_change", Refinement().tolerance_change)
         != plan.tolerance_change
@@ -123,7 +129,10 @@ def run_isolated(
             child = output / "processes" / f"{arm.name}-{seed}"
             command = trial_command(script, plan, arm, seed, child)
             process_started = time.perf_counter()
-            subprocess.run(command, cwd=script.parent.parent, check=True)
+            working_directory = Path(
+                os.environ.get("PINN_WORKING_DIRECTORY", script.parent.parent)
+            )
+            subprocess.run(command, cwd=working_directory, check=True)
             process_seconds = time.perf_counter() - process_started
             report = read_trial(child, plan, arm, seed)
             if combined is None:
@@ -133,6 +142,8 @@ def run_isolated(
                     "status": "running",
                     "trials": [],
                 }
+                if plan.density is not None:
+                    combined["points_override"] = plan.points
             elif report["environment"] != combined["environment"]:
                 raise ValueError(
                     "Child source revision or runtime environment changed during study"

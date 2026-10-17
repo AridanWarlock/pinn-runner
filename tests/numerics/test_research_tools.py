@@ -406,3 +406,109 @@ def test_failed_bundle_write_never_publishes_completion(
     assert not (output / "bundle.json").exists()
     with pytest.raises(ValueError, match="Incomplete"):
         module.read_bundle(output)
+
+
+@pytest.fixture
+def density_study(study: tuple[Path, Path]) -> tuple[Path, Path]:
+    root, path = study
+    manifest = json.loads(path.read_text())
+    manifest.update(
+        contract=2,
+        density=dict(
+            training_seconds=10, snapshot_seconds=2, sampling="nested_uniform", prefix_points=8
+        ),
+        case_faces={"heat": [dict(field="u", kind="neumann", axis="x", side="lower")]},
+        environment_requirements=dict(
+            torch="2.1",
+            cuda_runtime="11.8",
+            default_dtype="torch.float32",
+            float32_matmul_precision="highest",
+            cuda_matmul_allow_tf32=False,
+            cudnn_allow_tf32=False,
+        ),
+        network=dict(hidden_layers=[32], spatial_encoding="neumann_polynomial"),
+    )
+    manifest["report_parameters"].update(points_override=None, lbfgs_snapshots=[0, 100000])
+    arms = manifest["comparison"]
+    arms["baseline"].update(backend="neumann_analytic", points_override=8)
+    arms["candidate"].update(backend="neumann_analytic", points_override=32)
+    manifest["expected_trials"] = [
+        dict(case="heat", seed=19, **arms[k]) for k in ("baseline", "candidate")
+    ]
+    report_path = root / "case/report.json"
+    report = json.loads(report_path.read_text())
+    report.update(**manifest["report_parameters"], density=manifest["density"])
+    report["environment"].update(manifest["environment_requirements"])
+    for index, trial in enumerate(report["trials"]):
+        trial.update(
+            **arms[("baseline", "candidate")[index]],
+            feature_derivatives="analytic",
+            network=manifest["network"],
+            density=manifest["density"],
+            stop_reason="time_budget",
+            budget_overshoot_seconds=0.02,
+            density_preparation_seconds=0.01,
+            objective_prefix_sha256="c" * 64,
+            fixed_objective_sha256=("c" if index == 0 else "d") * 64,
+            peak_allocated_bytes=100,
+            peak_reserved_bytes=200,
+            training_seconds_with_snapshots=10.02,
+        )
+        for snap, step, seconds in zip(trial["snapshots"], [0, 10, 20], [2, 5, 10.01]):
+            snap.update(
+                lb_steps=step,
+                seconds=seconds,
+                adam_residual_points=16,
+                lbfgs_residual_points=snap["closures"] * trial["points_override"],
+            )
+            snap["boundary_operators"][0].update(manifest["case_faces"]["heat"][0])
+    report_path.write_text(json.dumps(report))
+    path.write_text(json.dumps(manifest))
+    return root, path
+
+
+def test_density_requires_nested_samples_and_preserves_point_identity(
+    density_study: tuple[Path, Path],
+) -> None:
+    value = evidence(density_study)
+    assert compare(value)["comparison_passed"]
+    assert [t["points_override"] for t in value["trials"]] == [8, 32]
+    assert not value["trials"][1]["snapshots"][-1]["passed"]
+    value["trials"][1]["objective_prefix_sha256"] = "e" * 64
+    with pytest.raises(ValueError, match="incomparable"):
+        compare(value)
+
+
+def test_density_does_not_confirm_success_after_deadline(density_study: tuple[Path, Path]) -> None:
+    root, _ = density_study
+
+    def change(report: dict[str, Any]) -> None:
+        for snap in report["trials"][1]["snapshots"][:2]:
+            snap["metrics"]["pde_rmse"] = 1
+
+    edit_json(root / "case/report.json", change)
+    result = compare(evidence(density_study))
+    assert not result["comparison_passed"]
+    assert result["cases"][0]["candidate_confirmed"] == 0
+
+
+@pytest.mark.parametrize("damage", ["budget", "weights", "points", "schedule"])
+def test_density_rejects_incomplete_or_incomparable_data(
+    density_study: tuple[Path, Path], damage: str
+) -> None:
+    root, _ = density_study
+
+    def change(report: dict[str, Any]) -> None:
+        trial = report["trials"][1]
+        if damage == "budget":
+            trial["training_seconds_with_snapshots"] = 9
+        elif damage == "weights":
+            trial["initial_state_sha256"] = "e" * 64
+        elif damage == "points":
+            trial["points_override"] = 16
+        else:
+            trial["snapshots"][1]["lb_steps"] = 0
+
+    edit_json(root / "case/report.json", change)
+    with pytest.raises(ValueError):
+        compare(evidence(density_study))
