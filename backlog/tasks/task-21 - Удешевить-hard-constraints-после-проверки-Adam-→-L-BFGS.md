@@ -1,11 +1,11 @@
 ---
 id: TASK-21
 title: Удешевить hard constraints после проверки Adam → L-BFGS
-status: Waiting CUDA
+status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-13 13:28'
-updated_date: '2026-10-17 15:50'
+updated_date: '2026-10-17 16:04'
 labels:
   - performance
   - hard-constraints
@@ -57,4 +57,6 @@ ordinal: 21000
 История сохранена в docs/research-history/task-21.md.
 
 2026-10-17: запущена density010, 5 пар 1024/4096 вложенных равномерных PDE-точек, по 60 с обучения. Код fdbc37c627d140d71d9ae8094412f52dfa70a57a; протокол 2fb0d0ad0d65c735e7e05e7e24d2710b9f0cb5ef:docs/experiments/2026-10-17-density-protocol.json. Математика и критерии: docs/density-neumann-protocol-2026-10-17.md. Полный CPU: 791 passed; заключительный быстрый: 744 passed, 50 e2e исключены; дополнительные профильные проверки и короткая CPU-проверка независимого оценщика прошли. Подтверждён running; численного результата ещё нет.
+
+2026-10-17: density010 завершена, проверены 10/10 обучений и 100 срезов из чистого снимка fdbc37c; обе плотности 1024/4096 подтвердили строгую точность 5/5 за 60 с. Для 4096 медианное парное отношение PDE RMS 0,724, памяти 1,785; наблюдаемое подтверждение раньше в 4/5 пар, разрешение 5 с. Необходимость плотной выборки не доказана, defaults прежние, общая приёмка TASK-21 остаётся открытой. Полный отчёт и ограничения: https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/density-neumann-result-2026-10-17.md (результаты c12dfc4). Фоновых запусков серии нет.
 <!-- SECTION:NOTES:END -->
