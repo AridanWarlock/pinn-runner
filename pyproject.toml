@@ -12,6 +12,8 @@ follow_imports = "silent"
 ignore_missing_imports = true
 files = [
   "run.py",
+  "research_tools",
+  "scripts/research.py",
   "scripts/check_backend.py",
   "scripts/gpu_jobs.py",
   "scripts/gpu_worker.py",

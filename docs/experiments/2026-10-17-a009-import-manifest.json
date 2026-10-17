@@ -1,0 +1,101 @@
+{
+  "contract": 1,
+  "registration": "retrospective_import",
+  "revision": "83f3c39716bf2b4ca98504e1843a8d4d0dd098c5",
+  "reports": [
+    "phase1/c0/report.json",
+    "phase1/c1/report.json"
+  ],
+  "expected_trials": [
+    {
+      "case": "heat_neumann_homogeneous3d",
+      "seed": 19,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial"
+    },
+    {
+      "case": "heat_neumann_homogeneous3d",
+      "seed": 19,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial"
+    },
+    {
+      "case": "heat_neumann_polynomial3d",
+      "seed": 19,
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial"
+    },
+    {
+      "case": "heat_neumann_polynomial3d",
+      "seed": 19,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial"
+    }
+  ],
+  "report_parameters": {
+    "adam_steps": 2000,
+    "lbfgs_snapshots": [
+      0,
+      50,
+      100,
+      150,
+      200,
+      300,
+      400,
+      500,
+      600
+    ],
+    "constraints": "hard_initial_robin",
+    "points_override": 1024,
+    "lbfgs_tolerance_change": 1e-12,
+    "execution_lifecycle": "isolated_trials"
+  },
+  "case_limits": {
+    "heat_neumann_homogeneous3d": {
+      "relative_l2": 0.005,
+      "final_relative_l2": 0.01,
+      "pde_rmse": 0.02,
+      "mode_relative_l2": 0.02
+    },
+    "heat_neumann_polynomial3d": {
+      "relative_l2": 0.005,
+      "final_relative_l2": 0.01,
+      "pde_rmse": 0.02
+    }
+  },
+  "physical_limits": {
+    "initial_rmse": 1e-06,
+    "boundary_max": 1e-05
+  },
+  "comparison": {
+    "baseline": {
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial"
+    },
+    "candidate": {
+      "backend": "neumann_analytic",
+      "lifting": "recursive",
+      "backward": "parameters",
+      "background": "auto",
+      "spatial_encoding": "neumann_polynomial"
+    },
+    "quality_factor": 1.5,
+    "median_training_ratio_max": 0.95,
+    "worst_training_ratio_max": 1.1
+  }
+}

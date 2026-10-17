@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TARGETS = [
     "run.py",
+    "research_tools",
     "pinnstorch",
     "scripts",
     "benchmarks",
