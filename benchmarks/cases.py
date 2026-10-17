@@ -140,6 +140,10 @@ class HeatAxisMode:
 
 
 class BoxNeumannHeatCase(BenchmarkCase):
+    @property
+    def affine_background_rate(self) -> float:
+        return 1.0
+
     def mode_for(self, axis: str) -> HeatAxisMode:
         return HeatAxisMode(float(np.pi), 0, 0)
 
@@ -155,7 +159,7 @@ class BoxNeumannHeatCase(BenchmarkCase):
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
         background = np.ones_like(spatial["x"]) * np.ones_like(time)
         for column in spatial.values():
-            background = background + time * column
+            background = background + self.affine_background_rate * time * column
         return cast(Array, background + self.mode(spatial, time))
 
     def additional_errors(
@@ -194,14 +198,15 @@ class BoxRobinHeatCase(BoxNeumannHeatCase):
 
 class HomogeneousNeumannHeatCase(BoxNeumannHeatCase):
     @property
+    def affine_background_rate(self) -> float:
+        return 0.0
+
+    @property
     def source(self) -> Path:
         return PROBLEMS / "heat_neumann_homogeneous" / "functions.py"
 
     def boundaries(self, axes: tuple[str, ...]) -> list[dict[str, Any]]:
         return [{"kind": "neumann", "field": "u", "axis": axis, "value": 0} for axis in axes]
-
-    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
-        return cast(Array, 1 + self.mode(spatial, time))
 
 
 class PolynomialNeumannHeatCase(BenchmarkCase):

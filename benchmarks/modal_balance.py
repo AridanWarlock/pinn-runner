@@ -45,6 +45,25 @@ class HeatEigenmode:
 
 
 @dataclass(frozen=True)
+class AffineHeatSolution:
+    mode: HeatEigenmode
+    background_rate: float
+
+    def source(self, spatial: list[torch.Tensor], clock: torch.Tensor) -> torch.Tensor:
+        result = torch.zeros_like(clock)
+        for column in spatial:
+            result = result + column.mul(self.background_rate)
+        return result
+
+    def reference(self, spatial: list[torch.Tensor], clock: torch.Tensor) -> torch.Tensor:
+        background = torch.ones_like(clock) + clock * self.source(spatial, clock)
+        return cast(
+            torch.Tensor,
+            background + self.mode.spatial(spatial) * clock.mul(-self.mode.decay_rate).exp(),
+        )
+
+
+@dataclass(frozen=True)
 class ModalBalance:
     rows: list[dict[str, float]]
     metrics: dict[str, float]

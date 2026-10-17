@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from benchmarks.cases import CASES, BoxNeumannHeatCase  # noqa: E402
-from benchmarks.modal_balance import HeatEigenmode, modal_heat_balance  # noqa: E402
+from benchmarks.modal_balance import AffineHeatSolution, HeatEigenmode, modal_heat_balance  # noqa: E402
 from pinnstorch.runner.dirichlet import trace_value  # noqa: E402
 from scripts.benchmark_robin_execution import load_model  # noqa: E402
 
@@ -57,22 +57,10 @@ def main() -> None:
         tuple(axis.frequency for axis in modes), tuple(axis.shift for axis in modes)
     )
 
+    analytical = AffineHeatSolution(mode, case.affine_background_rate)
+
     def field(spatial: list[torch.Tensor], clock: torch.Tensor) -> torch.Tensor:
         return cast(torch.Tensor, model(spatial, clock)["u"])
-
-    def source(spatial: list[torch.Tensor], clock: torch.Tensor) -> torch.Tensor:
-        result = torch.zeros_like(clock)
-        for x in spatial:
-            result = result + x
-        return result
-
-    def reference(spatial: list[torch.Tensor], clock: torch.Tensor) -> torch.Tensor:
-        background = torch.ones_like(clock)
-        for x in spatial:
-            background = background + clock * x
-        return cast(
-            torch.Tensor, background + mode.spatial(spatial) * clock.mul(-mode.decay_rate).exp()
-        )
 
     def initial(spatial: list[torch.Tensor], clock: torch.Tensor) -> torch.Tensor:
         return factory.adapter.initial_tensors(spatial, clock)["u"]
@@ -97,8 +85,8 @@ def main() -> None:
     started = time.perf_counter()
     budget = modal_heat_balance(
         field,
-        None if args.without_reference else reference,
-        source,
+        None if args.without_reference else analytical.reference,
+        analytical.source,
         targets,
         operators,
         mode,

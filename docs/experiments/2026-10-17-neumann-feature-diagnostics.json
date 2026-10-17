@@ -198,7 +198,14 @@
         }
       }
     ],
-    "limitations": "FP32 saved-state prediction on CPU. Original-grid metrics independently reproduced; this is not a GPU performance measurement. Positive Gauss quadrature approximates continuous error; initial near-zero errors do not yield stable fractions."
+    "limitations": "FP32 saved-state prediction on CPU. Original-grid metrics independently reproduced; this is not a GPU performance measurement. Positive Gauss quadrature approximates continuous error; initial near-zero errors do not yield stable fractions.",
+    "environment": {
+      "python": "3.10.20",
+      "torch": "2.1.0",
+      "numpy": "1.26.4",
+      "platform": "macOS-15.7.2-arm64-arm-64bit",
+      "cpu_threads": 2
+    }
   },
   "tables_sha256": {
     "docs/experiments/2026-10-16-neumann-features-final.csv": "f89cad83cc7435f8bdbf89a775d97d2a6e5868d40f9528c7e8700eef0860e439",
