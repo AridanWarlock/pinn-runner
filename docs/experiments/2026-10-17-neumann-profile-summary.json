@@ -1,0 +1,103 @@
+{
+  "contract": 1,
+  "status": {
+    "state": "completed",
+    "started_at": "2026-10-17T06:32:57.738428+00:00",
+    "completed": [
+      "identity",
+      "neumann_cosine",
+      "neumann_polynomial"
+    ],
+    "commit": "484f9d9626d70f39679576e319dd1c1c1bc08297",
+    "finished_at": "2026-10-17T06:40:29.262947+00:00"
+  },
+  "profiles": [
+    {
+      "revision": "484f9d9626d70f39679576e319dd1c1c1bc08297",
+      "torch": "2.1.0+cu118",
+      "gpu": "NVIDIA GeForce RTX 4070 Ti",
+      "weights_sha256": "5e358cf8cb487198c778049f82b7d30dd646bc45b44ced277aa8498f6cfb2537",
+      "state_sha256": "5ee9d24d24ce9cef8c114c1740efc1cbdcb42d23aa4448a50e17eba432dc6ef4",
+      "weights_unchanged": true,
+      "case": "heat_neumann_homogeneous2d",
+      "spatial_encoding": "identity",
+      "hard_execution": "robin_grouped",
+      "points": 1024,
+      "network_work": {
+        "calls": 4,
+        "rows": 9216
+      },
+      "timing": {
+        "median_seconds": 0.02407899999525398,
+        "min_seconds": 0.02340470001217909,
+        "max_seconds": 0.02556189999449998,
+        "warmup": 3,
+        "measurements": 9
+      },
+      "profiler": {
+        "cuda_activity_supported": false,
+        "cuda_operator_time_recorded": false,
+        "operators": 96
+      },
+      "limitations": "One saved state, fixed independent points, no optimizer update. FCN hooks removed before timing. Profiling is separate from synchronized unprofiled timing. CUDA activity support does not guarantee that CUDA events were captured; inspect operators/trace before kernel conclusions. Raw trace stays outside Git."
+    },
+    {
+      "revision": "484f9d9626d70f39679576e319dd1c1c1bc08297",
+      "torch": "2.1.0+cu118",
+      "gpu": "NVIDIA GeForce RTX 4070 Ti",
+      "weights_sha256": "5310cc8a8aa966a81679232b8f06d84b8a527b6d1d89a7edb358077c7ebd8389",
+      "state_sha256": "a0eb8f979df50bb8d88267634e52e1f7d15bdba94a605c8be69fa09edc48fb6f",
+      "weights_unchanged": true,
+      "case": "heat_neumann_homogeneous2d",
+      "spatial_encoding": "neumann_cosine",
+      "hard_execution": "eager",
+      "points": 1024,
+      "network_work": {
+        "calls": 1,
+        "rows": 1024
+      },
+      "timing": {
+        "median_seconds": 0.005543799983570352,
+        "min_seconds": 0.005435300001408905,
+        "max_seconds": 0.005977499997243285,
+        "warmup": 3,
+        "measurements": 9
+      },
+      "profiler": {
+        "cuda_activity_supported": false,
+        "cuda_operator_time_recorded": false,
+        "operators": 84
+      },
+      "limitations": "One saved state, fixed independent points, no optimizer update. FCN hooks removed before timing. Profiling is separate from synchronized unprofiled timing. CUDA activity support does not guarantee that CUDA events were captured; inspect operators/trace before kernel conclusions. Raw trace stays outside Git."
+    },
+    {
+      "revision": "484f9d9626d70f39679576e319dd1c1c1bc08297",
+      "torch": "2.1.0+cu118",
+      "gpu": "NVIDIA GeForce RTX 4070 Ti",
+      "weights_sha256": "3e98fe569b73335de6dccc9367f00604cf1b932d05805d4f11511027ad094aa5",
+      "state_sha256": "4fb08e16b7d7c8fdff16f4dca75d613f290fcd8d19f9cf19afe8e2964c5b9de7",
+      "weights_unchanged": true,
+      "case": "heat_neumann_homogeneous2d",
+      "spatial_encoding": "neumann_polynomial",
+      "hard_execution": "eager",
+      "points": 1024,
+      "network_work": {
+        "calls": 1,
+        "rows": 1024
+      },
+      "timing": {
+        "median_seconds": 0.008035300008486956,
+        "min_seconds": 0.0078466999984812,
+        "max_seconds": 0.008212899992940947,
+        "warmup": 3,
+        "measurements": 9
+      },
+      "profiler": {
+        "cuda_activity_supported": false,
+        "cuda_operator_time_recorded": false,
+        "operators": 87
+      },
+      "limitations": "One saved state, fixed independent points, no optimizer update. FCN hooks removed before timing. Profiling is separate from synchronized unprofiled timing. CUDA activity support does not guarantee that CUDA events were captured; inspect operators/trace before kernel conclusions. Raw trace stays outside Git."
+    }
+  ]
+}

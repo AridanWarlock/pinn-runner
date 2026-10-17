@@ -1,0 +1,55 @@
+{
+  "contract": 1,
+  "status": "registered_before_cuda_replay",
+  "registered_utc": "2026-10-17T06:39:49.293790+00:00",
+  "hypothesis": "In Torch2.1 max_iter=1 L-BFGS, the absolute directional-derivative tolerance can prevent updates even when the gradient is above tolerance_grad. This may explain the observed flat polynomial identity snapshots.",
+  "informed_by": "neumann-quality-002 identity polynomial2d snapshots and CPU frozen gradients; not a blind validation",
+  "toy": {
+    "initial_parameter": 1e-05,
+    "loss": "0.5*x^2",
+    "tolerance_change": [
+      1e-09,
+      1e-12
+    ],
+    "tolerance_grad": 1e-07,
+    "max_iter": 1,
+    "line_search": "strong_wolfe"
+  },
+  "replay": {
+    "case": "heat_neumann_polynomial2d",
+    "seed": 19,
+    "encoding": "identity",
+    "execution": "robin_grouped",
+    "adam_steps": 2000,
+    "lbfgs_snapshots": [
+      0,
+      25,
+      50,
+      75,
+      100,
+      125,
+      150,
+      175,
+      200
+    ],
+    "collocation_points": 1024,
+    "default_noop_control_steps": 5,
+    "continuation_steps": [
+      25,
+      75
+    ],
+    "continuation_tolerance_change": 1e-12,
+    "preserve_optimizer_history": true,
+    "preserve_weights_at_switch": true,
+    "other_settings": "recursive, auto background, backward parameters, FP32, TF32 off"
+  },
+  "measurements": [
+    "state fingerprints before/after",
+    "closure count",
+    "gradient infinity norm",
+    "g dot d from optimizer state at stopped snapshots",
+    "fixed objective fingerprint",
+    "independent global/final/PDE metrics before and after continuation"
+  ],
+  "decision": "Confirm cause only from actual optimizer state and unchanged baseline continuation. Improvement after relaxing one threshold supports a remedy; no default change from one seed. Keep failures. This is diagnostic, not a performance benchmark."
+}
