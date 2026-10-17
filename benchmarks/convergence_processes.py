@@ -9,6 +9,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from pinnstorch.runner.settings import Refinement
+
 from .convergence import ConvergenceArm, ConvergencePlan
 
 
@@ -41,6 +43,8 @@ def trial_command(
         arm.background,
         "--spatial-encoding",
         arm.encoding,
+        "--lbfgs-tolerance-change",
+        str(plan.tolerance_change),
     ]
     for name, limit in plan.limits.items():
         command.extend(["--" + name.replace("_", "-"), str(limit)])
@@ -66,6 +70,11 @@ def read_trial(
     }
     if not isinstance(report, dict) or any(report.get(k) != v for k, v in expected.items()):
         raise ValueError("Child report does not match the requested convergence protocol")
+    if (
+        report.get("lbfgs_tolerance_change", Refinement().tolerance_change)
+        != plan.tolerance_change
+    ):
+        raise ValueError("Child report uses a different L-BFGS tolerance_change")
     trials = report.get("trials")
     if not isinstance(trials, list) or len(trials) != 1 or not isinstance(trials[0], dict):
         raise ValueError("Each child must return exactly one trial")

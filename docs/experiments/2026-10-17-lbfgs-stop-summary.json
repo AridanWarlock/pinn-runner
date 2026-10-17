@@ -1,0 +1,15 @@
+{
+  "contract": 1,
+  "torch": "2.1.0+cu118",
+  "device": "NVIDIA GeForce RTX 4070 Ti",
+  "source_prefix_metrics_reproduced": true,
+  "queue": {
+    "state": "completed",
+    "started_at": "2026-10-17T06:42:48.822179+00:00",
+    "completed": [],
+    "commit": "381bd320c4aae9076d6e2d5f41b8710dd1e1b0ca",
+    "diagnostic_source_sha256": "d3aae9e4edc06e66564eb87c386be48b82e1fdc272ed72cdbb9b75cf5f8dd6d5",
+    "finished_at": "2026-10-17T06:44:06.776516+00:00"
+  },
+  "direction_interpretation": "g_dot_d combines current post-run gradients and the saved direction. It reconstructs the precheck at the fully unchanged, one-closure-per-call snapshots; do not interpret changing snapshots as pre-search derivatives."
+}

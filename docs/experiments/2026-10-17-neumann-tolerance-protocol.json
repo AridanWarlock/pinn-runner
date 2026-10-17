@@ -1,0 +1,54 @@
+{
+  "contract": 1,
+  "status": "registered_before_tolerance_comparison",
+  "registered_utc": "2026-10-17T06:46:44.856815+00:00",
+  "hypothesis": "A smaller absolute directional tolerance may remove premature no-op L-BFGS calls and change strict time-to-quality. Test all three representations on both 2D cases and all three seeds. Do not infer a universal default from the single-seed replay.",
+  "phase1": {
+    "cases": [
+      "heat_neumann_homogeneous2d",
+      "heat_neumann_polynomial2d"
+    ],
+    "seeds": [
+      19,
+      1234,
+      4321
+    ],
+    "representations": [
+      "identity",
+      "neumann_cosine",
+      "neumann_polynomial"
+    ],
+    "adam_steps": 2000,
+    "lbfgs_snapshots": [
+      0,
+      25,
+      50,
+      75,
+      100,
+      125,
+      150,
+      200,
+      300,
+      400,
+      500,
+      600
+    ],
+    "collocation_points": 1024
+  },
+  "quality_limits": {
+    "relative_l2": 0.0002,
+    "final_relative_l2": 0.0004,
+    "pde_rmse": 0.003
+  },
+  "homogeneous_extra_limit": {
+    "mode_relative_l2": 0.001
+  },
+  "fixed_settings": "Windows RTX4070Ti, current Torch2.1/cu118, FP32 without TF32, hidden32x32x32, recursive lifting, background auto, backward parameters. Identity uses robin_grouped; feature representations use eager without projection. New Python process per trial, alternate order, one pinned source, no concurrent GPU jobs.",
+  "measurements": "Global/final/worst-time L2, independent physical PDE residual, initial/face temperature errors, per-face Neumann operator, work counters, training/process/prediction time, allocated/reserved memory, trainable parameter count, initial/objective hashes. Time-to-quality requires two adjacent successes; no interpolation or teacher in training.",
+  "storage": "Only final rows, control snapshots and a concise result report go into Git. Raw repeated temporal profiles remain in numerical-reports on Windows. Mathematical derivations stay complete.",
+  "interpretation": "Keep failed/censored trials. Require two adjacent successful snapshots. Compare reported intervals, never interpolated exact crossing times. Fixed step budget is not equal wall time; crossing intervals test the time-to-quality hypothesis. No default promotion and no dependency upgrades.",
+  "training_code_revision": "same solver as 8b0f73f; new benchmark option only",
+  "lbfgs_tolerance_change": 1e-12,
+  "informed_by": "lbfgs-stop-004 causal CUDA replay; comparison is exploratory, not blind",
+  "baseline_study": "neumann-quality-002, identical protocol except tolerance_change=1e-9"
+}

@@ -3,6 +3,7 @@
 import json
 import subprocess
 from argparse import Namespace
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -27,10 +28,11 @@ p.add_argument('--steps',type=int);p.add_argument('--snapshots',nargs='+',type=i
 p.add_argument('--constraints');p.add_argument('--hard-execution');p.add_argument('--hard-lifting');p.add_argument('--backward')
 p.add_argument('--relative-l2',type=float);p.add_argument('--final-relative-l2',type=float);p.add_argument('--pde-rmse',type=float)
 p.add_argument('--points',type=int);p.add_argument('--hard-background',default='general')
+p.add_argument('--lbfgs-tolerance-change',type=float,default=1e-9)
 a,_=p.parse_known_args()
 a.output.mkdir(parents=True)
 trial=dict(case=a.case,seed=a.seeds,backend=a.hard_execution,lifting=a.hard_lifting,backward=a.backward,background=a.hard_background,pid=os.getpid())
-r=dict(contract=3,status='completed',execution_lifecycle='single_trial',case=a.case,environment=dict(revision='fixture',device='cpu'),limits=dict(relative_l2=a.relative_l2,final_relative_l2=a.final_relative_l2,pde_rmse=a.pde_rmse),adam_steps=a.steps,lbfgs_snapshots=a.snapshots,constraints=a.constraints,points_override=a.points,trials=[trial])
+r=dict(contract=3,status='completed',execution_lifecycle='single_trial',case=a.case,environment=dict(revision='fixture',device='cpu'),limits=dict(relative_l2=a.relative_l2,final_relative_l2=a.final_relative_l2,pde_rmse=a.pde_rmse),adam_steps=a.steps,lbfgs_snapshots=a.snapshots,constraints=a.constraints,points_override=a.points,lbfgs_tolerance_change=a.lbfgs_tolerance_change,trials=[trial])
 (a.output/'report.json').write_text(json.dumps(r))
 """)
     return script
@@ -234,12 +236,36 @@ def test_mode_quality_limit_is_forwarded_to_fresh_worker(
             "hard_initial_robin",
             "--mode-relative-l2",
             "0.02",
+            "--lbfgs-tolerance-change",
+            "1e-12",
             "--spatial-encoding",
             "neumann_polynomial",
         ],
     )
     _, selected, arms = cli.arguments()
     assert selected.limits["mode_relative_l2"] == 0.02
+    assert selected.tolerance_change == 1e-12
     command = trial_command(Path("benchmark.py"), selected, arms[0], 19, tmp_path / "child")
     assert command[command.index("--mode-relative-l2") + 1] == "0.02"
+    assert command[command.index("--lbfgs-tolerance-change") + 1] == "1e-12"
     assert command[command.index("--spatial-encoding") + 1] == "neumann_polynomial"
+
+
+def test_tolerance_is_preserved_in_config_worker_and_report(
+    tmp_path: Path, child_script: Path
+) -> None:
+    selected = replace(plan(), tolerance_change=1e-12)
+    arm = ConvergenceArm("robin_grouped", "recursive", "parameters")
+    assert selected.config(19, arm)["training"]["refinement"]["tolerance_change"] == 1e-12
+    output = tmp_path / "small-tolerance"
+    report = run_isolated(selected, [arm], [19], output, child_script)
+    assert report["lbfgs_tolerance_change"] == 1e-12
+    child = output / "processes" / f"{arm.name}-19"
+    with pytest.raises(ValueError, match="tolerance_change"):
+        read_trial(child, plan(), arm, 19)
+
+
+@pytest.mark.parametrize("value", [0.0, -1e-9, float("nan"), float("inf")])
+def test_invalid_tolerance_is_rejected_before_cuda(value: float) -> None:
+    with pytest.raises(ValueError, match="tolerance_change"):
+        replace(plan(), tolerance_change=value)

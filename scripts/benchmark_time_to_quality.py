@@ -23,7 +23,7 @@ from benchmarks.convergence import (  # noqa: E402
     crossing,
 )
 from benchmarks.convergence_processes import run_isolated, write_report  # noqa: E402
-from pinnstorch.runner.settings import TaskSettings  # noqa: E402
+from pinnstorch.runner.settings import Refinement, TaskSettings  # noqa: E402
 from scripts.benchmark_solutions import environment  # noqa: E402
 
 __all__ = ["crossing"]
@@ -79,6 +79,9 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     parser.add_argument("--final-relative-l2", type=float, default=LIMITS["final_relative_l2"])
     parser.add_argument("--pde-rmse", type=float, default=LIMITS["pde_rmse"])
     parser.add_argument("--mode-relative-l2", type=float, default=None)
+    parser.add_argument(
+        "--lbfgs-tolerance-change", type=float, default=Refinement().tolerance_change
+    )
     args = parser.parse_args()
     if min(args.seeds) < 0 or len(set(args.seeds)) != len(args.seeds):
         parser.error("Unique nonnegative seeds required")
@@ -101,7 +104,13 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     if args.mode_relative_l2 is not None:
         limits["mode_relative_l2"] = args.mode_relative_l2
     plan = ConvergencePlan(
-        CASES[args.case], args.steps, tuple(args.snapshots), limits, args.constraints, args.points
+        CASES[args.case],
+        args.steps,
+        tuple(args.snapshots),
+        limits,
+        args.constraints,
+        args.points,
+        tolerance_change=args.lbfgs_tolerance_change,
     )
     arms = list(
         dict.fromkeys(
@@ -151,6 +160,7 @@ def main() -> None:
         "lbfgs_snapshots": plan.snapshots,
         "constraints": plan.constraints,
         "points_override": plan.points,
+        "lbfgs_tolerance_change": plan.tolerance_change,
         "limitations": "Only L-BFGS snapshots after completed Adam. Two adjacent successes required; no interpolation. Previous snapshot I/O included and reported separately. Analytical evaluation follows all optimizer steps, never changes training. Quality uses independent eager physical autograd. Prediction timing of the trained executor and eager control are separate. Shared-process reuse is diagnostic and may affect FP32 repeatability.",
         "trials": [],
     }

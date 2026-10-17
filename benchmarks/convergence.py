@@ -71,6 +71,7 @@ class ConvergencePlan:
     constraints: str = "hard_initial_dirichlet"
     points: int | None = None
     device: str = "cuda"
+    tolerance_change: float = Refinement().tolerance_change
 
     def __post_init__(self) -> None:
         if (
@@ -86,11 +87,17 @@ class ConvergencePlan:
             raise ValueError("Finite positive quality limits required")
         if self.points is not None and self.points < 1:
             raise ValueError("Collocation point count must be positive")
+        if not math.isfinite(self.tolerance_change) or self.tolerance_change <= 0:
+            raise ValueError("L-BFGS tolerance_change must be finite and positive")
 
     def config(self, seed: int, arm: ConvergenceArm, evaluating: bool = False) -> dict[str, Any]:
         config = self.case.config(self.device, self.steps, seed, evaluating)
         config["training"].update(
-            constraints=self.constraints, refinement={"steps": self.snapshots[-1]}
+            constraints=self.constraints,
+            refinement={
+                "steps": self.snapshots[-1],
+                "tolerance_change": self.tolerance_change,
+            },
         )
         if self.points is not None:
             config["training"]["collocation"].update(points=self.points, sampling="lhs")
@@ -302,6 +309,7 @@ def convergence_trial(
         "control_prediction_background": evaluator.model.hparams["hard_background"],
         "control_prediction_performance": control_prediction,
         "seed": seed,
+        "lbfgs_tolerance_change": plan.tolerance_change,
         "snapshots": rows,
         "crossing": crossing(rows),
         **performance,
