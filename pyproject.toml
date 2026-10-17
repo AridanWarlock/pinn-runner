@@ -23,6 +23,7 @@ files = [
   "scripts/benchmark_time_to_quality.py",
   "scripts/benchmark_cosine_spectrum.py",
   "scripts/benchmark_neumann_projection.py",
+  "scripts/profile_convergence_trial.py",
   "scripts/benchmark_modal_diagnostics.py",
   "scripts/benchmark_modal_balance.py",
   "scripts/benchmark_residual_slices.py",
