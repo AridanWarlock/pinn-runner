@@ -23,6 +23,9 @@ python3 scripts/research.py status --remote --job-id study-001
 python3 scripts/research.py cancel --job-id study-001
 python3 scripts/research.py collect --remote --job-id study-001 \
   --output numerical-reports/study-001-compact
+python3 scripts/research.py diagnose --remote --job-id study-001
+python3 scripts/research.py diagnose --remote --job-id study-001 \
+  --log run --lines 10 --max-bytes 2048
 python3 scripts/research.py task TASK-21
 python3 scripts/research.py status --root numerical-reports/example
 python3 scripts/research.py status --remote --root numerical-reports/a008
@@ -38,10 +41,11 @@ python3 scripts/research.py compare --bundle numerical-reports/example-compact -
 | `status --remote --job-id` | ID | Состояние процесса, время подтверждения, прогресс по случаям; не качество решения |
 | `cancel` | ID | Запрос отмены; завершение подтверждается следующим статусом, не самим фактом записи запроса |
 | `collect --remote` | ID и новая папка | Проверяет/сокращает отчёты на Windows, передаёт только машинное доказательство и пишет локальную папку; stdout короткий |
+| `diagnose` | ID и `--remote` либо локальная копия `--root`; необязательный ограниченный хвост журнала | Статус/причина, список журналов; не запускает обучение. [Детали](research-diagnostics.md) |
 | `task` | ID задачи; необязательный `--board` | ID, название, статус, приоритет, зависимости, ссылки и число критериев; `--criteria` добавляет полный текст; без истории и плана. Только чтение CLI Backlog |
 | `status` | Каталог серии | Короткое содержимое `status.json`; не читает отчёты обучения |
 | `status --remote` | Безопасный относительный путь `numerical-reports/name` | SSH через существующий `gpu_jobs.remote`, неизменяемая проверка Windows-каталога; читает только статус |
-| `collect` | Локальные сырые отчёты и явный манифест | Новая папка с `evidence.json`, `final.csv`, `snapshots.csv`; отказывается перезаписывать |
+| `collect` | Локальные сырые отчёты и явный манифест | Новая папка с `evidence.json`, `final.csv`, `snapshots.csv`, `bundle.json`; отказывается перезаписывать |
 | `compare` | Собранная папка | Проверка парных критериев, отдельно достижение абсолютной точности; `--details` добавляет пары и интервалы |
 
 stdout — один JSON-объект с `contract: 1` и `kind`. Диагностическая ошибка —
@@ -278,3 +282,16 @@ Torch, автоматическое изменение математическ�
 независимой оценки; произвольный файл команд в протоколе не исполняется.
 Неизвестный владелец не завершается по одному PID; автоматического удаления
 каталогов задач, получения повышенных прав или перезапуска такой задачи нет.
+
+### Целостность пакета и диагностика
+
+После TASK-29 `compare` проверяет завершающий `bundle.json` и SHA-256 трёх
+файлов пакета. Частично записанный или изменённый пакет не принимается. Старые
+пакеты без завершающей записи пересобираются в новую папку из прежних отчётов,
+без обучения. Не дописывать маркер вручную.
+
+`diagnose` по умолчанию не читает журналы. Явный хвост ограничен байтами до
+чтения и строками после декодирования. Локальная копия не используется для
+проверки Windows-PID на Mac. Повреждённые метаданные дают `unknown`; однозначный
+отказ до создания процесса сохраняется как `failed`. Подробности, ограничения
+и критерии: `docs/research-diagnostics.md`. Математические критерии не изменены.

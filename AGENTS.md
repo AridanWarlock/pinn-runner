@@ -141,3 +141,7 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
   реализованного и будущего API — `docs/research-workflow-api.md`.
 - В карточке сохраняйте короткий итог со ссылкой, не копию отчёта. Полные
   математические выводы сохраняйте в тематическом Markdown.
+
+- При сбое очереди сначала используйте `scripts/research.py diagnose`; полный
+  журнал не загружайте автоматически. Для `compare` нужен опубликованный пакет
+  с `bundle.json`; неполную папку не исправляйте ручной подстановкой маркера.
