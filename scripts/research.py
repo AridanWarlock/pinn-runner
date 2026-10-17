@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from research_tools.board import brief  # noqa: E402
+from research_tools.board import brief, task_page  # noqa: E402
 from research_tools.comparison import compare  # noqa: E402
 from research_tools.control import call, collect_remote, submit  # noqa: E402
 from research_tools.diagnostics import diagnose  # noqa: E402
@@ -44,6 +44,11 @@ def main(argv: list[str] | None = None) -> int:
     task.add_argument("task_id")
     task.add_argument("--criteria", action="store_true", help="Include full acceptance criteria")
     task.add_argument("--board", type=Path, default=ROOT / ".project-board")
+    tasks = sub.add_parser("tasks", help="Read a bounded page of current tasks and requirements")
+    tasks.add_argument("--status", help="Exact board status; default excludes Done and Deferred")
+    tasks.add_argument("--limit", type=int, default=5)
+    tasks.add_argument("--skip", type=int, default=0)
+    tasks.add_argument("--board", type=Path, default=ROOT / ".project-board")
     launch = sub.add_parser("submit", help="Submit a published protocol to the Windows GPU queue")
     launch.add_argument("--protocol-commit", required=True)
     launch.add_argument("--protocol-path", required=True)
@@ -71,7 +76,9 @@ def main(argv: list[str] | None = None) -> int:
     code = 0
     try:
         output: Json
-        if args.command == "plan":
+        if args.command == "tasks":
+            output = task_page(args.board, status=args.status, limit=args.limit, skip=args.skip)
+        elif args.command == "plan":
             output = plan(load_manifest(args.manifest), details=args.details)
         elif args.command == "diagnose":
             if args.job_id:

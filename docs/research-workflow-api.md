@@ -26,6 +26,7 @@ python3 scripts/research.py collect --remote --job-id study-001 \
 python3 scripts/research.py diagnose --remote --job-id study-001
 python3 scripts/research.py diagnose --remote --job-id study-001 \
   --log run --lines 10 --max-bytes 2048
+python3 scripts/research.py tasks
 python3 scripts/research.py task TASK-21
 python3 scripts/research.py status --root numerical-reports/example
 python3 scripts/research.py status --remote --root numerical-reports/a008
@@ -305,3 +306,10 @@ Torch, автоматическое изменение математическ�
 версии инструмента; произвольный старый SHA он не сертифицирует.
 Подробные требования, математические ограничения и смысл бюджета:
 `docs/research-planning.md`.
+
+### Поиск текущей задачи
+
+`tasks [--status STATUS] [--limit 5] [--skip 0]` возвращает страницу текущих
+карточек со ссылками на требования, без истории. По умолчанию Done и Deferred
+исключены; `next_skip` задаёт продолжение. Поле готовности доски не является
+разрешением начать работу. Контракт: `docs/research-task-index.md`.

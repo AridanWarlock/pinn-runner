@@ -11,10 +11,12 @@
 Дальше:
 
 ```sh
-python3 scripts/research.py task TASK-27
+python3 scripts/research.py tasks
 ```
 
-Прочитай ссылку требований и статус задачи. TASK-27, TASK-28, TASK-29 и TASK-30 завершены:
+Выбери задачу по поручению пользователя, затем вызови `task TASK-N --criteria`
+и прочитай ссылку требований. Не выбирай работу только по порядку списка.
+Описание списка: `docs/research-task-index.md`. TASK-27, TASK-28, TASK-29 и TASK-30 завершены:
 команды `submit`, удалённые статус/отмена/сбор реализованы. Результаты и
 ограничения — `docs/research-queue-result-2026-10-17.md`, контракт —
 `docs/research-workflow-api.md`. Для сбоя начни с `diagnose`, затем открывай
