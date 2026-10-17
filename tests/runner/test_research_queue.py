@@ -29,7 +29,10 @@ def protocol() -> dict[str, Any]:
         registration="prospective",
         revision="a" * 40,
         reports=["c0/report.json"],
-        expected_trials=[dict(case="heat", seed=19, **arm) for arm in (baseline, candidate)],
+        expected_trials=[
+            dict(case="heat_neumann_homogeneous2d", seed=19, **arm)
+            for arm in (baseline, candidate)
+        ],
         report_parameters=dict(
             adam_steps=1,
             lbfgs_snapshots=[0, 1],
@@ -38,7 +41,11 @@ def protocol() -> dict[str, Any]:
             lbfgs_tolerance_change=1e-12,
             execution_lifecycle="isolated_trials",
         ),
-        case_limits={"heat": dict(relative_l2=0.01, final_relative_l2=0.02, pde_rmse=0.03)},
+        case_limits={
+            "heat_neumann_homogeneous2d": dict(
+                relative_l2=0.01, final_relative_l2=0.02, pde_rmse=0.03
+            )
+        },
         physical_limits=dict(initial_rmse=1e-6, boundary_max=1e-5),
         comparison=dict(
             baseline=baseline,
@@ -48,7 +55,11 @@ def protocol() -> dict[str, Any]:
             worst_training_ratio_max=1.1,
         ),
         case_faces={
-            "heat": [dict(field="u", kind="neumann", axis="x", side=s) for s in ("lower", "upper")]
+            "heat_neumann_homogeneous2d": [
+                dict(field="u", kind="neumann", axis=axis, side=s)
+                for axis in ("x", "y")
+                for s in ("lower", "upper")
+            ]
         },
         network=dict(hidden_layers=[32, 32, 32], spatial_encoding="neumann_polynomial"),
         environment_requirements=dict(

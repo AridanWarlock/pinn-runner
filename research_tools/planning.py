@@ -1,0 +1,137 @@
+"""Offline executability checks and budget accounting, not a convergence proof."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from benchmarks.catalog import (
+    BACKGROUNDS,
+    BACKWARDS,
+    CATALOG,
+    CONSTRAINTS,
+    ENCODINGS,
+    EXECUTIONS,
+    LIFTINGS,
+    CaseSpec,
+)
+
+from .schema import Json, face_identity, validate_manifest
+
+
+def validate_arm(arm: Json, constraints: str, spec: CaseSpec) -> None:
+    choices = dict(
+        backend=EXECUTIONS,
+        lifting=LIFTINGS,
+        backward=BACKWARDS,
+        background=BACKGROUNDS,
+        spatial_encoding=ENCODINGS,
+    )
+    for field, allowed in choices.items():
+        if arm[field] not in allowed:
+            raise ValueError(f"Unsupported {field}: {arm[field]}")
+    backend, encoding = arm["backend"], arm["spatial_encoding"]
+    if constraints == "soft" and backend != "eager":
+        raise ValueError("Soft constraints require eager execution")
+    robin = constraints == "hard_initial_robin"
+    if (backend in ("robin_batch", "robin_grouped", "neumann_analytic")) and not robin:
+        raise ValueError("Robin executors require hard_initial_robin")
+    if robin and backend == "product_rule":
+        raise ValueError("product_rule is a Dirichlet executor")
+    if not robin and (arm["lifting"] != "recursive" or arm["background"] != "general"):
+        raise ValueError("Expanded lifting and background selection require hard_initial_robin")
+    kinds = {face["kind"] for face in spec.faces()}
+    if constraints == "hard_initial_dirichlet" and kinds != {"dirichlet"}:
+        raise ValueError("Dirichlet hard constraints require Dirichlet faces")
+    if robin and "dirichlet" in kinds:
+        raise ValueError("Current Robin projection requires nonzero derivative coefficients")
+    if arm["background"] == "static" and not spec.static_background:
+        raise ValueError("This reference case has no declared static Neumann background")
+    if encoding != "identity" and (
+        not robin or backend not in ("eager", "neumann_analytic") or kinds != {"neumann"}
+    ):
+        raise ValueError(
+            "Neumann features require pure Neumann faces and eager/analytic Robin execution"
+        )
+    if backend == "neumann_analytic" and encoding != "neumann_polynomial":
+        raise ValueError("Analytic feature derivatives require polynomial encoding")
+
+
+def plan(manifest: Json, *, details: bool = False) -> Json:
+    manifest = validate_manifest(manifest, Path.cwd())
+    if manifest["contract"] != 2 or manifest["registration"] != "prospective":
+        raise ValueError("Execution planning requires prospective manifest contract 2")
+    parameters = manifest["report_parameters"]
+    if parameters["constraints"] not in CONSTRAINTS:
+        raise ValueError("Unsupported constraint strategy")
+    if parameters["lbfgs_snapshots"][0] != 0:
+        raise ValueError("The snapshot schedule must start at zero")
+    reports = manifest["reports"]
+    if len(reports) != len(manifest["case_limits"]) or any(
+        not path.endswith("/report.json") for path in reports
+    ):
+        raise ValueError("One report per case ending in /report.json required")
+    if any(
+        a != b and a.startswith(b + "/")
+        for a in (p.rsplit("/", 1)[0] for p in reports)
+        for b in (p.rsplit("/", 1)[0] for p in reports)
+    ):
+        raise ValueError("Case report directories must not be nested")
+    precision = manifest["environment_requirements"]
+    if (
+        precision["default_dtype"] != "torch.float32"
+        or precision["float32_matmul_precision"] != "highest"
+        or precision["cuda_matmul_allow_tf32"]
+        or precision["cudnn_allow_tf32"]
+    ):
+        raise ValueError("Current convergence executor uses FP32 with TF32 disabled")
+    rows: list[Json] = []
+    for (name, limits), report in zip(manifest["case_limits"].items(), reports):
+        if name not in CATALOG or not CATALOG[name].convergence:
+            raise ValueError(f"No convergence executor registered for {name}")
+        spec = CATALOG[name]
+        if set(limits) - {"relative_l2", "final_relative_l2", "pde_rmse", "mode_relative_l2"}:
+            raise ValueError("Unsupported quality metric")
+        if "mode_relative_l2" in limits and not spec.modal_metric:
+            raise ValueError("The selected case has no modal error evaluator")
+        if {face_identity(f) for f in manifest["case_faces"][name]} != {
+            face_identity(f) for f in spec.faces()
+        }:
+            raise ValueError("Expected faces differ from the registered problem")
+        for arm in (manifest["comparison"][k] for k in ("baseline", "candidate")):
+            validate_arm(arm, parameters["constraints"], spec)
+            if manifest["network"] != {
+                "hidden_layers": list(spec.layers),
+                "spatial_encoding": arm["spatial_encoding"],
+            }:
+                raise ValueError("Network differs from the registered case configuration")
+        seeds = sorted({t["seed"] for t in manifest["expected_trials"] if t["case"] == name})
+        rows.append(
+            dict(
+                case=name,
+                dimensions=spec.dimensions,
+                seeds=seeds if details else seeds[:5],
+                seeds_truncated=not details and len(seeds) > 5,
+                pairs=len(seeds),
+                trials=2 * len(seeds),
+                report=report,
+                limits=limits,
+            )
+        )
+    count = len(manifest["expected_trials"])
+    return {
+        "contract": 1,
+        "kind": "research-plan",
+        "revision": manifest["revision"],
+        "registration": manifest["registration"],
+        "arms": {name: manifest["comparison"][name] for name in ("baseline", "candidate")},
+        "constraints": parameters["constraints"],
+        "catalog_scope": "current_tool_version",
+        "cases": rows,
+        "trials": count,
+        "adam_steps_total": count * parameters["adam_steps"],
+        "lbfgs_calls_total": count * parameters["lbfgs_snapshots"][-1],
+        "saved_states_total": count * len(parameters["lbfgs_snapshots"]),
+        "collocation_override": parameters["points_override"],
+        "quality_confirmation_possible": len(parameters["lbfgs_snapshots"]) >= 2,
+        "limitations": "Offline structural check only: runtime packages, callbacks and mathematical correctness still require worker validation. L-BFGS closures and time-to-quality cannot be inferred from the step budget.",
+    }

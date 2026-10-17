@@ -16,6 +16,7 @@ from research_tools.comparison import compare  # noqa: E402
 from research_tools.control import call, collect_remote, submit  # noqa: E402
 from research_tools.diagnostics import diagnose  # noqa: E402
 from research_tools.evidence import collect, read_bundle, status, write_bundle  # noqa: E402
+from research_tools.planning import plan  # noqa: E402
 from research_tools.remote_status import remote_status  # noqa: E402
 from research_tools.schema import Json, load_manifest  # noqa: E402
 
@@ -63,11 +64,16 @@ def main(argv: list[str] | None = None) -> int:
     diagnosis.add_argument("--log", choices=("run", "launcher"))
     diagnosis.add_argument("--lines", type=int, default=40)
     diagnosis.add_argument("--max-bytes", type=int, default=4096)
+    planning = sub.add_parser("plan", help="Offline protocol validation and budget summary")
+    planning.add_argument("--manifest", type=Path, required=True)
+    planning.add_argument("--details", action="store_true", help="Include all seeds")
     args = parser.parse_args(argv)
     code = 0
     try:
         output: Json
-        if args.command == "diagnose":
+        if args.command == "plan":
+            output = plan(load_manifest(args.manifest), details=args.details)
+        elif args.command == "diagnose":
             if args.job_id:
                 if not args.remote:
                     parser.error("--job-id requires --remote")

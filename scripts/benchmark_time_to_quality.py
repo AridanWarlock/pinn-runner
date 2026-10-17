@@ -16,6 +16,15 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from benchmarks.cases import CASES  # noqa: E402
+from benchmarks.catalog import (  # noqa: E402
+    BACKGROUNDS,
+    BACKWARDS,
+    CONSTRAINTS,
+    CONVERGENCE_CASES,
+    ENCODINGS,
+    EXECUTIONS,
+    LIFTINGS,
+)
 from benchmarks.convergence import (  # noqa: E402
     ConvergenceArm,
     ConvergencePlan,
@@ -41,7 +50,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     )
     parser.add_argument(
         "--case",
-        choices=tuple(name for name in CASES if name.startswith("heat")),
+        choices=CONVERGENCE_CASES,
         default="heat3d",
     )
     parser.add_argument("--seeds", type=int, nargs="+", default=[1234, 19])
@@ -50,27 +59,21 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     parser.add_argument("--points", type=int)
     parser.add_argument(
         "--constraints",
-        choices=("soft", "hard_initial_dirichlet", "hard_initial_robin"),
+        choices=CONSTRAINTS,
         default="hard_initial_dirichlet",
     )
     parser.add_argument(
         "--hard-execution",
-        choices=("eager", "product_rule", "robin_batch", "robin_grouped", "neumann_analytic"),
+        choices=EXECUTIONS,
         nargs="+",
         default=["eager", "product_rule"],
     )
-    parser.add_argument(
-        "--hard-lifting", choices=("recursive", "expanded"), nargs="+", default=["recursive"]
-    )
-    parser.add_argument(
-        "--backward", choices=("auto", "all", "parameters"), nargs="+", default=["all"]
-    )
-    parser.add_argument(
-        "--hard-background", choices=("general", "static", "auto"), nargs="+", default=["general"]
-    )
+    parser.add_argument("--hard-lifting", choices=LIFTINGS, nargs="+", default=["recursive"])
+    parser.add_argument("--backward", choices=BACKWARDS, nargs="+", default=["all"])
+    parser.add_argument("--hard-background", choices=BACKGROUNDS, nargs="+", default=["general"])
     parser.add_argument(
         "--spatial-encoding",
-        choices=("identity", "neumann_cosine", "neumann_polynomial"),
+        choices=ENCODINGS,
         nargs="+",
         default=["identity"],
         help="Neumann features use eager or analytic derivatives without projection",

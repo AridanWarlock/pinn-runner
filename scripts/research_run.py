@@ -20,6 +20,9 @@ def main() -> None:
     from research_tools.schema import inside, load_manifest
 
     manifest = load_manifest(args.manifest)
+    from research_tools.planning import plan as offline_plan
+
+    offline_plan(manifest)
     import torch
 
     from benchmarks.cases import CASES

@@ -14,6 +14,7 @@ from scripts.gpu_worker import valid_id
 from .comparison import compare
 from .diagnostics import validate_tail
 from .evidence import write_bundle
+from .planning import plan
 from .queue import validate_request
 from .schema import Json, inside, object_value
 
@@ -71,6 +72,7 @@ def submit(
     source = subprocess.check_output(
         ["git", "show", f"{protocol_commit}:{protocol_path}"], cwd=root, stderr=subprocess.PIPE
     )
+    plan(object_value(json.loads(source), "protocol"))
     request["protocol_sha256"] = hashlib.sha256(source).hexdigest()
     prepared = call("prepare", job_id, request=request)
     if prepared["state"] != "queued":

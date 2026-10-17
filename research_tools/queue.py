@@ -20,6 +20,7 @@ from scripts.gpu_worker import (
     write_json,
 )
 
+from .planning import plan
 from .schema import Json, inside, object_value, read_object, validate_manifest
 
 TERMINAL = {"completed", "failed", "timed_out", "cancelled"}
@@ -71,6 +72,7 @@ def prepare(root: Path, request: Json) -> Json:
     manifest = validate_manifest(object_value(json.loads(source), "manifest"), root)
     if manifest["contract"] != 2 or manifest["registration"] != "prospective":
         raise ValueError("Only prospective protocols may be submitted")
+    plan(manifest)
     published(root, manifest["revision"])
     directory = inside(root, ".gpu-jobs/" + request["job_id"])
     if directory.exists():

@@ -10,6 +10,7 @@ from typing import Any, cast
 import numpy as np
 from numpy.typing import NDArray
 
+from .catalog import SPECS, Family
 from .policies import CartesianGrid, FixedQuality, GridPolicy, QualityPolicy, TrainingBudget
 
 Array = NDArray[np.float64]
@@ -259,27 +260,25 @@ class BurgersCase(BenchmarkCase):
         return cast(Array, np.exp(-time) * np.sin(np.pi * spatial["x"]))
 
 
+FACTORIES: dict[Family, type[BenchmarkCase]] = {
+    "heat": HeatCase,
+    "dirichlet": DirichletHeatCase,
+    "neumann_interval": NeumannHeatCase,
+    "robin_interval": RobinHeatCase,
+    "neumann_box": BoxNeumannHeatCase,
+    "robin_box": BoxRobinHeatCase,
+    "mixed": MixedBoxHeatCase,
+    "polynomial": PolynomialNeumannHeatCase,
+    "homogeneous": HomogeneousNeumannHeatCase,
+    "advection": AdvectionCase,
+    "burgers": BurgersCase,
+}
 CASES: dict[str, BenchmarkCase] = {
-    case.name: case
-    for case in (
-        HeatCase("heat2d", 2),
-        HeatCase("heat3d", 3, grid=CartesianGrid((8, 17))),
-        DirichletHeatCase("heat_dirichlet2d", 2),
-        DirichletHeatCase("heat_dirichlet3d", 3, grid=CartesianGrid((8, 17))),
-        NeumannHeatCase("heat_neumann", 1),
-        RobinHeatCase("heat_robin", 1),
-        BoxNeumannHeatCase("heat_neumann2d", 2, grid=CartesianGrid((8, 17))),
-        BoxNeumannHeatCase("heat_neumann3d", 3, grid=CartesianGrid((6, 9))),
-        BoxRobinHeatCase("heat_robin2d", 2, grid=CartesianGrid((8, 17))),
-        BoxRobinHeatCase("heat_robin3d", 3, grid=CartesianGrid((6, 9))),
-        MixedBoxHeatCase("heat_mixed3d", 3, grid=CartesianGrid((6, 9))),
-        PolynomialNeumannHeatCase("heat_neumann_polynomial1d", 1),
-        HomogeneousNeumannHeatCase("heat_neumann_homogeneous1d", 1),
-        HomogeneousNeumannHeatCase("heat_neumann_homogeneous2d", 2, grid=CartesianGrid((8, 17))),
-        HomogeneousNeumannHeatCase("heat_neumann_homogeneous3d", 3, grid=CartesianGrid((6, 9))),
-        PolynomialNeumannHeatCase("heat_neumann_polynomial2d", 2, grid=CartesianGrid((8, 17))),
-        PolynomialNeumannHeatCase("heat_neumann_polynomial3d", 3, grid=CartesianGrid((6, 9))),
-        AdvectionCase("advection", 1),
-        BurgersCase("burgers", 1),
+    spec.name: FACTORIES[spec.family](
+        spec.name,
+        spec.dimensions,
+        grid=CartesianGrid(spec.grid_counts) if spec.grid_counts is not None else CartesianGrid(),
+        budget=TrainingBudget(layers=spec.layers),
     )
+    for spec in SPECS
 }
