@@ -1,0 +1,51 @@
+{
+  "contract": 1,
+  "status": "registered_before_followup_training",
+  "registered_utc": "2026-10-17T06:23:51.867135+00:00",
+  "hypothesis": "After the initial exploratory series, extra optimization of faster Neumann feature networks may recover stricter accuracy while retaining a wall-time advantage. This is a follow-up informed by those results, not a blind validation.",
+  "phase1": {
+    "cases": [
+      "heat_neumann_homogeneous2d",
+      "heat_neumann_polynomial2d"
+    ],
+    "seeds": [
+      19,
+      1234,
+      4321
+    ],
+    "representations": [
+      "identity",
+      "neumann_cosine",
+      "neumann_polynomial"
+    ],
+    "adam_steps": 2000,
+    "lbfgs_snapshots": [
+      0,
+      25,
+      50,
+      75,
+      100,
+      125,
+      150,
+      200,
+      300,
+      400,
+      500,
+      600
+    ],
+    "collocation_points": 1024
+  },
+  "quality_limits": {
+    "relative_l2": 0.0002,
+    "final_relative_l2": 0.0004,
+    "pde_rmse": 0.003
+  },
+  "homogeneous_extra_limit": {
+    "mode_relative_l2": 0.001
+  },
+  "fixed_settings": "Windows RTX4070Ti, current Torch2.1/cu118, FP32 without TF32, hidden32x32x32, recursive lifting, background auto, backward parameters. Identity uses robin_grouped; feature representations use eager without projection. New Python process per trial, alternate order, one pinned source, no concurrent GPU jobs.",
+  "measurements": "Global/final/worst-time L2, independent physical PDE residual, initial/face temperature errors, per-face Neumann operator, work counters, training/process/prediction time, allocated/reserved memory, trainable parameter count, initial/objective hashes. Time-to-quality requires two adjacent successes; no interpolation or teacher in training.",
+  "storage": "Only final rows, control snapshots and a concise result report go into Git. Raw repeated temporal profiles remain in numerical-reports on Windows. Mathematical derivations stay complete.",
+  "interpretation": "Keep failed/censored trials. Require two adjacent successful snapshots. Compare reported intervals, never interpolated exact crossing times. Fixed step budget is not equal wall time; crossing intervals test the time-to-quality hypothesis. No default promotion and no dependency upgrades.",
+  "training_code_revision": "8b0f73f66fd36dd14fc0075d2930c5953fc59beb"
+}
