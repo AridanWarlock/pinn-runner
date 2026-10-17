@@ -321,3 +321,46 @@ def test_symbolic_link_cannot_escape_study(study: tuple[Path, Path], tmp_path: P
     (inner / "case").symlink_to(root / "case", target_is_directory=True)
     with pytest.raises(ValueError, match="escapes"):
         collect(inner, load_manifest(manifest), manifest)
+
+
+@pytest.mark.parametrize("damage", ["missing_face", "duplicate_face", "dtype", "architecture"])
+def test_contract_two_checks_geometry_precision_and_architecture(
+    study: tuple[Path, Path], damage: str
+) -> None:
+    root, manifest_path = study
+    manifest = json.loads(manifest_path.read_text())
+    faces = [dict(field="u", kind="neumann", axis="x", side=s) for s in ("lower", "upper")]
+    manifest.update(
+        contract=2,
+        case_faces={"heat": faces},
+        environment_requirements=dict(
+            torch="2.1.0",
+            cuda_runtime="11.8",
+            default_dtype="torch.float32",
+            float32_matmul_precision="highest",
+            cuda_matmul_allow_tf32=False,
+            cudnn_allow_tf32=False,
+        ),
+        network=dict(hidden_layers=[32, 32, 32]),
+    )
+    manifest_path.write_text(json.dumps(manifest))
+    report_path = root / "case/report.json"
+    report = json.loads(report_path.read_text())
+    report["environment"].update(manifest["environment_requirements"])
+    for trial in report["trials"]:
+        trial["network"] = manifest["network"]
+        for snap in trial["snapshots"]:
+            snap["boundary_operators"] = [f | {"max_error": 1e-8} for f in faces]
+    report_path.write_text(json.dumps(report))
+    assert compare(evidence(study))["comparison_passed"]
+    if damage == "dtype":
+        report["environment"]["default_dtype"] = "torch.float64"
+    elif damage == "architecture":
+        report["trials"][0]["network"] = {"hidden_layers": [1]}
+    elif damage == "missing_face":
+        report["trials"][0]["snapshots"][0]["boundary_operators"].pop()
+    else:
+        report["trials"][0]["snapshots"][0]["boundary_operators"] *= 2
+    report_path.write_text(json.dumps(report))
+    with pytest.raises(ValueError):
+        evidence(study)

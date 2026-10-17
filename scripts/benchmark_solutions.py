@@ -60,6 +60,8 @@ def environment(device: str) -> dict[str, Any]:
         "torch": torch.__version__,
         "cuda_runtime": torch.version.cuda,
         "cpu_threads": torch.get_num_threads(),
+        "default_dtype": str(torch.get_default_dtype()),
+        "cudnn_allow_tf32": torch.backends.cudnn.allow_tf32,
         "float32_matmul_precision": torch.get_float32_matmul_precision(),
         "cuda_matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
         "device": device,

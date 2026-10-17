@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from .schema import Json, digest, identity, inside, number, object_value
+from .schema import Json, digest, face_identity, identity, inside, number, object_value
 
 
 def status(root: Path) -> Json:
@@ -40,7 +40,7 @@ def compact_status(value: Json) -> Json:
     }
 
 
-def compact_snapshot(raw: Json, limits: Json) -> Json:
+def compact_snapshot(raw: Json, limits: Json, faces: list[Json] | None = None) -> Json:
     metrics = object_value(raw.get("metrics"), "snapshot metrics")
     compact = {key: number(value, key) for key, value in metrics.items()}
     if not {"initial_rmse", *limits.keys()} <= compact.keys():
@@ -48,6 +48,18 @@ def compact_snapshot(raw: Json, limits: Json) -> Json:
     operators = raw.get("boundary_operators")
     if not isinstance(operators, list) or not operators:
         raise ValueError("Snapshot boundary operators are missing")
+    compact_operators = []
+    if faces is not None:
+        ids = [face_identity(object_value(face, "face")) for face in operators]
+        if len(ids) != len(set(ids)) or set(ids) != {face_identity(face) for face in faces}:
+            raise ValueError("Missing, duplicate or unexpected boundary faces")
+        compact_operators = [
+            {
+                **{k: face[k] for k in ("field", "kind", "axis", "side")},
+                "max_error": number(face["max_error"], "face error"),
+            }
+            for face in operators
+        ]
     maximum = max(
         number(object_value(face, "face").get("max_error"), "face max_error") for face in operators
     )
@@ -60,6 +72,7 @@ def compact_snapshot(raw: Json, limits: Json) -> Json:
         "closures": number(raw.get("closures"), "closures"),
         "metrics": compact,
         "boundary_max": maximum,
+        "boundary_operators": compact_operators,
         "passed": all(compact[key] <= limit for key, limit in limits.items()),
     }
 
@@ -84,7 +97,10 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
     if limits is None:
         raise ValueError("Unexpected case")
     snapshots = [
-        compact_snapshot(object_value(s, "snapshot"), limits) for s in raw.get("snapshots", [])
+        compact_snapshot(
+            object_value(s, "snapshot"), limits, manifest.get("case_faces", {}).get(raw["case"])
+        )
+        for s in raw.get("snapshots", [])
     ]
     if [s["lb_steps"] for s in snapshots] != manifest["report_parameters"]["lbfgs_snapshots"]:
         raise ValueError("Trial snapshots do not match the complete declared schedule")
@@ -142,6 +158,10 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
     for key in ("adam_steps", "lbfgs_tolerance_change"):
         if raw.get(key) != manifest["report_parameters"][key]:
             raise ValueError(f"Trial {key} differs from declared protocol")
+    if manifest["contract"] == 2:
+        if raw.get("network") != manifest["network"]:
+            raise ValueError("Trial network differs from declared architecture")
+        compact["network"] = raw["network"]
     compact.update(
         adam_steps=raw["adam_steps"],
         lbfgs_tolerance_change=raw["lbfgs_tolerance_change"],
@@ -176,6 +196,10 @@ def collect(root: Path, manifest: Json, manifest_path: Path) -> Json:
             raise ValueError("Report source revision differs from manifest")
         if environment is not None and current != environment:
             raise ValueError("Environment differs across reports")
+        if any(
+            current.get(k) != v for k, v in manifest.get("environment_requirements", {}).items()
+        ):
+            raise ValueError("Runtime/precision differs from declared protocol")
         environment = current
         raw_trials = report.get("trials")
         if not isinstance(raw_trials, list) or not raw_trials:

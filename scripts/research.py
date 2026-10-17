@@ -1,4 +1,4 @@
-"""Small, read-only research interface. Does not import Torch or launch training."""
+"""Compact research control plane; Torch runs only inside Windows workers."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT))
 
 from research_tools.board import brief  # noqa: E402
 from research_tools.comparison import compare  # noqa: E402
+from research_tools.control import call, collect_remote, submit  # noqa: E402
 from research_tools.evidence import collect, status, write_bundle  # noqa: E402
 from research_tools.remote_status import remote_status  # noqa: E402
 from research_tools.schema import Json, load_manifest, read_object  # noqa: E402
@@ -22,13 +23,17 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     state = sub.add_parser("status", help="Read only the small study status.json")
-    state.add_argument("--root", required=True)
+    state_input = state.add_mutually_exclusive_group(required=True)
+    state_input.add_argument("--root")
+    state_input.add_argument("--job-id")
     state.add_argument(
         "--remote", action="store_true", help="Read Windows status through guarded SSH"
     )
     gather = sub.add_parser("collect", help="Validate a complete study and write compact evidence")
-    gather.add_argument("--root", type=Path, required=True)
-    gather.add_argument("--manifest", type=Path, required=True)
+    gather.add_argument("--root", type=Path)
+    gather.add_argument("--manifest", type=Path)
+    gather.add_argument("--remote", action="store_true")
+    gather.add_argument("--job-id")
     gather.add_argument("--output", type=Path, required=True)
     comparison = sub.add_parser("compare", help="Evaluate explicit paired gates")
     comparison.add_argument("--bundle", type=Path, required=True)
@@ -37,13 +42,47 @@ def main(argv: list[str] | None = None) -> int:
     task.add_argument("task_id")
     task.add_argument("--criteria", action="store_true", help="Include full acceptance criteria")
     task.add_argument("--board", type=Path, default=ROOT / ".project-board")
+    launch = sub.add_parser("submit", help="Submit a published protocol to the Windows GPU queue")
+    launch.add_argument("--protocol-commit", required=True)
+    launch.add_argument("--protocol-path", required=True)
+    launch.add_argument("--job-id", required=True)
+    launch.add_argument("--timeout-seconds", type=int, default=3600)
+    launch.add_argument(
+        "--probe", action="store_true", help="Test lifecycle without importing Torch or training"
+    )
+    cancel = sub.add_parser(
+        "cancel", help="Request cooperative termination of the owned process tree"
+    )
+    cancel.add_argument("--job-id", required=True)
     args = parser.parse_args(argv)
     code = 0
     try:
         output: Json
         if args.command == "status":
-            output = remote_status(args.root) if args.remote else status(Path(args.root))
+            if args.job_id:
+                if not args.remote:
+                    parser.error("--job-id requires --remote")
+                output = call("status", args.job_id)
+            else:
+                output = remote_status(args.root) if args.remote else status(Path(args.root))
+        elif args.command == "submit":
+            output = submit(
+                ROOT,
+                args.protocol_commit,
+                args.protocol_path,
+                args.job_id,
+                args.timeout_seconds,
+                args.probe,
+            )
+        elif args.command == "cancel":
+            output = call("cancel", args.job_id)
+        elif args.command == "collect" and args.remote:
+            if not args.job_id or args.root or args.manifest:
+                parser.error("Remote collection requires only --job-id and --output")
+            output = collect_remote(args.job_id, args.output)
         elif args.command == "collect":
+            if not args.root or not args.manifest or args.job_id:
+                parser.error("Local collection requires --root and --manifest")
             manifest = load_manifest(args.manifest)
             evidence = collect(args.root, manifest, args.manifest)
             # Validate pairing before writing any output.
@@ -67,6 +106,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(output, ensure_ascii=False, allow_nan=False))
     except (
         ValueError,
+        RuntimeError,
         KeyError,
         TypeError,
         OSError,

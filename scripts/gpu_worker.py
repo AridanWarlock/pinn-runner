@@ -15,7 +15,7 @@ import zipfile
 from datetime import datetime, timezone
 from importlib import import_module
 from pathlib import Path
-from typing import Any, BinaryIO, Protocol, cast
+from typing import Any, BinaryIO, Callable, Protocol, cast
 
 ROOT = Path(r"C:\Projects\pinn-runner")
 
@@ -113,7 +113,9 @@ class FileLockBackend(Protocol):
     def locking(self, descriptor: int, mode: int, count: int) -> None: ...
 
 
-def acquire_lock(path: Path, directory: Path) -> BinaryIO:
+def acquire_lock(
+    path: Path, directory: Path, cancelled: Callable[[], bool] | None = None
+) -> BinaryIO:
     msvcrt = cast(FileLockBackend, import_module("msvcrt"))
 
     stream = path.open("a+b")
@@ -121,6 +123,9 @@ def acquire_lock(path: Path, directory: Path) -> BinaryIO:
         stream.write(b"0")
         stream.flush()
     while True:
+        if cancelled is not None and cancelled():
+            stream.close()
+            raise InterruptedError("Cancelled while queued")
         stream.seek(0)
         try:
             msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)

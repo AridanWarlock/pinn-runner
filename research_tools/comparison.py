@@ -21,13 +21,23 @@ def compare(evidence: Json) -> Json:
         and environment.get("working_tree_dirty") is not False
     ):
         raise ValueError("Prospective evidence requires explicitly clean source")
+    if any(
+        environment.get(k) != v for k, v in manifest.get("environment_requirements", {}).items()
+    ):
+        raise ValueError("Runtime/precision differs from registered protocol")
     trials: list[Json] = []
     for raw in evidence["trials"]:
         trial = object_value(raw, "trial")
         snapshots = []
         for value in trial["snapshots"]:
             snap = object_value(value, "snapshot")
-            snapshots.append(snap | {"boundary_operators": [{"max_error": snap["boundary_max"]}]})
+            snapshots.append(
+                snap
+                | {
+                    "boundary_operators": snap.get("boundary_operators")
+                    or [{"max_error": snap["boundary_max"]}]
+                }
+            )
         # Revalidate cached values and recompute crossings; never trust saved pass flags.
         trials.append(compact_trial(trial | {"snapshots": snapshots}, manifest))
     keys = [identity(t) for t in trials]

@@ -306,6 +306,7 @@ def convergence_trial(
         "control_feature_derivatives": evaluator.model.net.features.derivative_rule
         if isinstance(evaluator.model.net, FeatureFCN)
         else None,
+        "network": config["network"],
         "trainable_parameters": sum(
             p.numel() for p in objects.model.parameters() if p.requires_grad
         ),

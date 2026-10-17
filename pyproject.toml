@@ -14,6 +14,8 @@ files = [
   "run.py",
   "research_tools",
   "scripts/research.py",
+  "scripts/research_worker.py",
+  "scripts/research_run.py",
   "scripts/check_backend.py",
   "scripts/gpu_jobs.py",
   "scripts/gpu_worker.py",

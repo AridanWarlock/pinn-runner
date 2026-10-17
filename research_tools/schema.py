@@ -81,8 +81,10 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
         "physical_limits",
         "comparison",
     }
-    if set(manifest) != required or manifest["contract"] != 1:
-        raise ValueError("Manifest contract 1 with exactly the documented fields required")
+    if manifest.get("contract") == 2:
+        required |= {"case_faces", "environment_requirements", "network"}
+    if set(manifest) != required or manifest["contract"] not in (1, 2):
+        raise ValueError("Manifest contract 1/2 with exactly the documented fields required")
     if manifest["registration"] not in ("prospective", "retrospective_import"):
         raise ValueError("registration must distinguish prospective from retrospective import")
     if not isinstance(manifest["revision"], str) or not re.fullmatch(
@@ -173,4 +175,45 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
             raise ValueError("Every case/seed must have exactly one baseline and one candidate")
     for key in ("quality_factor", "median_training_ratio_max", "worst_training_ratio_max"):
         number(comparison[key], key, positive=True)
+    if manifest["contract"] == 2:
+        faces = object_value(manifest["case_faces"], "case_faces")
+        if set(faces) != set(case_limits):
+            raise ValueError("case_faces must cover exactly the cases")
+        for case_faces in faces.values():
+            if not isinstance(case_faces, list) or not case_faces:
+                raise ValueError("Expected boundary faces required")
+            ids = [face_identity(object_value(face, "face")) for face in case_faces]
+            if len(ids) != len(set(ids)):
+                raise ValueError("Duplicate expected boundary face")
+        environment = object_value(
+            manifest["environment_requirements"], "environment_requirements"
+        )
+        if set(environment) != {
+            "torch",
+            "cuda_runtime",
+            "default_dtype",
+            "float32_matmul_precision",
+            "cuda_matmul_allow_tf32",
+            "cudnn_allow_tf32",
+        }:
+            raise ValueError("Pin runtime, dtype and precision flags explicitly")
+        if not all(
+            isinstance(environment[k], str) and environment[k]
+            for k in ("torch", "cuda_runtime", "default_dtype", "float32_matmul_precision")
+        ) or any(
+            type(environment[k]) is not bool
+            for k in ("cuda_matmul_allow_tf32", "cudnn_allow_tf32")
+        ):
+            raise ValueError("Invalid runtime/precision requirements")
+        if not object_value(manifest["network"], "network"):
+            raise ValueError("Resolved network configuration required")
     return manifest
+
+
+def face_identity(face: Json) -> tuple[str, ...]:
+    fields = ("field", "kind", "axis", "side")
+    if not all(isinstance(face.get(k), str) and face[k] for k in fields):
+        raise ValueError("Boundary identity requires field/kind/axis/side")
+    if face["side"] not in ("lower", "upper"):
+        raise ValueError("Unknown boundary side")
+    return tuple(face[k] for k in fields)
