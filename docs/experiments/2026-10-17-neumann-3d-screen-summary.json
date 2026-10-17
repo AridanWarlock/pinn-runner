@@ -1,0 +1,45 @@
+{
+  "contract": 1,
+  "status": {
+    "state": "completed",
+    "commit": "2488111aa8e95ddfca5250507c6b9099eaee53ca",
+    "started_at": "2026-10-17T07:01:54.226962+00:00",
+    "completed_cases": [
+      {
+        "phase": "phase1",
+        "case": "heat_neumann_homogeneous3d",
+        "seconds": 164.20943569997326,
+        "trials": 3
+      },
+      {
+        "phase": "phase1",
+        "case": "heat_neumann_polynomial3d",
+        "seconds": 168.7192553000059,
+        "trials": 3
+      }
+    ],
+    "updated_at": "2026-10-17T07:07:31.424614+00:00",
+    "waiting_for": "neumann-pullback-006",
+    "profile_reused_from": "neumann-pullback-006:69 passed; ordinary autograd in screen",
+    "phase": "phase1",
+    "finished_at": "2026-10-17T07:13:09.818547+00:00"
+  },
+  "environment": {
+    "revision": "2488111aa8e95ddfca5250507c6b9099eaee53ca",
+    "working_tree_dirty": true,
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "cpu_threads": 6,
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti",
+    "packages": {
+      "numpy": "1.26.4",
+      "lightning": "2.1.0"
+    }
+  },
+  "interpretation": "One seed, short budget. Final quality passed only for identity polynomial3d; other five final states failed registered criteria. All are finite and preserve boundary operators. No default promotion."
+}

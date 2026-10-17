@@ -1,0 +1,46 @@
+{
+  "contract": 1,
+  "status": {
+    "state": "completed",
+    "commit": "b7d0319f44a7fa44b329e78b72071c69813a6129",
+    "started_at": "2026-10-17T06:48:05.347110+00:00",
+    "completed_cases": [
+      {
+        "phase": "phase1",
+        "case": "heat_neumann_homogeneous2d",
+        "seconds": 488.30475780001143,
+        "trials": 9
+      },
+      {
+        "phase": "phase1",
+        "case": "heat_neumann_polynomial2d",
+        "seconds": 597.5456028999761,
+        "trials": 9
+      }
+    ],
+    "profile_reused_from": "neumann-features-001:57 passed; unchanged training code",
+    "phase": "phase1",
+    "finished_at": "2026-10-17T07:06:16.592654+00:00"
+  },
+  "environment": {
+    "revision": "b7d0319f44a7fa44b329e78b72071c69813a6129",
+    "working_tree_dirty": true,
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "cpu_threads": 6,
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti",
+    "packages": {
+      "numpy": "1.26.4",
+      "lightning": "2.1.0"
+    }
+  },
+  "source_training_code": "b7d0319",
+  "optimizer_tolerance_change": 1e-12,
+  "only_intended_change_from_quality002": "tolerance_change",
+  "scope": "18 exploratory trainings; same quality thresholds and fixed budget. No global default promotion."
+}
