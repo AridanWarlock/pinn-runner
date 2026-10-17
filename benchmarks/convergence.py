@@ -286,12 +286,11 @@ def convergence_trial(
     )
     for row in rows:
         metrics, diagnostics = evaluator.evaluate(directory / f"lb-{row['lb_steps']}.pt")
-        if plan.density is not None:
-            metrics["worst_time_relative_l2"] = max(
-                item["relative_l2"]
-                for item in diagnostics["temporal"]
-                if item["relative_l2"] is not None
-            )
+        metrics["worst_time_relative_l2"] = max(
+            item["relative_l2"]
+            for item in diagnostics["temporal"]
+            if item["relative_l2"] is not None
+        )
         missing = plan.limits.keys() - metrics.keys()
         if missing:
             raise ValueError(f"Unknown quality metrics: {sorted(missing)}")

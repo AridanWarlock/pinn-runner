@@ -512,3 +512,26 @@ def test_density_rejects_incomplete_or_incomparable_data(
     edit_json(root / "case/report.json", change)
     with pytest.raises(ValueError):
         compare(evidence(density_study))
+
+
+def test_fixed_step_collection_preserves_measured_work_and_memory(
+    study: tuple[Path, Path],
+) -> None:
+    def change(report: dict[str, Any]) -> None:
+        for trial in report["trials"]:
+            trial.update(peak_allocated_bytes=1234, peak_reserved_bytes=4096, snapshot_seconds=0.1)
+            for snapshot in trial["snapshots"]:
+                snapshot.update(
+                    adam_residual_points=256, lbfgs_residual_points=snapshot["closures"] * 8
+                )
+                snapshot["metrics"]["worst_time_relative_l2"] = 0.004
+
+    edit_json(study[0] / "case/report.json", change)
+    value = evidence(study)
+    assert value["trials"][0]["peak_allocated_bytes"] == 1234
+    assert value["trials"][0]["snapshots"][-1]["lbfgs_residual_points"] == 16
+    assert value["trials"][0]["snapshots"][-1]["metrics"]["worst_time_relative_l2"] == 0.004
+    assert compare(value)["comparison_passed"]
+    value["trials"][0]["peak_allocated_bytes"] = float("nan")
+    with pytest.raises(ValueError, match="finite"):
+        compare(value)

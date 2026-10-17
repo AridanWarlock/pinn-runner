@@ -67,6 +67,11 @@ def compact_snapshot(raw: Json, limits: Json, faces: list[Json] | None = None) -
     if type(step) is not int or step < 0:
         raise ValueError("Snapshot lb_steps must be a nonnegative integer")
     return {
+        **{
+            key: number(raw[key], key)
+            for key in ("adam_residual_points", "lbfgs_residual_points")
+            if key in raw
+        },
         "lb_steps": step,
         "seconds": number(raw.get("seconds"), "snapshot seconds"),
         "closures": number(raw.get("closures"), "closures"),
@@ -207,6 +212,17 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
         snapshots=snapshots,
         crossing=crossing(snapshots),
     )
+    for key in (
+        "peak_allocated_bytes",
+        "peak_reserved_bytes",
+        "snapshot_seconds",
+        "setup_seconds",
+        "evaluation_seconds",
+        "trial_wall_seconds",
+        "process_seconds",
+    ):
+        if raw.get(key) is not None:
+            compact[key] = number(raw[key], key)
     if "density" in manifest:
         compact.update(
             {
