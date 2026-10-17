@@ -129,7 +129,7 @@ def test_uncertain_launch_never_repeats_process_creation(
         calls.append(args)
         raise subprocess.CalledProcessError(1, args[0])
 
-    monkeypatch.setattr(queue.subprocess, "check_output", broken)
+    monkeypatch.setattr(queue.subprocess, "Popen", broken)
     with pytest.raises(subprocess.CalledProcessError):
         queue.launch(root, root / ".gpu-jobs/probe")
     assert queue.launch(root, root / ".gpu-jobs/probe")["state"] == "unknown"
@@ -242,23 +242,25 @@ def test_remote_transport_validates_ids_and_propagates_disconnect(
         control.call("status", "../outside")
 
 
-def test_wmi_launch_is_detached_and_directory_guarded(
+def test_launch_is_detached_and_directory_guarded(
     job: tuple[Path, dict[str, Any]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     root, _ = job
     commands = []
 
-    def launch(command: list[str], **kwargs: Any) -> str:
-        commands.append(command)
-        return "123\n"
+    class Process:
+        pid = 123
 
-    monkeypatch.setattr(queue.subprocess, "check_output", launch)
+        def __init__(self, command: list[str], **kwargs: Any) -> None:
+            commands.append((command, kwargs))
+
+    monkeypatch.setattr(queue.subprocess, "Popen", Process)
     monkeypatch.setattr(queue, "process_token", lambda pid: "same")
     state = queue.launch(root, root / ".gpu-jobs/probe")
     assert state["launcher_pid"] == 123
-    script = commands[0][-1]
-    assert script.startswith("Set-Location")
-    assert "CurrentDirectory=" in script and "Win32_Process" in script and " -B " in script
-    assert "16777216" in script
+    command, options = commands[0]
+    assert command[1] == "-B"
+    assert options["cwd"] == root and options["creationflags"] == 0x01000208
+    assert options["env"]["PYTHONDONTWRITEBYTECODE"] == "1"
     queue.launch(root, root / ".gpu-jobs/probe")
     assert len(commands) == 1

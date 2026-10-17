@@ -201,22 +201,29 @@ def launch(root: Path, directory: Path) -> Json:
             stream.write(timestamp())
     except FileExistsError:
         return job_status(directory)
-    # WMI owns the process, so the SSH process lifetime is irrelevant.
-    command = f'"{root / ".venv/Scripts/python.exe"}" -B "{directory / "checkout/scripts/research_worker.py"}" execute --job-id {directory.name}'
-    script = (
-        f"Set-Location -LiteralPath '{root}' -ErrorAction Stop; if ((Get-Location).Path -ne '{root}') {{ exit 1 }}; "
-        "$ErrorActionPreference='Stop'; $startup=New-CimInstance -ClassName Win32_ProcessStartup -ClientOnly -Property @{CreateFlags=[uint32]16777216;ShowWindow=[uint16]0}; $r=Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='"
-        + command
-        + "';CurrentDirectory='"
-        + str(root)
-        + "';ProcessStartupInformation=$startup}; if ($r.ReturnValue -ne 0) { throw 'WMI process creation failed' }; $r.ProcessId"
-    )
-    result = subprocess.check_output(
-        ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
-        cwd=root,
-        text=True,
-    )
-    pid = int(result.strip())
+    manifest = registered_manifest(directory)
+    command = [
+        str(root / ".venv/Scripts/python.exe"),
+        "-B",
+        str(directory / "checkout/scripts/research_worker.py"),
+        "execute",
+        "--job-id",
+        directory.name,
+    ]
+    # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_BREAKAWAY_FROM_JOB.
+    # Fail explicitly if the SSH host's Job Object does not permit breakaway.
+    with (directory / "launcher.log").open("wb") as log:
+        process = subprocess.Popen(
+            command,
+            cwd=root,
+            env=job_environment(directory, manifest["revision"]),
+            stdin=subprocess.DEVNULL,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            creationflags=0x01000208,
+            close_fds=True,
+        )
+    pid = process.pid
     write_json(directory / "launcher.json", {"pid": pid, "token": process_token(pid)})
     return job_status(directory) | {"launcher_pid": pid}
 
