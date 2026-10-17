@@ -128,7 +128,12 @@ def test_complete_evidence_recomputes_crossings_and_writes_no_raw_arrays(
     assert value["trials"][0]["crossing"]["left_censored"]
     output = study[0] / "bundle"
     write_bundle(output, value)
-    assert set(p.name for p in output.iterdir()) == {"evidence.json", "final.csv", "snapshots.csv"}
+    assert set(p.name for p in output.iterdir()) == {
+        "evidence.json",
+        "final.csv",
+        "snapshots.csv",
+        "bundle.json",
+    }
     assert len((output / "snapshots.csv").read_text().splitlines()) == 7
     with pytest.raises(FileExistsError):
         write_bundle(output, value)
@@ -297,7 +302,7 @@ def test_cli_distinguishes_failed_hypothesis_from_invalid_data(
         lambda e: e["trials"][1]["snapshots"][0]["metrics"].update(pde_rmse=float("nan")),
     )
     assert main(["compare", "--bundle", str(output)]) == 2
-    assert "finite" in capsys.readouterr().err
+    assert "checksum" in capsys.readouterr().err
 
 
 def test_cached_crossing_cannot_fake_two_successes(study: tuple[Path, Path]) -> None:
@@ -364,3 +369,40 @@ def test_contract_two_checks_geometry_precision_and_architecture(
     report_path.write_text(json.dumps(report))
     with pytest.raises(ValueError):
         evidence(study)
+
+
+@pytest.mark.parametrize("filename", ["evidence.json", "final.csv", "snapshots.csv"])
+def test_bundle_checksums_cover_all_published_files(
+    study: tuple[Path, Path], filename: str
+) -> None:
+    from research_tools.evidence import read_bundle
+
+    root, _ = study
+    output = root / "sealed"
+    value = evidence(study)
+    write_bundle(output, value)
+    assert read_bundle(output)["manifest_sha256"] == value["manifest_sha256"]
+    with (output / filename).open("a") as stream:
+        stream.write("changed")
+    with pytest.raises(ValueError, match="checksum"):
+        read_bundle(output)
+
+
+def test_failed_bundle_write_never_publishes_completion(
+    study: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from research_tools import evidence as module
+
+    value = evidence(study)
+    output = study[0] / "partial"
+
+    def refused(*args: Any, **kwargs: Any) -> None:
+        raise OSError("Disk full")
+
+    monkeypatch.setattr(module.csv.DictWriter, "writerows", refused)
+    with pytest.raises(OSError, match="Disk full"):
+        module.write_bundle(output, value)
+    assert (output / "evidence.json").exists()
+    assert not (output / "bundle.json").exists()
+    with pytest.raises(ValueError, match="Incomplete"):
+        module.read_bundle(output)

@@ -164,30 +164,50 @@ def process_token(pid: int) -> str | None:
         api.CloseHandle(handle)
 
 
+def read_metadata(path: Path) -> Json:
+    with path.open("rb") as stream:
+        source = stream.read(65537)
+    if len(source) > 65536:
+        raise ValueError("Job metadata exceeds 64 KiB")
+    return object_value(json.loads(source), "job metadata")
+
+
 def job_status(directory: Path) -> Json:
-    status = read_object(directory / "status.json")
-    if status["state"] in TERMINAL:
-        return status
-    owner = directory / "worker.claim"
-    if owner.exists():
-        claim = read_object(owner)
-        if not claim["token"] or process_token(claim["pid"]) != claim["token"]:
-            return status | {
-                "state": "unknown",
-                "reason": "Worker identity is no longer verifiable; no automatic restart",
-            }
-    elif (directory / "launch.claim").exists():
-        launcher = directory / "launcher.json"
-        launcher_info = read_object(launcher) if launcher.exists() else {}
+    try:
+        status = read_metadata(inside(directory, "status.json"))
+        if status.get("state") not in TERMINAL | {"queued", "running", "unknown"}:
+            raise ValueError("Unknown recorded state")
+        if status["state"] in TERMINAL:
+            return status
+        claim_path = inside(directory, "worker.claim")
+        if not claim_path.exists():
+            if not (directory / "launch.claim").exists():
+                return status
+            claim_path = inside(directory, "launcher.json")
+            reason = "launch_uncertain"
+        else:
+            reason = "worker_unverifiable"
+        claim = read_metadata(claim_path) if claim_path.exists() else {}
+        pid, token = claim.get("pid"), claim.get("token")
         if (
-            not launcher_info.get("token")
-            or process_token(launcher_info["pid"]) != launcher_info["token"]
+            type(pid) is not int
+            or pid <= 0
+            or not isinstance(token, str)
+            or not token
+            or process_token(pid) != token
         ):
             return status | {
                 "state": "unknown",
-                "reason": "Launch outcome is uncertain; no automatic restart",
+                "reason_code": reason,
+                "reason": "Process identity is not verifiable; no automatic restart",
             }
-    return status
+        return status
+    except (OSError, ValueError, TypeError) as error:
+        return {
+            "state": "unknown",
+            "reason_code": "metadata_unreadable",
+            "error": str(error)[:500],
+        }
 
 
 def launch(root: Path, directory: Path) -> Json:
@@ -201,28 +221,39 @@ def launch(root: Path, directory: Path) -> Json:
             stream.write(timestamp())
     except FileExistsError:
         return job_status(directory)
-    manifest = registered_manifest(directory)
-    command = [
-        str(root / ".venv/Scripts/python.exe"),
-        "-B",
-        str(directory / "checkout/scripts/research_worker.py"),
-        "execute",
-        "--job-id",
-        directory.name,
-    ]
-    # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_BREAKAWAY_FROM_JOB.
-    # Fail explicitly if the SSH host's Job Object does not permit breakaway.
-    with (directory / "launcher.log").open("wb") as log:
-        process = subprocess.Popen(
-            command,
-            cwd=root,
-            env=job_environment(directory, manifest["revision"]),
-            stdin=subprocess.DEVNULL,
-            stdout=log,
-            stderr=subprocess.STDOUT,
-            creationflags=0x01000208,
-            close_fds=True,
-        )
+    try:
+        manifest = registered_manifest(directory)
+        command = [
+            str(root / ".venv/Scripts/python.exe"),
+            "-B",
+            str(directory / "checkout/scripts/research_worker.py"),
+            "execute",
+            "--job-id",
+            directory.name,
+        ]
+        # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP | CREATE_BREAKAWAY_FROM_JOB.
+        # Fail explicitly if the SSH host's Job Object does not permit breakaway.
+        with (directory / "launcher.log").open("wb") as log:
+            process = subprocess.Popen(
+                command,
+                cwd=root,
+                env=job_environment(directory, manifest["revision"]),
+                stdin=subprocess.DEVNULL,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                creationflags=0x01000208,
+                close_fds=True,
+            )
+    except (OSError, ValueError) as error:
+        failed = read_object(directory / "status.json") | {
+            "state": "failed",
+            "reason_code": "launch_rejected",
+            "error": str(error)[:500],
+            "updated_at": timestamp(),
+            "finished_at": timestamp(),
+        }
+        write_json(directory / "status.json", failed)
+        return failed
     pid = process.pid
     write_json(directory / "launcher.json", {"pid": pid, "token": process_token(pid)})
     return job_status(directory) | {"launcher_pid": pid}

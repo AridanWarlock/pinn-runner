@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from research_tools import queue  # noqa: E402
+from research_tools.diagnostics import diagnose  # noqa: E402
 from research_tools.evidence import collect  # noqa: E402
 from research_tools.schema import inside  # noqa: E402
 from scripts.gpu_worker import ROOT, valid_id  # noqa: E402
@@ -20,10 +21,14 @@ from scripts.gpu_worker import ROOT, valid_id  # noqa: E402
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "action", choices=("prepare", "launch", "execute", "status", "cancel", "collect")
+        "action",
+        choices=("prepare", "launch", "execute", "status", "cancel", "collect", "diagnose"),
     )
     parser.add_argument("--job-id")
     parser.add_argument("--request-base64")
+    parser.add_argument("--log", choices=("run", "launcher"))
+    parser.add_argument("--lines", type=int, default=40)
+    parser.add_argument("--max-bytes", type=int, default=4096)
     args = parser.parse_args()
     if sys.platform != "win32" or Path.cwd().resolve() != ROOT.resolve():
         parser.error("Windows project working directory required")
@@ -34,7 +39,11 @@ def main() -> None:
         if args.action == "execute":
             queue.execute(ROOT, directory)
             return
-        if args.action == "launch":
+        if args.action == "diagnose":
+            output = diagnose(
+                directory, live=True, log=args.log, lines=args.lines, max_bytes=args.max_bytes
+            )
+        elif args.action == "launch":
             output = queue.launch(ROOT, directory)
         elif args.action == "cancel":
             output = queue.cancel(directory)

@@ -14,9 +14,10 @@ sys.path.insert(0, str(ROOT))
 from research_tools.board import brief  # noqa: E402
 from research_tools.comparison import compare  # noqa: E402
 from research_tools.control import call, collect_remote, submit  # noqa: E402
-from research_tools.evidence import collect, status, write_bundle  # noqa: E402
+from research_tools.diagnostics import diagnose  # noqa: E402
+from research_tools.evidence import collect, read_bundle, status, write_bundle  # noqa: E402
 from research_tools.remote_status import remote_status  # noqa: E402
-from research_tools.schema import Json, load_manifest, read_object  # noqa: E402
+from research_tools.schema import Json, load_manifest  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -54,11 +55,36 @@ def main(argv: list[str] | None = None) -> int:
         "cancel", help="Request cooperative termination of the owned process tree"
     )
     cancel.add_argument("--job-id", required=True)
+    diagnosis = sub.add_parser("diagnose", help="Bounded job metadata and optional log tail")
+    diagnosis_input = diagnosis.add_mutually_exclusive_group(required=True)
+    diagnosis_input.add_argument("--root", type=Path)
+    diagnosis_input.add_argument("--job-id")
+    diagnosis.add_argument("--remote", action="store_true")
+    diagnosis.add_argument("--log", choices=("run", "launcher"))
+    diagnosis.add_argument("--lines", type=int, default=40)
+    diagnosis.add_argument("--max-bytes", type=int, default=4096)
     args = parser.parse_args(argv)
     code = 0
     try:
         output: Json
-        if args.command == "status":
+        if args.command == "diagnose":
+            if args.job_id:
+                if not args.remote:
+                    parser.error("--job-id requires --remote")
+                output = call(
+                    "diagnose",
+                    args.job_id,
+                    log=args.log,
+                    lines=args.lines,
+                    max_bytes=args.max_bytes,
+                )
+            else:
+                if args.remote:
+                    parser.error("Use --job-id for remote diagnostics")
+                output = diagnose(
+                    args.root, log=args.log, lines=args.lines, max_bytes=args.max_bytes
+                )
+        elif args.command == "status":
             if args.job_id:
                 if not args.remote:
                     parser.error("--job-id requires --remote")
@@ -96,7 +122,7 @@ def main(argv: list[str] | None = None) -> int:
                 "registration": manifest["registration"],
             }
         elif args.command == "compare":
-            output = compare(read_object(args.bundle / "evidence.json"))
+            output = compare(read_bundle(args.bundle))
             code = 0 if output["comparison_passed"] else 1
             if not args.details:
                 for case in output["cases"]:

@@ -273,3 +273,41 @@ def write_bundle(output: Path, evidence: Json) -> None:
             writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
             writer.writeheader()
             writer.writerows(values)
+
+    completion = {
+        "contract": 1,
+        "kind": "research-bundle",
+        "sha256": {name: digest(output / name) for name in BUNDLE_FILES},
+    }
+    temporary = output / "bundle.json.tmp"
+    temporary.write_text(json.dumps(completion, allow_nan=False) + "\n", encoding="utf-8")
+    temporary.replace(output / "bundle.json")
+
+
+BUNDLE_FILES = ("evidence.json", "final.csv", "snapshots.csv")
+
+
+def read_bundle(directory: Path) -> Json:
+    marker = inside(directory, "bundle.json")
+    if not marker.is_file():
+        raise ValueError(
+            "Incomplete bundle: completion record is missing; recollect to a new directory"
+        )
+    record = object_value(json.loads(marker.read_text(encoding="utf-8")), "bundle")
+    if (
+        set(record) != {"contract", "kind", "sha256"}
+        or record.get("contract") != 1
+        or record.get("kind") != "research-bundle"
+        or not isinstance(record.get("sha256"), dict)
+        or set(record["sha256"]) != set(BUNDLE_FILES)
+    ):
+        raise ValueError("Invalid bundle completion record")
+    evidence_bytes = b""
+    for filename in BUNDLE_FILES:
+        path = inside(directory, filename)
+        source = path.read_bytes()
+        if hashlib.sha256(source).hexdigest() != record["sha256"][filename]:
+            raise ValueError(f"Bundle checksum differs: {filename}")
+        if filename == "evidence.json":
+            evidence_bytes = source
+    return object_value(json.loads(evidence_bytes), "evidence")

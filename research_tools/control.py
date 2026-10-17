@@ -12,16 +12,30 @@ from scripts.gpu_jobs import remote
 from scripts.gpu_worker import valid_id
 
 from .comparison import compare
+from .diagnostics import validate_tail
 from .evidence import write_bundle
 from .queue import validate_request
 from .schema import Json, inside, object_value
 
 
-def call(action: str, job_id: str, *, request: Json | None = None) -> Json:
+def call(
+    action: str,
+    job_id: str,
+    *,
+    request: Json | None = None,
+    log: str | None = None,
+    lines: int = 40,
+    max_bytes: int = 4096,
+) -> Json:
     valid_id(job_id)
-    if action not in {"prepare", "launch", "status", "cancel", "collect"}:
+    if action not in {"prepare", "launch", "status", "cancel", "collect", "diagnose"}:
         raise ValueError("Unknown research action")
     arguments = f"{action} --job-id {job_id}"
+    if action == "diagnose":
+        validate_tail(log, lines, max_bytes)
+        arguments += f" --lines {lines} --max-bytes {max_bytes}"
+        if log is not None:
+            arguments += f" --log {log}"
     prefix = ""
     if request is not None:
         validate_request(request)
@@ -35,7 +49,7 @@ def call(action: str, job_id: str, *, request: Json | None = None) -> Json:
     result = object_value(json.loads(value), "worker response")
     return (
         result
-        if action == "collect"
+        if action in {"collect", "diagnose"}
         else {"contract": 1, "kind": "research-job", "job_id": job_id, **result}
     )
 
