@@ -1,0 +1,92 @@
+{
+  "contract": 4,
+  "kind": "frozen-timing",
+  "registration": "prospective",
+  "revision": "7b81d0851b2437e049854cc5aefc19a2adc68bc2",
+  "sources": [
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 19,
+      "trial": ".gpu-jobs/analytic012/r/c0/processes/eager-recursive-parameters-auto-neumann_polynomial-19/eager-recursive-parameters-auto-neumann_polynomial-19",
+      "weights": "lb-2000.pt",
+      "weights_sha256": "df24e936c0a94559e2fc7dad1c198d5b58b7ec31663531464680387ff8dd69e7",
+      "config_sha256": "907cbe7d11fb761dea5c3344665aadf01c639216ba4aa1aa908a50f9a3b67ad0"
+    },
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "seed": 4321,
+      "trial": ".gpu-jobs/analytic012/r/c0/processes/eager-recursive-parameters-auto-neumann_polynomial-4321/eager-recursive-parameters-auto-neumann_polynomial-4321",
+      "weights": "lb-2000.pt",
+      "weights_sha256": "c5887531fb8406c7b57bd8239faa56430297fef343ac07937f8ec75e1c03fe16",
+      "config_sha256": "7fdaeaaa4d14915abad5d8630a7a56c5f28ba3efa525b93fb3f8aad2fb1b0305"
+    },
+    {
+      "case": "heat_neumann_polynomial2d",
+      "seed": 19,
+      "trial": ".gpu-jobs/analytic012/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-19/eager-recursive-parameters-auto-neumann_polynomial-19",
+      "weights": "lb-2000.pt",
+      "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+      "config_sha256": "907cbe7d11fb761dea5c3344665aadf01c639216ba4aa1aa908a50f9a3b67ad0"
+    },
+    {
+      "case": "heat_neumann_polynomial2d",
+      "seed": 4321,
+      "trial": ".gpu-jobs/analytic012/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-4321/eager-recursive-parameters-auto-neumann_polynomial-4321",
+      "weights": "lb-2000.pt",
+      "weights_sha256": "d56d977b2623d1900055da0b392e7f3073a24b0643e3de1b2eb76a93c0ff6761",
+      "config_sha256": "7fdaeaaa4d14915abad5d8630a7a56c5f28ba3efa525b93fb3f8aad2fb1b0305"
+    },
+    {
+      "case": "heat_neumann_homogeneous3d",
+      "seed": 19,
+      "trial": ".gpu-jobs/analytic011/r/c0/processes/eager-recursive-parameters-auto-neumann_polynomial-19/eager-recursive-parameters-auto-neumann_polynomial-19",
+      "weights": "lb-600.pt",
+      "weights_sha256": "71b35e5e8e669ef2adffcd763ff289f2e971776dca3c3b52bbd61951e000ede1",
+      "config_sha256": "8c09efd14cf09a0ad4dc0cf8ecadee880180d620b6952604412887f28a111ed2"
+    },
+    {
+      "case": "heat_neumann_homogeneous3d",
+      "seed": 4321,
+      "trial": ".gpu-jobs/analytic011/r/c0/processes/eager-recursive-parameters-auto-neumann_polynomial-4321/eager-recursive-parameters-auto-neumann_polynomial-4321",
+      "weights": "lb-600.pt",
+      "weights_sha256": "3715f1fd6b51f84b89fce06cbdf3ff2ddbc05d22bf9c8edfbc77aee422ce5ac2",
+      "config_sha256": "e23de3baf9bbea35ef5a025a7ede494fbd2936aa6ecffc06f3530ed9473aa136"
+    },
+    {
+      "case": "heat_neumann_polynomial3d",
+      "seed": 19,
+      "trial": ".gpu-jobs/analytic011/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-19/eager-recursive-parameters-auto-neumann_polynomial-19",
+      "weights": "lb-600.pt",
+      "weights_sha256": "85f2994d9132bd3e2c4d7eb32f7959d90db4c6afd36ae703ac31ff8406353d83",
+      "config_sha256": "8c09efd14cf09a0ad4dc0cf8ecadee880180d620b6952604412887f28a111ed2"
+    },
+    {
+      "case": "heat_neumann_polynomial3d",
+      "seed": 4321,
+      "trial": ".gpu-jobs/analytic011/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-4321/eager-recursive-parameters-auto-neumann_polynomial-4321",
+      "weights": "lb-600.pt",
+      "weights_sha256": "e56f469f81d7342c1256b2ae1526b3acca12799db9e15a1ad07553d9910b0bdb",
+      "config_sha256": "e23de3baf9bbea35ef5a025a7ede494fbd2936aa6ecffc06f3530ed9473aa136"
+    }
+  ],
+  "repeats": 3,
+  "points": 1024,
+  "prediction_points": 8193,
+  "blocks": 9,
+  "block_seconds": 6.0,
+  "prediction_block_seconds": 0.75,
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "comparison": {
+    "median_objective_ratio_max": 0.95,
+    "worst_objective_ratio_max": 1.1,
+    "median_prediction_ratio_max": 1.1,
+    "worst_allocated_ratio_max": 1.1
+  }
+}
