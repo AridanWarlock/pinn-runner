@@ -1,0 +1,42 @@
+{
+  "contract": 5,
+  "kind": "lbfgs-timing",
+  "registration": "prospective",
+  "revision": "47c229fde2c404b2afc7db2ed8d05c6c3dd5df04",
+  "sources": [
+    {
+      "case": "heat_neumann_polynomial3d",
+      "seed": 19,
+      "trial": ".gpu-jobs/analytic011/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-19/eager-recursive-parameters-auto-neumann_polynomial-19",
+      "weights": "lb-600.pt",
+      "weights_sha256": "85f2994d9132bd3e2c4d7eb32f7959d90db4c6afd36ae703ac31ff8406353d83",
+      "config_sha256": "8c09efd14cf09a0ad4dc0cf8ecadee880180d620b6952604412887f28a111ed2"
+    },
+    {
+      "case": "heat_neumann_polynomial3d",
+      "seed": 4321,
+      "trial": ".gpu-jobs/analytic011/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-4321/eager-recursive-parameters-auto-neumann_polynomial-4321",
+      "weights": "lb-600.pt",
+      "weights_sha256": "e56f469f81d7342c1256b2ae1526b3acca12799db9e15a1ad07553d9910b0bdb",
+      "config_sha256": "e23de3baf9bbea35ef5a025a7ede494fbd2936aa6ecffc06f3530ed9473aa136"
+    }
+  ],
+  "repeats": 3,
+  "points": 1024,
+  "steps": 10,
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "comparison": {
+    "median_total_ratio_max": 0.95,
+    "worst_total_ratio_max": 1.1,
+    "final_pde_rmse_max": 0.003,
+    "final_relative_l2_max": 0.002,
+    "pair_field_max_difference": 5e-05
+  }
+}
