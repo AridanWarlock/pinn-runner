@@ -79,6 +79,10 @@ def load_manifest(path: Path) -> Json:
 
 
 def validate_manifest(manifest: Json, base: Path) -> Json:
+    if manifest.get("contract") == 3:
+        from .frozen_profile import validate
+
+        return validate(manifest)
     required = {
         "contract",
         "registration",

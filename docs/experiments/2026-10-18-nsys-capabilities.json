@@ -1,0 +1,26 @@
+{
+  "paths": [
+    "C:\\Program Files\\NVIDIA Corporation\\Nsight Systems 2023.1.2\\target-windows-x64\\nsys.exe"
+  ],
+  "queries": [
+    {
+      "path": "C:\\Program Files\\NVIDIA Corporation\\Nsight Systems 2023.1.2\\target-windows-x64\\nsys.exe",
+      "args": [
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "NVIDIA Nsight Systems version 2023.1.2.43-32377213v0\n",
+      "stderr": ""
+    },
+    {
+      "path": "C:\\Program Files\\NVIDIA Corporation\\Nsight Systems 2023.1.2\\target-windows-x64\\nsys.exe",
+      "args": [
+        "status",
+        "--environment"
+      ],
+      "exit_code": 0,
+      "stdout": "Timestamp counter supported: Yes\n\nSampling Environment Check\nAdministrator privileges: No\nSampling Environment: Fail\n\nSee the product documentation for more information.\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -10,6 +10,10 @@ from .schema import Json, arm_fields, identity, number, object_value, validate_m
 
 
 def compare(evidence: Json) -> Json:
+    if evidence.get("kind") == "frozen-profile-evidence":
+        from .frozen_profile import compare as compare_profile
+
+        return compare_profile(evidence)
     if evidence.get("contract") != 1 or evidence.get("kind") != "research-evidence":
         raise ValueError("Expected research evidence contract 1")
     manifest = validate_manifest(object_value(evidence["manifest"], "manifest"), Path.cwd())

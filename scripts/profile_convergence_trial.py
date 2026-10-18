@@ -6,11 +6,13 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import statistics
 import subprocess
 import sys
 import time
 from collections.abc import Callable
+from contextlib import nullcontext
 from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any, cast
@@ -32,18 +34,23 @@ from pinnstorch.runner.problem import load_problem  # noqa: E402
 from pinnstorch.runner.settings import TaskSettings  # noqa: E402
 
 
-def training_step(factory: SolverFactory, model: PINNModule, points: torch.Tensor) -> torch.Tensor:
+def training_step(
+    factory: SolverFactory, model: PINNModule, points: torch.Tensor, native_trace: bool = False
+) -> torch.Tensor:
     model.zero_grad(set_to_none=True)
     columns = [
         points[:, i : i + 1].detach().clone().requires_grad_() for i in range(points.shape[1])
     ]
-    physical = dict(model(columns[:-1], columns[-1]))
-    residuals = factory.adapter.residuals(physical, *columns)
+    with torch.cuda.nvtx.range("physical_field") if native_trace else nullcontext():
+        physical = dict(model(columns[:-1], columns[-1]))
+    with torch.cuda.nvtx.range("physical_residual") if native_trace else nullcontext():
+        residuals = factory.adapter.residuals(physical, *columns)
     loss = cast(
         torch.Tensor,
         torch.stack([residuals[name].square().mean() for name in factory.problem.equations]).sum(),
     )
-    torch.autograd.backward(loss, inputs=tuple(model.parameters()))
+    with torch.cuda.nvtx.range("parameter_gradient") if native_trace else nullcontext():
+        torch.autograd.backward(loss, inputs=tuple(model.parameters()))
     return loss.detach()
 
 
@@ -142,6 +149,11 @@ def main() -> None:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--points", type=int, default=1024)
     parser.add_argument("--feature-derivatives", choices=("autograd", "analytic"), default=None)
+    parser.add_argument(
+        "--native-trace",
+        action="store_true",
+        help="NVTX ranges for external tracing; skip the nested Torch profiler",
+    )
     args = parser.parse_args()
     if args.points < 1 or args.output.exists():
         parser.error("Positive point count and a new output directory required")
@@ -175,7 +187,7 @@ def main() -> None:
     )
 
     def operation() -> torch.Tensor:
-        return training_step(factory, model, points)
+        return training_step(factory, model, points, native_trace=args.native_trace)
 
     work = count_network_work(model, operation)
     timing = timed_steps(operation)
@@ -183,14 +195,17 @@ def main() -> None:
         model, [points[:, i : i + 1] for i in range(points.shape[1] - 1)], points[:, -1:], 2048
     )
     args.output.mkdir(parents=True)
-    profiling = operator_profile(operation, args.output)
+    profiling = (
+        {"external_native_trace": True}
+        if args.native_trace
+        else operator_profile(operation, args.output)
+    )
     model.zero_grad(set_to_none=True)
     if tensor_fingerprint(model.state_dict()) != initial_fingerprint:
         raise RuntimeError("Profiling changed the saved physical model")
     report = {
-        "revision": subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
-        ).strip(),
+        "revision": os.environ.get("PINN_PINNED_REVISION")
+        or subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "torch": torch.__version__,
         "gpu": torch.cuda.get_device_name(),
         "weights_sha256": hashlib.sha256(weights.read_bytes()).hexdigest(),
@@ -205,6 +220,7 @@ def main() -> None:
         "network_work": asdict(work),
         "timing": timing,
         "prediction": prediction,
+        "timing_includes_external_profiler": args.native_trace,
         "profiler": profiling,
         "limitations": "One saved state, fixed independent points, no optimizer update. FCN hooks removed before timing. Profiling is separate from synchronized unprofiled timing. CUDA activity support does not guarantee that CUDA events were captured; inspect operators/trace before kernel conclusions. Raw trace stays outside Git.",
     }

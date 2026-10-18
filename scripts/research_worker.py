@@ -53,7 +53,13 @@ def main() -> None:
             if queue.read_object(directory / "request.json")["probe"]:
                 raise ValueError("Transport probes do not produce scientific evidence")
             path = directory / "manifest.json"
-            output = collect(directory / "r", queue.registered_manifest(directory), path)
+            manifest = queue.registered_manifest(directory)
+            if manifest["contract"] == 3:
+                from research_tools.frozen_profile import collect as collect_profile
+
+                output = collect_profile(directory / "r", manifest)
+            else:
+                output = collect(directory / "r", manifest, path)
             output["provenance"] = {
                 "protocol_commit": queue.read_object(directory / "request.json")[
                     "protocol_commit"

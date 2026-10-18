@@ -322,6 +322,15 @@ def write_bundle(output: Path, evidence: Json) -> None:
     rows: list[Json] = []
     snapshots: list[Json] = []
     for trial in evidence["trials"]:
+        if evidence.get("kind") == "frozen-profile-evidence":
+            rows.append(
+                dict(
+                    rule=trial["rule"],
+                    profile_exit_code=trial["profile_exit_code"],
+                    kernel_count=trial["trace"].get("kernels", {}).get("count", 0),
+                )
+            )
+            continue
         common = {
             key: trial[key]
             for key in (

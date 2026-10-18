@@ -57,6 +57,10 @@ def validate_arm(arm: Json, constraints: str, spec: CaseSpec) -> None:
 
 
 def plan(manifest: Json, *, details: bool = False) -> Json:
+    if manifest.get("contract") == 3:
+        from .frozen_profile import plan as profile_plan
+
+        return profile_plan(manifest)
     manifest = validate_manifest(manifest, Path.cwd())
     if manifest["contract"] != 2 or manifest["registration"] != "prospective":
         raise ValueError("Execution planning requires prospective manifest contract 2")

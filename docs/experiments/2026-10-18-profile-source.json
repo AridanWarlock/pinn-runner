@@ -1,0 +1,28 @@
+{
+  "source_report": "C:\\Projects\\pinn-runner\\.gpu-jobs\\analytic012\\r\\c1\\report.json",
+  "source_trial": "C:\\Projects\\pinn-runner\\.gpu-jobs\\analytic012\\r\\c1\\processes\\eager-recursive-parameters-auto-neumann_polynomial-19\\eager-recursive-parameters-auto-neumann_polynomial-19",
+  "weights": "C:\\Projects\\pinn-runner\\.gpu-jobs\\analytic012\\r\\c1\\processes\\eager-recursive-parameters-auto-neumann_polynomial-19\\eager-recursive-parameters-auto-neumann_polynomial-19\\lb-2000.pt",
+  "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+  "weights_bytes": 13240,
+  "config_sha256": "907cbe7d11fb761dea5c3344665aadf01c639216ba4aa1aa908a50f9a3b67ad0",
+  "help_exit_code": 0,
+  "profile_options": [
+    "\t-c, --capture-range=\n\n\t   Possible values are none, cudaProfilerApi, nvtx, hotkey.\n\t   When '-c cudaProfilerApi' is used, profiling will start only when cudaProfilerStart API is",
+    "\t--cpuctxsw=\n\n\t   Possible values are 'process-tree', 'system-wide', or 'none'.\n\t   Trace OS thread scheduling activity. Select 'none' to disable tracing CPU context switches. ",
+    "\t-d, --duration=\n\n\t   Collection duration in seconds.\n\t   Default is 0 seconds.",
+    "\t   Note that this switch is applicable only when --trace=dx12 is specified.\n\t   Default is 'individual'. Application scope.\n\n\t--dx12-wait-calls=",
+    "\t   Note that this switch is applicable only when --trace=dx12 is specified.\n\t   Default is 'false'. Application scope.\n\n\t-e, --env-var=",
+    "\t-f, --force-overwrite=\n\n\t   Possible values are 'true' or 'false'.\n\t   If true, overwrite all existing result files with same output filename",
+    "\t   Note that this switch is applicable only when --capture-range=hotkey is specified.\n\t   Default is `F12`.\n\n\t--injection-use-detours=",
+    "\t   Note that both switches are applicable only when --trace=nvtx is specified.\n\n\t-o, --output=\n",
+    "\t-o, --output=\n\n\t   Output report filename.\n\t   Any %q{ENV_VAR} pattern in the filename will be substituted with the value of the ",
+    "\t   Note that this switch is applicable only when --trace=opengl is specified.\n\t   Default is 'true'. Application scope.\n\n\t-p, --nvtx-capture=",
+    "\t   Note that this switch is applicable only when --capture-range=nvtx is specified.\n\n\t--python-sampling=\n",
+    "\t-s, --sample=\n\n\t   Possible values are 'process-tree', 'system-wide' or 'none'.\n\t   Collect CPU IP/backtrace samples. Select 'none' to disable sampling. 'process-tree' or 'system-wide' requires administrative privileges. ",
+    "\t-t, --trace=\n\n\t   Possible values are 'cuda', 'nvtx', 'cublas', 'cublas-verbose', 'cusparse', \n\t   'cusparse-verbose', 'opengl', 'opengl-annotations', 'nvvideo', 'vulkan', ",
+    "\t   Note that this switch is applicable only when --trace=vulkan is specified.\n\t   Default is 'individual'. Application scope.\n\n\t-w, --show-output=",
+    "\t   Note that this switch is applicable only when --trace=wddm is specified.\n\t   Default is 'true'. System scope.\n\n\t-x, --stop-on-exit=",
+    "\t-x, --stop-on-exit=\n\n\t   Possible values are 'true' or 'false'.\n\t   Stop profiling when the launched application exits."
+  ],
+  "source_case": "heat_neumann_polynomial2d"
+}
