@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 from pathlib import Path
 
@@ -44,6 +45,7 @@ FIELDS = {
     "suite",
     "tests",
     "test_sha256",
+    "test_hash_mode",
     "environment_requirements",
 }
 ENVIRONMENT = dict(
@@ -64,6 +66,7 @@ def validate(manifest: Json) -> Json:
         or manifest["registration"] != "prospective"
         or manifest["suite"] != SUITE
         or manifest["tests"] != EXPECTED
+        or manifest["test_hash_mode"] != "lf-normalized"
         or manifest["environment_requirements"] != ENVIRONMENT
     ):
         raise ValueError("Expected registered CUDA Neumann acceptance contract 6")
@@ -74,6 +77,11 @@ def validate(manifest: Json) -> Json:
         ):
             raise ValueError("Invalid acceptance source hash")
     return manifest
+
+
+def canonical_test_digest(path: Path) -> str:
+    """Match Git text across LF/CRLF archives; preserve every other byte."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
 def plan(manifest: Json) -> Json:
@@ -107,6 +115,11 @@ def compare(evidence: Json) -> Json:
         or evidence["gpu"] != "NVIDIA GeForce RTX 4070 Ti"
     ):
         raise ValueError("Acceptance provenance/device differs")
+    for key in ("test_raw_sha256", "test_raw_sha256_after"):
+        if re.fullmatch("[0-9a-f]{64}", evidence[key]) is None:
+            raise ValueError("Invalid raw acceptance test hash")
+    if evidence["test_raw_sha256"] != evidence["test_raw_sha256_after"]:
+        raise ValueError("Raw acceptance source changed")
     trials = evidence["trials"]
     if evidence["collected"] != EXPECTED or [t["nodeid"] for t in trials] != EXPECTED:
         raise ValueError("Incomplete acceptance test inventory")

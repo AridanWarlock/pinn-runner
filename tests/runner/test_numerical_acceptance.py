@@ -26,6 +26,7 @@ def protocol() -> dict[str, Any]:
         suite=acceptance.SUITE,
         tests=acceptance.EXPECTED.copy(),
         test_sha256="b" * 64,
+        test_hash_mode="lf-normalized",
         environment_requirements=acceptance.ENVIRONMENT.copy(),
     )
 
@@ -39,6 +40,8 @@ def evidence() -> dict[str, Any]:
         revision=m["revision"],
         test_sha256=m["test_sha256"],
         source_unchanged=True,
+        test_raw_sha256="c" * 64,
+        test_raw_sha256_after="c" * 64,
         environment=m["environment_requirements"],
         environment_after=m["environment_requirements"].copy(),
         test_device="cuda",
@@ -152,3 +155,17 @@ def test_protocol_cannot_select_arbitrary_files() -> None:
     m["suite"] = "run.py"
     with pytest.raises(ValueError):
         acceptance.validate(m)
+
+
+def test_hash_normalizes_only_git_line_endings_and_keeps_raw_integrity(tmp_path: Path) -> None:
+    lf, crlf = tmp_path / "lf.py", tmp_path / "crlf.py"
+    lf.write_bytes(b"def run():\n    return 1\n")
+    crlf.write_bytes(b"def run():\r\n    return 1\r\n")
+    assert digest(lf) != digest(crlf)
+    assert acceptance.canonical_test_digest(lf) == acceptance.canonical_test_digest(crlf)
+    crlf.write_bytes(b"def run():\r\n    return 2\r\n")
+    assert acceptance.canonical_test_digest(lf) != acceptance.canonical_test_digest(crlf)
+    e = evidence()
+    e["test_raw_sha256_after"] = "d" * 64
+    with pytest.raises(ValueError, match="Raw acceptance source changed"):
+        compare(e)

@@ -1,0 +1,17 @@
+{
+  "job_id": "geometry016",
+  "state": "failed",
+  "source_revision": "8db7d5525d168fc6cbe1526c81cf1869123ff61f",
+  "protocol_commit": "933389d85866e25cfa686e230d660e57685e7feb",
+  "phase": "preflight_test_sha256",
+  "numerical_tests_started": false,
+  "cuda_available": true,
+  "torch": "2.1.0+cu118",
+  "local_git_test_bytes": 10308,
+  "windows_test_bytes": 10540,
+  "windows_crlf": 232,
+  "git_test_sha256": "233c235784007ce48ca1502cdbcaf37ab96ade7e9d8ab11b3021c3a73a2684ae",
+  "windows_raw_test_sha256": "2544d31ef8b572d3a97903827303488cbee3656672017210a63c128a78069d6d",
+  "windows_lf_normalized_sha256": "233c235784007ce48ca1502cdbcaf37ab96ade7e9d8ab11b3021c3a73a2684ae",
+  "interpretation": "Transport representation mismatch, not a numerical failure. Failed snapshot preserved; replacement requires a new published protocol and job ID."
+}
