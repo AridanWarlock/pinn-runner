@@ -2,12 +2,14 @@
 
 import os
 from dataclasses import replace
+from itertools import product
 from pathlib import Path
 
 import pytest
 import torch
 
 from benchmarks.cases import CASES
+from pinnstorch.api import Coordinates, TensorFields
 from pinnstorch.models.net.neumann_polynomial import analytic_polynomial_features
 from pinnstorch.models.net.spatial_features import FeatureFCN, NeumannFeatures
 from pinnstorch.runner.factory import SolverFactory
@@ -131,3 +133,100 @@ def test_analytic_execution_requires_polynomial_representation(encoding: str) ->
     config["training"].update(constraints="hard_initial_robin", hard_execution="neumann_analytic")
     with pytest.raises(ValueError, match="neumann_polynomial"):
         TaskSettings.read(config)
+
+
+@pytest.mark.parametrize("dimensions", [1, 2, 3])
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
+def test_shifted_geometry_full_field_identity(
+    tmp_path: Path, dimensions: int, dtype: torch.dtype
+) -> None:
+    """Cover all face intersections, initial time and near-wall physical Hessians."""
+    bounds = ((-2.0, 0.5), (0.25, 1.75), (1.0, 3.5))[:dimensions]
+    t0, t1 = 0.75, 2.25
+    case = CASES[f"heat_neumann_homogeneous{dimensions}d"]
+    config = case.config(device(), 1, 19)
+    config["network"].update(hidden_layers=[6, 6], spatial_encoding="neumann_polynomial")
+    config["training"].update(constraints="hard_initial_robin", hard_execution="neumann_analytic")
+    for axis, (a, b) in zip(config["domain"]["space"].values(), bounds):
+        axis.update(interval=[a, b], points=3)
+    config["domain"]["time"].update(interval=[t0, t1], points=3)
+
+    def initial(c: Coordinates) -> TensorFields:
+        value = torch.ones_like(c.t)
+        for x, (a, b) in zip(c.spatial.values(), bounds):
+            z = (x - a) / (b - a)
+            value = value + z.square() * (1 - z).square()
+        return {"u": value}
+
+    problem = replace(load_problem(case.source), initial=initial)
+    factory = SolverFactory(TaskSettings.read(config), problem, tmp_path, case.source.parent)
+    torch.manual_seed(19)
+    model = factory.build(predicting=True).model.to(device=device(), dtype=dtype)
+    assert isinstance(model.net, FeatureFCN)
+    # Tensor product explicitly includes every face, edge and corner at all times.
+    rows = list(product(*([(0.0, 0.37, 1.0)] * dimensions), (0.0, 0.43, 1.0)))
+    for i in range(dimensions):
+        for z in (1e-4, 1 - 1e-4):
+            row = [0.37] * dimensions + [0.43]
+            row[i] = z
+            rows.append(tuple(row))
+    unit = torch.tensor(rows, device=device(), dtype=dtype)
+    tolerance = (
+        dict(rtol=2e-4, atol=5e-6) if dtype == torch.float32 else dict(rtol=1e-10, atol=1e-11)
+    )
+    results = []
+    for rule in ("autograd", "analytic"):
+        model.net.features = replace(model.net.features, derivative_rule=rule)
+        columns = [
+            (unit[:, i : i + 1] * (b - a) + a).detach().requires_grad_()
+            for i, (a, b) in enumerate(bounds)
+        ]
+        clock = (unit[:, -1:] * (t1 - t0) + t0).detach().requires_grad_()
+        inputs = (*columns, clock)
+        field = model(columns, clock)["u"]
+        first = torch.autograd.grad(field.sum(), inputs, create_graph=True)
+        second = torch.cat(
+            [
+                torch.cat(torch.autograd.grad(g.sum(), inputs, create_graph=True), dim=1)
+                for g in first
+            ],
+            dim=1,
+        )
+        residual = factory.adapter.residuals({"u": field}, *columns, clock)["heat"]
+        grads = torch.autograd.grad(residual.square().mean(), tuple(model.parameters()))
+        # Independent oracle: output bias adds tau*b, hence dR/db = 1/(t1-t0).
+        bias_index = [name for name, _ in model.named_parameters()].index(
+            "net.network.model.output.bias"
+        )
+        torch.testing.assert_close(
+            grads[bias_index],
+            (2 * residual.detach().mean() / (t1 - t0)).reshape_as(grads[bias_index]),
+            **tolerance,
+        )
+        results.append(
+            tuple(
+                v.detach()
+                for v in (
+                    field,
+                    torch.cat(first, dim=1),
+                    second,
+                    residual,
+                    torch.cat([g.reshape(-1) for g in grads]),
+                )
+            )
+        )
+        start = unit[:, -1:].eq(0)
+        expected = initial(factory.adapter.context(columns, clock))["u"]
+        torch.testing.assert_close(field[start], expected[start], rtol=0, atol=0)
+        for i in range(dimensions):
+            for side, sign in ((0, -1), (1, 1)):
+                face = unit[:, i : i + 1].eq(side)
+                normal_derivative = sign * first[i][face]
+                torch.testing.assert_close(
+                    normal_derivative, torch.zeros_like(normal_derivative), **tolerance
+                )
+        assert all(torch.isfinite(v).all() for v in results[-1])
+        assert results[-1][-1].abs().max() > 0
+    assert torch.equal(results[0][0], results[1][0])
+    for control, actual in zip(results[0][1:], results[1][1:]):
+        torch.testing.assert_close(actual, control, **tolerance)
