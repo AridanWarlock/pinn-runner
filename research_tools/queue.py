@@ -70,7 +70,7 @@ def prepare(root: Path, request: Json) -> Json:
     if hashlib.sha256(source).hexdigest() != request["protocol_sha256"]:
         raise ValueError("Published protocol differs from request")
     manifest = validate_manifest(object_value(json.loads(source), "manifest"), root)
-    if manifest["contract"] not in (2, 3) or manifest["registration"] != "prospective":
+    if manifest["contract"] not in (2, 3, 4) or manifest["registration"] != "prospective":
         raise ValueError("Only prospective protocols may be submitted")
     plan(manifest)
     published(root, manifest["revision"])
@@ -293,10 +293,13 @@ def execute(root: Path, directory: Path) -> None:
         state.update(state="running", started_at=timestamp(), updated_at=timestamp())
         write_json(directory / "status.json", state)
         manifest = registered_manifest(directory)
-        script = directory / (
-            "checkout/scripts/research_profile.py"
-            if manifest["contract"] == 3
-            else "checkout/scripts/research_run.py"
+        script = (
+            directory
+            / {
+                2: "checkout/scripts/research_run.py",
+                3: "checkout/scripts/research_profile.py",
+                4: "checkout/scripts/research_timing.py",
+            }[manifest["contract"]]
         )
         command = [
             str(root / ".venv/Scripts/python.exe"),

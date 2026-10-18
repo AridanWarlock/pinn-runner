@@ -10,6 +10,10 @@ from .schema import Json, arm_fields, identity, number, object_value, validate_m
 
 
 def compare(evidence: Json) -> Json:
+    if evidence.get("kind") == "frozen-timing-evidence":
+        from .frozen_timing import compare as compare_timing
+
+        return compare_timing(evidence)
     if evidence.get("kind") == "frozen-profile-evidence":
         from .frozen_profile import compare as compare_profile
 

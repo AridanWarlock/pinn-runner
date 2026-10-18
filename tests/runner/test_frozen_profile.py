@@ -137,3 +137,22 @@ def test_frozen_source_changes_rejected(key: str, value: Any) -> None:
     data["trials"][0][key] = value
     with pytest.raises(ValueError, match="source changed"):
         compare(data)
+
+
+@pytest.mark.parametrize("details", [False, True])
+def test_profile_compare_cli_accepts_nonconvergence_output(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], details: bool
+) -> None:
+    import json
+
+    from scripts.research import main
+
+    output = tmp_path / "bundle"
+    write_bundle(output, evidence())
+    arguments = ["compare", "--bundle", str(output)]
+    if details:
+        arguments.append("--details")
+    assert main(arguments) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["cuda_trace_captured"] is True
+    assert result["performance_claim"] is False

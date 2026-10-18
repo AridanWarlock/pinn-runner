@@ -1,0 +1,105 @@
+{
+  "comparison": {
+    "contract": 1,
+    "kind": "frozen-profile-comparison",
+    "comparison_passed": true,
+    "cuda_trace_captured": true,
+    "numerical_accuracy_claim": false,
+    "performance_claim": false,
+    "rules": 2
+  },
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "provenance": {
+    "protocol_commit": "a3ac174ccb26179c59c016363a28c8c926bfb8b8",
+    "protocol_sha256": "885814fe0dc2284cd6d6b338b399becce2c5e570b0d4d320b822cadbaac8b779"
+  },
+  "manifest": {
+    "contract": 3,
+    "kind": "frozen-profile",
+    "registration": "prospective",
+    "revision": "73e00ef0e1bc5a58475381b840b39afb61140d4e",
+    "case": "heat_neumann_polynomial2d",
+    "trial": ".gpu-jobs/analytic012/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-19/eager-recursive-parameters-auto-neumann_polynomial-19",
+    "weights": "lb-2000.pt",
+    "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+    "config_sha256": "907cbe7d11fb761dea5c3344665aadf01c639216ba4aa1aa908a50f9a3b67ad0",
+    "points": 1024,
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "trials": [
+    {
+      "rule": "autograd",
+      "trace": {
+        "kernels": {
+          "count": 9176,
+          "summed_nanoseconds": 13173891
+        },
+        "copies": {
+          "count": 324,
+          "summed_nanoseconds": 273351
+        },
+        "memsets": {
+          "count": 0,
+          "summed_nanoseconds": 0
+        }
+      },
+      "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+      "source_unchanged": true,
+      "artifact_sha256": {
+        "autograd.log": "b0a78d2d4b80eebb5ac5d73f26a5d31c561ecb1650df3fe55b6fccc7221ad70f",
+        "autograd-export.log": "c7dc5c5df9fabde7a7d1735437b28bea347cf39916df1c5e4eace1e68369a57e",
+        "autograd.sqlite": "84da313d4e3f8011c056ae0f57b8737bfa9977ed9bf373912c6353ae124277d8",
+        "autograd.nsys-rep": "1c17589f4c5f7b307c1833de3f8f07a688d8e366c56ab936307109e6fdd3d5e9",
+        "autograd-work/report.json": "138da0e168f4baf5fb02e2f76007b1d4ec9d791763eeb09f8790078224dad666"
+      },
+      "state_sha256": "b955bfa01f66125368a223f6f372cb7c6339203656fb6c8465c49ecd9fb844bf",
+      "independent_autograd_control": null
+    },
+    {
+      "rule": "analytic",
+      "trace": {
+        "kernels": {
+          "count": 8816,
+          "summed_nanoseconds": 13485973
+        },
+        "copies": {
+          "count": 203,
+          "summed_nanoseconds": 166177
+        },
+        "memsets": {
+          "count": 0,
+          "summed_nanoseconds": 0
+        }
+      },
+      "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+      "source_unchanged": true,
+      "artifact_sha256": {
+        "analytic.log": "aa972abce5694cc6e3af248f699c283e382308a61ebfb38c185ce3659f66cfe4",
+        "analytic-export.log": "42ac873d7864fe559cf3d8a6a209ba6b6294c0b1a0da20151a0acdb90ab6ab69",
+        "analytic.sqlite": "75caef8be32a9cd9fd9706be59e45a1b5b645b4015c49d596c3b92f58e6575a7",
+        "analytic.nsys-rep": "f22fe6bcd98703b7b52570e367dc237eb7f216167b1887ada20b96e2bc7e95bf",
+        "analytic-work/report.json": "83efe84090402047eed22cacb0f6fb3dc3a37ef3551044bd022a8f1932b747d9"
+      },
+      "state_sha256": "b955bfa01f66125368a223f6f372cb7c6339203656fb6c8465c49ecd9fb844bf",
+      "independent_autograd_control": {
+        "loss_absolute_difference": 3.979039320256561e-13,
+        "gradient_max_absolute_difference": 4.220055416226387e-09,
+        "gradient_relative_l2_difference": 3.274129630881362e-05
+      }
+    }
+  ]
+}

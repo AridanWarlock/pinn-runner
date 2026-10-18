@@ -138,8 +138,8 @@ def main(argv: list[str] | None = None) -> int:
             output = compare(read_bundle(args.bundle))
             code = 0 if output["comparison_passed"] else 1
             if not args.details:
-                for case in output["cases"]:
-                    del case["details"]
+                for case in output.get("cases", []):
+                    case.pop("details", None)
         else:
             output = brief(args.board, args.task_id, criteria=args.criteria)
         print(json.dumps(output, ensure_ascii=False, allow_nan=False))
