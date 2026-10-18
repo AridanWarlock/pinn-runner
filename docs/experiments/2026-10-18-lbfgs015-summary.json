@@ -1,0 +1,56 @@
+{
+  "code": "47c229fde2c404b2afc7db2ed8d05c6c3dd5df04",
+  "provenance": {
+    "protocol_commit": "87ed03f06bd4546c70040edae99191f8e643455c",
+    "protocol_sha256": "84ec89fd889ec90261243e3ba95103190239f94ffaef9e391464c76712fbf9a6"
+  },
+  "trials": 12,
+  "pairs": 6,
+  "measured_steps": 240,
+  "all_restored": true,
+  "all_sources_unchanged": true,
+  "median_total_ratio": 0.8386970860322407,
+  "worst_total_ratio": 0.8776950685750662,
+  "median_closure_count_ratio": 1.0,
+  "median_amortized_seconds_per_closure_ratio": 0.8386970860322407,
+  "median_attributed_closure_unit_ratio": 0.8356526747087114,
+  "max_field_difference": 1.7187994671985507e-07,
+  "max_pde_rmse": 0.0015503194881603122,
+  "max_relative_l2": 0.0005000338651790924,
+  "closure_calls_range": [
+    21,
+    22
+  ],
+  "median_instrumentation_ratio": 1.006345858078956,
+  "median_diagnostic_outside_share": 0.06328294688054734,
+  "gpu": [
+    "NVIDIA GeForce RTX 4070 Ti"
+  ],
+  "settings": {
+    "learning_rate": 1.0,
+    "history_size": 50,
+    "tolerance_grad": 1e-07,
+    "tolerance_change": 1e-12,
+    "max_iter": 1,
+    "line_search_fn": "strong_wolfe"
+  },
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "comparison": {
+    "contract": 1,
+    "kind": "lbfgs-timing-comparison",
+    "trials": 12,
+    "median_total_ratio": 0.8386970860322407,
+    "worst_total_ratio": 0.8776950685750662,
+    "numerical_passed": true,
+    "pair_field_max_difference": 1.7187994671985507e-07,
+    "comparison_passed": true,
+    "scope": "One case/two saved states, not time to target"
+  }
+}
