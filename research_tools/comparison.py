@@ -10,6 +10,10 @@ from .schema import Json, arm_fields, identity, number, object_value, validate_m
 
 
 def compare(evidence: Json) -> Json:
+    if evidence.get("kind") == "allocation-profile-evidence":
+        from .allocation_profile import compare as compare_allocation
+
+        return compare_allocation(evidence)
     if evidence.get("kind") == "numerical-acceptance-evidence":
         from .numerical_acceptance import compare as compare_acceptance
 

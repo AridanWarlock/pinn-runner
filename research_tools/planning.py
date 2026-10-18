@@ -57,6 +57,10 @@ def validate_arm(arm: Json, constraints: str, spec: CaseSpec) -> None:
 
 
 def plan(manifest: Json, *, details: bool = False) -> Json:
+    if manifest.get("contract") == 7:
+        from .allocation_profile import plan as allocation_plan
+
+        return allocation_plan(manifest)
     if manifest.get("contract") == 6:
         from .numerical_acceptance import plan as acceptance_plan
 

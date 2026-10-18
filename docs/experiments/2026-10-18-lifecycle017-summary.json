@@ -1,0 +1,45 @@
+{
+  "revision": "b025b22f646c3e8937bb808a77d53b2e9389032e",
+  "test_sha256": "b30fb09778e60d90b1d7dcccf1b80aa7f673222ccb20fb99a90945b7c9bb752a",
+  "test_raw_sha256": "b78455e051796d8d25606d6f8163d4268a08f89070eec3b351d29a2cc1e10790",
+  "test_raw_sha256_after": "b78455e051796d8d25606d6f8163d4268a08f89070eec3b351d29a2cc1e10790",
+  "source_unchanged": true,
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "1a74a1bf1512b9804a4da7bbb83ee727e8c5581d760197c43accf24a7872c205",
+    "pytest-results.json": "8cc2d82fb075b181a640724822d6c1b63a37ab73c88c39c1a87f1e22b90b844c"
+  },
+  "provenance": {
+    "protocol_commit": "590487a9b79d8e2873e12ee21509606f821259e4",
+    "protocol_sha256": "22b1bf772d19499d58be787787f1b4ff2e60e158d74827186d65f7d4b2ac8e9c"
+  },
+  "job_id": "lifecycle017",
+  "protocol_commit": "590487a9b79d8e2873e12ee21509606f821259e4",
+  "tests": 6,
+  "phases": 18,
+  "all_passed": true,
+  "comparison_passed": true,
+  "performance_claim": false,
+  "accuracy_claim": false
+}

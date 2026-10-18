@@ -15,15 +15,18 @@ def main() -> None:
     parser.add_argument("--manifest", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
-    from research_tools.frozen_profile import run
+    from research_tools.allocation_profile import run as allocation_run
+    from research_tools.frozen_profile import run as native_run
     from research_tools.queue import registered_manifest, verify_snapshot
 
     verify_snapshot(args.manifest.parent)
+    manifest = registered_manifest(args.manifest.parent)
+    run = allocation_run if manifest["contract"] == 7 else native_run
     run(
         Path(r"C:\Projects\pinn-runner"),
         ROOT,
         args.output,
-        registered_manifest(args.manifest.parent),
+        manifest,
     )
 
 

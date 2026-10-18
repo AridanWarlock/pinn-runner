@@ -322,6 +322,9 @@ def write_bundle(output: Path, evidence: Json) -> None:
     rows: list[Json] = []
     snapshots: list[Json] = []
     for trial in evidence["trials"]:
+        if evidence.get("kind") == "allocation-profile-evidence":
+            rows.extend(dict(rule=trial["rule"], **row) for row in trial["profiling"]["stages"])
+            continue
         if evidence.get("kind") == "numerical-acceptance-evidence":
             rows.append(dict(nodeid=trial["nodeid"], **trial["phases"], seconds=trial["seconds"]))
             continue
