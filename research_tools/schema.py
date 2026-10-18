@@ -79,6 +79,10 @@ def load_manifest(path: Path) -> Json:
 
 
 def validate_manifest(manifest: Json, base: Path) -> Json:
+    if manifest.get("contract") == 5:
+        from .lbfgs_timing import validate
+
+        return validate(manifest)
     if manifest.get("contract") == 4:
         from .frozen_timing import validate
 

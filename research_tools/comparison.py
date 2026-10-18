@@ -10,6 +10,10 @@ from .schema import Json, arm_fields, identity, number, object_value, validate_m
 
 
 def compare(evidence: Json) -> Json:
+    if evidence.get("kind") == "lbfgs-timing-evidence":
+        from .lbfgs_timing import compare as compare_lbfgs
+
+        return compare_lbfgs(evidence)
     if evidence.get("kind") == "frozen-timing-evidence":
         from .frozen_timing import compare as compare_timing
 

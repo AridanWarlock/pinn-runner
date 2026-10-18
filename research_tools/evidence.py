@@ -322,6 +322,23 @@ def write_bundle(output: Path, evidence: Json) -> None:
     rows: list[Json] = []
     snapshots: list[Json] = []
     for trial in evidence["trials"]:
+        if evidence.get("kind") == "lbfgs-timing-evidence":
+            rows.append(
+                dict(
+                    source_index=trial["source_index"],
+                    repeat=trial["repeat"],
+                    rule=trial["rule"],
+                    case=trial["source"]["case"],
+                    seed=trial["source"]["seed"],
+                    total_seconds=trial["total"]["seconds"],
+                    closure_calls=trial["total"]["closure_calls"],
+                    attributed_seconds=trial["attributed"]["seconds"],
+                    attributed_closure_seconds=trial["attributed"]["closure_seconds"],
+                    pde_rmse=trial["pde_rmse"],
+                    relative_l2=trial["relative_l2"],
+                )
+            )
+            continue
         if evidence.get("kind") == "frozen-timing-evidence":
             rows.append(
                 dict(
