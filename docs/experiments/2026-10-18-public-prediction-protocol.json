@@ -1,0 +1,32 @@
+{
+  "contract": 8,
+  "kind": "public-prediction",
+  "registration": "prospective",
+  "revision": "f45bd82cd81ff2d682b915c253cf47cc8b20d1f9",
+  "case": "heat_neumann_polynomial3d",
+  "trial": ".gpu-jobs/analytic011/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-19/eager-recursive-parameters-auto-neumann_polynomial-19",
+  "weights": "lb-600.pt",
+  "weights_sha256": "85f2994d9132bd3e2c4d7eb32f7959d90db4c6afd36ae703ac31ff8406353d83",
+  "config_sha256": "8c09efd14cf09a0ad4dc0cf8ecadee880180d620b6952604412887f28a111ed2",
+  "points": 152303,
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "repeats": 3,
+  "batch_sizes": [
+    128,
+    2048
+  ],
+  "space_points": 17,
+  "time_points": 31,
+  "comparison": {
+    "median_ratio_max": 1.1,
+    "worst_ratio_max": 1.25,
+    "peak_ratio_max": 1.1
+  }
+}
