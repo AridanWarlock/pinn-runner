@@ -54,7 +54,11 @@ def main() -> None:
                 raise ValueError("Transport probes do not produce scientific evidence")
             path = directory / "manifest.json"
             manifest = queue.registered_manifest(directory)
-            if manifest["contract"] == 5:
+            if manifest["contract"] == 6:
+                from research_tools.numerical_acceptance import collect as collect_acceptance
+
+                output = collect_acceptance(directory / "r", manifest)
+            elif manifest["contract"] == 5:
                 from research_tools.lbfgs_timing import collect as collect_lbfgs
 
                 output = collect_lbfgs(directory / "r", manifest)
