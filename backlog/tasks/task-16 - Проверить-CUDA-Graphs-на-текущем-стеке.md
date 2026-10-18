@@ -4,7 +4,7 @@ title: Проверить CUDA Graphs на текущем стеке
 status: To Do
 assignee: []
 created_date: '2026-10-13 08:37'
-updated_date: '2026-10-17 08:34'
+updated_date: '2026-10-18 11:30'
 labels:
   - performance
 milestone: m-0
@@ -14,7 +14,7 @@ dependencies:
 documentation:
   - >-
     https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/research-tasks/task-16.md
-priority: medium
+priority: low
 ordinal: 16000
 ---
 

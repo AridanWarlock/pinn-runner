@@ -4,7 +4,7 @@ title: Подтвердить комбинацию стратегий и обн�
 status: To Do
 assignee: []
 created_date: '2026-10-13 08:37'
-updated_date: '2026-10-17 08:34'
+updated_date: '2026-10-18 11:30'
 labels:
   - acceptance
 milestone: m-0
@@ -17,7 +17,7 @@ dependencies:
 documentation:
   - >-
     https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/research-tasks/task-14.md
-priority: high
+priority: low
 ordinal: 14000
 ---
 
