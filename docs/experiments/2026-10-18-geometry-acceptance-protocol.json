@@ -1,0 +1,38 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "8db7d5525d168fc6cbe1526c81cf1869123ff61f",
+  "suite": "tests/numerics/test_neumann_polynomial_pullback.py",
+  "tests": [
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_analytic_pullback_passes_independent_finite_difference_checks[False]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_analytic_pullback_passes_independent_finite_difference_checks[True]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_analytic_pullback_matches_explicit_physical_derivatives[dtype0]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_analytic_pullback_matches_explicit_physical_derivatives[dtype1]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_frozen_physical_field_pde_and_parameter_gradient_match_autograd[dtype0-1]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_frozen_physical_field_pde_and_parameter_gradient_match_autograd[dtype0-2]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_frozen_physical_field_pde_and_parameter_gradient_match_autograd[dtype0-3]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_frozen_physical_field_pde_and_parameter_gradient_match_autograd[dtype1-1]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_frozen_physical_field_pde_and_parameter_gradient_match_autograd[dtype1-2]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_frozen_physical_field_pde_and_parameter_gradient_match_autograd[dtype1-3]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_analytic_features_remain_no_grad_during_prediction",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_analytic_rule_rejects_nonpolynomial_encoding",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_analytic_execution_requires_polynomial_representation[identity]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_analytic_execution_requires_polynomial_representation[neumann_cosine]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_shifted_geometry_full_field_identity[dtype0-1]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_shifted_geometry_full_field_identity[dtype0-2]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_shifted_geometry_full_field_identity[dtype0-3]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_shifted_geometry_full_field_identity[dtype1-1]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_shifted_geometry_full_field_identity[dtype1-2]",
+    "tests/numerics/test_neumann_polynomial_pullback.py::test_shifted_geometry_full_field_identity[dtype1-3]"
+  ],
+  "test_sha256": "233c235784007ce48ca1502cdbcaf37ab96ade7e9d8ab11b3021c3a73a2684ae",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
