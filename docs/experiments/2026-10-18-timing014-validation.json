@@ -1,0 +1,238 @@
+{
+  "kind": "frozen-timing-result",
+  "comparison": {
+    "contract": 1,
+    "kind": "frozen-timing-comparison",
+    "comparison_passed": true,
+    "numerical_accuracy_claim": false,
+    "cases": [
+      {
+        "case": "heat_neumann_homogeneous2d",
+        "pairs": 6,
+        "median_objective_ratio": 0.8274333200105894,
+        "worst_objective_ratio": 0.8312643366843121,
+        "median_prediction128_ratio": 1.0067126096358843,
+        "median_prediction2048_ratio": 1.0072340053141267,
+        "worst_allocated_ratio": 0.9943244114801677,
+        "passed": true
+      },
+      {
+        "case": "heat_neumann_homogeneous3d",
+        "pairs": 6,
+        "median_objective_ratio": 0.8169781959201019,
+        "worst_objective_ratio": 0.8225078189813917,
+        "median_prediction128_ratio": 1.0073789158123818,
+        "median_prediction2048_ratio": 1.012759323844361,
+        "worst_allocated_ratio": 0.9923751726284258,
+        "passed": true
+      },
+      {
+        "case": "heat_neumann_polynomial2d",
+        "pairs": 6,
+        "median_objective_ratio": 0.8350196404903742,
+        "worst_objective_ratio": 0.8377665249146885,
+        "median_prediction128_ratio": 0.999282785645407,
+        "median_prediction2048_ratio": 1.0058624544079326,
+        "worst_allocated_ratio": 0.9943351286397871,
+        "passed": true
+      },
+      {
+        "case": "heat_neumann_polynomial3d",
+        "pairs": 6,
+        "median_objective_ratio": 0.8289138806975513,
+        "worst_objective_ratio": 0.8317195645869679,
+        "median_prediction128_ratio": 0.9996098053592362,
+        "median_prediction2048_ratio": 1.0052873603864447,
+        "worst_allocated_ratio": 0.9924011863453971,
+        "passed": true
+      }
+    ]
+  },
+  "case_measurements": [
+    {
+      "case": "heat_neumann_homogeneous2d",
+      "pairs": 6,
+      "median_objective_ratio": 0.8274333200105894,
+      "worst_objective_ratio": 0.8312643366843121,
+      "median_prediction128_ratio": 1.0067126096358843,
+      "median_prediction2048_ratio": 1.0072340053141267,
+      "worst_allocated_ratio": 0.9943244114801677,
+      "passed": true,
+      "autograd": {
+        "objective_median_ms": 8.08336991925027,
+        "prediction128_median_ms": 42.940113889118145,
+        "prediction2048_median_ms": 3.338088680388046,
+        "allocated_bytes": [
+          23815680
+        ],
+        "reserved_bytes": [
+          29360128
+        ],
+        "cold_ready_median_seconds": 2.172151100006886,
+        "cold_first_prediction_median_ms": 67.05179999698885,
+        "objective_calls": 40045
+      },
+      "analytic": {
+        "objective_median_ms": 6.694977090312708,
+        "prediction128_median_ms": 43.23040555593454,
+        "prediction2048_median_ms": 3.35524218761358,
+        "allocated_bytes": [
+          23680512
+        ],
+        "reserved_bytes": [
+          29360128
+        ],
+        "cold_ready_median_seconds": 2.1810997999855317,
+        "cold_first_prediction_median_ms": 67.62940000044182,
+        "objective_calls": 48372
+      }
+    },
+    {
+      "case": "heat_neumann_homogeneous3d",
+      "pairs": 6,
+      "median_objective_ratio": 0.8169781959201019,
+      "worst_objective_ratio": 0.8225078189813917,
+      "median_prediction128_ratio": 1.0073789158123818,
+      "median_prediction2048_ratio": 1.012759323844361,
+      "worst_allocated_ratio": 0.9923751726284258,
+      "passed": true,
+      "autograd": {
+        "objective_median_ms": 11.114919178847634,
+        "prediction128_median_ms": 51.84406333331329,
+        "prediction2048_median_ms": 4.047873924562698,
+        "allocated_bytes": [
+          26322432
+        ],
+        "reserved_bytes": [
+          31457280
+        ],
+        "cold_ready_median_seconds": 2.1792965500208084,
+        "cold_first_prediction_median_ms": 67.91990000056103,
+        "objective_calls": 29108
+      },
+      "analytic": {
+        "objective_median_ms": 9.072031495483166,
+        "prediction128_median_ms": 52.22678999804582,
+        "prediction2048_median_ms": 4.105959835880858,
+        "allocated_bytes": [
+          26121728
+        ],
+        "reserved_bytes": [
+          31457280
+        ],
+        "cold_ready_median_seconds": 2.1698741000145674,
+        "cold_first_prediction_median_ms": 67.74820000282489,
+        "objective_calls": 35693
+      }
+    },
+    {
+      "case": "heat_neumann_polynomial2d",
+      "pairs": 6,
+      "median_objective_ratio": 0.8350196404903742,
+      "worst_objective_ratio": 0.8377665249146885,
+      "median_prediction128_ratio": 0.999282785645407,
+      "median_prediction2048_ratio": 1.0058624544079326,
+      "worst_allocated_ratio": 0.9943351286397871,
+      "passed": true,
+      "autograd": {
+        "objective_median_ms": 8.921058469501782,
+        "prediction128_median_ms": 46.40826764550772,
+        "prediction2048_median_ms": 3.611413221173839,
+        "allocated_bytes": [
+          23860736
+        ],
+        "reserved_bytes": [
+          29360128
+        ],
+        "cold_ready_median_seconds": 2.1713366999756545,
+        "cold_first_prediction_median_ms": 67.04169997829013,
+        "objective_calls": 36284
+      },
+      "analytic": {
+        "objective_median_ms": 7.452942485141578,
+        "prediction128_median_ms": 46.30948235075373,
+        "prediction2048_median_ms": 3.6193216205604712,
+        "allocated_bytes": [
+          23725568
+        ],
+        "reserved_bytes": [
+          29360128
+        ],
+        "cold_ready_median_seconds": 2.1736511000199243,
+        "cold_first_prediction_median_ms": 67.06010000198148,
+        "objective_calls": 43442
+      }
+    },
+    {
+      "case": "heat_neumann_polynomial3d",
+      "pairs": 6,
+      "median_objective_ratio": 0.8289138806975513,
+      "worst_objective_ratio": 0.8317195645869679,
+      "median_prediction128_ratio": 0.9996098053592362,
+      "median_prediction2048_ratio": 1.0052873603864447,
+      "worst_allocated_ratio": 0.9924011863453971,
+      "passed": true,
+      "autograd": {
+        "objective_median_ms": 12.605197942839641,
+        "prediction128_median_ms": 57.504564286708565,
+        "prediction2048_median_ms": 4.501167664577638,
+        "allocated_bytes": [
+          26412544
+        ],
+        "reserved_bytes": [
+          31457280
+        ],
+        "cold_ready_median_seconds": 2.188217649993021,
+        "cold_first_prediction_median_ms": 67.79030000325292,
+        "objective_calls": 25606
+      },
+      "analytic": {
+        "objective_median_ms": 10.44917713040891,
+        "prediction128_median_ms": 57.33002142681341,
+        "prediction2048_median_ms": 4.519774031498293,
+        "allocated_bytes": [
+          26211840
+        ],
+        "reserved_bytes": [
+          31457280
+        ],
+        "cold_ready_median_seconds": 2.186931399977766,
+        "cold_first_prediction_median_ms": 67.19005000195466,
+        "objective_calls": 30927
+      }
+    }
+  ],
+  "trials": 48,
+  "pairs": 24,
+  "sources": 8,
+  "measured_seconds": 3256.233876800048,
+  "total_child_seconds": 3391.0386223001406,
+  "control_maxima": {
+    "loss_absolute_difference": 7.958078640513122e-12,
+    "gradient_max_absolute_difference": 1.6618287190794945e-08,
+    "gradient_relative_l2_difference": 3.369745900272392e-05
+  },
+  "weights_unchanged_count": 48,
+  "source_unchanged_count": 48,
+  "all_unprofiled": true,
+  "all_threads6": true,
+  "gpu": [
+    "NVIDIA GeForce RTX 4070 Ti"
+  ],
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "provenance": {
+    "protocol_commit": "1507f08a30e078c1fcb8a5bd3e12758f4efe2031",
+    "protocol_sha256": "8d385c3739850318739f6c58868ade0e04616f02467b22a5d88c822f1749ed78"
+  },
+  "code": "7b81d0851b2437e049854cc5aefc19a2adc68bc2",
+  "protocol": "1507f08a30e078c1fcb8a5bd3e12758f4efe2031",
+  "max_relative_mad": 0.019580320363283346,
+  "median_relative_mad": 0.003250276410436688
+}

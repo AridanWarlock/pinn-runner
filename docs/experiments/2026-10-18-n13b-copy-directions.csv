@@ -1,0 +1,5 @@
+rule,stage,direction,copies,bytes,source_kind,destination_kind,phase_calls
+autograd,parameter_gradient,Device-to-Device,26,106496,Device,Device,13
+autograd,physical_residual,Device-to-Device,221,905216,Device,Device,13
+analytic,parameter_gradient,Device-to-Device,26,106496,Device,Device,13
+analytic,physical_residual,Device-to-Device,65,266240,Device,Device,13

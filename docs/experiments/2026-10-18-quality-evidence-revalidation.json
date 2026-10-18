@@ -1,0 +1,122 @@
+[
+  {
+    "series": "analytic011",
+    "case": "heat_neumann_homogeneous3d",
+    "trials": 10,
+    "seeds": [
+      19,
+      73,
+      1234,
+      2026,
+      4321
+    ],
+    "same_initial_state_and_objective": true,
+    "independent_control": "autograd/general",
+    "crossings": [
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed"
+    ],
+    "confirmed_count": 10,
+    "snapshot_count": 90,
+    "final_physical_and_quality_passed_count": 10,
+    "control_prediction_execution": "eager"
+  },
+  {
+    "series": "analytic011",
+    "case": "heat_neumann_polynomial3d",
+    "trials": 10,
+    "seeds": [
+      19,
+      73,
+      1234,
+      2026,
+      4321
+    ],
+    "same_initial_state_and_objective": true,
+    "independent_control": "autograd/general",
+    "crossings": [
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed"
+    ],
+    "confirmed_count": 10,
+    "snapshot_count": 90,
+    "final_physical_and_quality_passed_count": 10,
+    "control_prediction_execution": "eager"
+  },
+  {
+    "series": "analytic012",
+    "case": "heat_neumann_homogeneous2d",
+    "trials": 10,
+    "seeds": [
+      19,
+      73,
+      1234,
+      2026,
+      4321
+    ],
+    "same_initial_state_and_objective": true,
+    "independent_control": "autograd/general",
+    "crossings": [
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed"
+    ],
+    "confirmed_count": 10,
+    "snapshot_count": 120,
+    "final_physical_and_quality_passed_count": 10,
+    "control_prediction_execution": "eager"
+  },
+  {
+    "series": "analytic012",
+    "case": "heat_neumann_polynomial2d",
+    "trials": 10,
+    "seeds": [
+      19,
+      73,
+      1234,
+      2026,
+      4321
+    ],
+    "same_initial_state_and_objective": true,
+    "independent_control": "autograd/general",
+    "crossings": [
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed"
+    ],
+    "confirmed_count": 10,
+    "snapshot_count": 120,
+    "final_physical_and_quality_passed_count": 10,
+    "control_prediction_execution": "eager"
+  }
+]

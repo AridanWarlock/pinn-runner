@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="455" viewBox="0 0 900 455"><rect width="100%" height="100%" fill="white"/><g font-family="Arial,sans-serif" font-size="13" fill="#222">
+<text x="450.0" y="26" text-anchor="middle" font-size="18" font-weight="bold">Потери и градиент: одинаковые веса, без профилировщика</text>
+<text x="450.0" y="49" text-anchor="middle" fill="#555">Отношение времени: аналитическое / обычное · меньше — лучше</text>
+<line x1="86" y1="311.2941176470588" x2="860" y2="311.2941176470588" stroke="#e7e7e7" stroke-width="1" stroke-dasharray=""/>
+<text x="74" y="315.2941176470588" text-anchor="end">0,80</text>
+<line x1="86" y1="274.5294117647059" x2="860" y2="274.5294117647059" stroke="#e7e7e7" stroke-width="1" stroke-dasharray=""/>
+<text x="74" y="278.5294117647059" text-anchor="end">0,85</text>
+<line x1="86" y1="237.76470588235296" x2="860" y2="237.76470588235296" stroke="#e7e7e7" stroke-width="1" stroke-dasharray=""/>
+<text x="74" y="241.76470588235296" text-anchor="end">0,90</text>
+<line x1="86" y1="201.00000000000006" x2="860" y2="201.00000000000006" stroke="#e7e7e7" stroke-width="1" stroke-dasharray=""/>
+<text x="74" y="205.00000000000006" text-anchor="end">0,95</text>
+<line x1="86" y1="164.23529411764707" x2="860" y2="164.23529411764707" stroke="#e7e7e7" stroke-width="1" stroke-dasharray=""/>
+<text x="74" y="168.23529411764707" text-anchor="end">1,00</text>
+<line x1="86" y1="127.47058823529412" x2="860" y2="127.47058823529412" stroke="#e7e7e7" stroke-width="1" stroke-dasharray=""/>
+<text x="74" y="131.47058823529412" text-anchor="end">1,05</text>
+<line x1="86" y1="90.70588235294116" x2="860" y2="90.70588235294116" stroke="#e7e7e7" stroke-width="1" stroke-dasharray=""/>
+<text x="74" y="94.70588235294116" text-anchor="end">1,10</text>
+<line x1="86" y1="164.23529411764707" x2="860" y2="164.23529411764707" stroke="#777" stroke-width="1" stroke-dasharray="5,4"/>
+<line x1="86" y1="201.00000000000006" x2="860" y2="201.00000000000006" stroke="#278440" stroke-width="1" stroke-dasharray="5,4"/>
+<line x1="86" y1="90.70588235294116" x2="860" y2="90.70588235294116" stroke="#b03a3e" stroke-width="1" stroke-dasharray="5,4"/>
+<circle cx="156.75" cy="290.59504120269474" r="3.6" fill="#2166ac"/>
+<circle cx="163.75" cy="291.65007642879135" r="3.6" fill="#2166ac"/>
+<circle cx="170.75" cy="288.6555573191288" r="3.6" fill="#2166ac"/>
+<circle cx="194.75" cy="288.305634790947" r="3.6" fill="#d95f02"/>
+<circle cx="201.75" cy="293.80806051948247" r="3.6" fill="#d95f02"/>
+<circle cx="208.75" cy="292.95548517884663" r="3.6" fill="#d95f02"/>
+<path d="M 182.75 286.1225588157431 L 187.75 291.1225588157431 L 182.75 296.1225588157431 L 177.75 291.1225588157431 Z" fill="black"/>
+<text x="182.75" y="277.1225588157431" text-anchor="middle" font-weight="bold">0,8274</text>
+<text x="182.75" y="351" text-anchor="middle">Мода 2D</text>
+<circle cx="350.25" cy="284.503167336259" r="3.6" fill="#2166ac"/>
+<circle cx="357.25" cy="284.44431029870805" r="3.6" fill="#2166ac"/>
+<circle cx="364.25" cy="286.58559664848485" r="3.6" fill="#2166ac"/>
+<circle cx="388.25" cy="287.0049716759835" r="3.6" fill="#d95f02"/>
+<circle cx="395.25" cy="283.5246140333173" r="3.6" fill="#d95f02"/>
+<circle cx="402.25" cy="288.9226074713546" r="3.6" fill="#d95f02"/>
+<path d="M 376.25 280.5443819923719 L 381.25 285.5443819923719 L 376.25 290.5443819923719 L 371.25 285.5443819923719 Z" fill="black"/>
+<text x="376.25" y="271.5443819923719" text-anchor="middle" font-weight="bold">0,8350</text>
+<text x="376.25" y="351" text-anchor="middle">Полином 2D</text>
+<circle cx="543.75" cy="299.57015617909656" r="3.6" fill="#2166ac"/>
+<circle cx="550.75" cy="298.42244889629336" r="3.6" fill="#2166ac"/>
+<circle cx="557.75" cy="294.7442507489767" r="3.6" fill="#2166ac"/>
+<circle cx="581.75" cy="298.43043423700135" r="3.6" fill="#d95f02"/>
+<circle cx="588.75" cy="299.189865880496" r="3.6" fill="#d95f02"/>
+<circle cx="595.75" cy="306.02287096551885" r="3.6" fill="#d95f02"/>
+<path d="M 569.75 293.8101500587486 L 574.75 298.8101500587486 L 569.75 303.8101500587486 L 564.75 298.8101500587486 Z" fill="black"/>
+<text x="569.75" y="284.8101500587486" text-anchor="middle" font-weight="bold">0,8170</text>
+<text x="569.75" y="351" text-anchor="middle">Мода 3D</text>
+<circle cx="737.25" cy="291.5110667214772" r="3.6" fill="#2166ac"/>
+<circle cx="744.25" cy="290.10463876130086" r="3.6" fill="#2166ac"/>
+<circle cx="751.25" cy="289.96318374230026" r="3.6" fill="#2166ac"/>
+<circle cx="775.25" cy="291.0656574655426" r="3.6" fill="#d95f02"/>
+<circle cx="782.25" cy="287.9709083919354" r="3.6" fill="#d95f02"/>
+<circle cx="789.25" cy="289.18866138628175" r="3.6" fill="#d95f02"/>
+<path d="M 763.25 285.03391125180053 L 768.25 290.03391125180053 L 763.25 295.03391125180053 L 758.25 290.03391125180053 Z" fill="black"/>
+<text x="763.25" y="276.03391125180053" text-anchor="middle" font-weight="bold">0,8289</text>
+<text x="763.25" y="351" text-anchor="middle">Полином 3D</text>
+<line x1="86" y1="326" x2="860" y2="326" stroke="#444" stroke-width="1" stroke-dasharray=""/>
+<circle cx="110" cy="384" r="3.5" fill="#2166ac"/>
+<text x="122" y="389" >Генератор 19</text>
+<circle cx="310" cy="384" r="3.5" fill="#d95f02"/>
+<text x="322" y="389" >Генератор 4321</text>
+<circle cx="540" cy="384" r="3.5" fill="black"/>
+<text x="552" y="389" >Ромб: медиана шести пар</text>
+<text x="450.0" y="416" text-anchor="middle" font-size="12" fill="#555">Два сохранённых состояния × три повторные пары на случай; не шесть независимых обучений.</text>
+<text x="450.0" y="440" text-anchor="middle" font-size="12" fill="#555">Зелёный пунктир — порог медианы 0,95; красный — порог худшей пары 1,10.</text>
+</g></svg>
