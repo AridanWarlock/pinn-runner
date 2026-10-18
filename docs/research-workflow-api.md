@@ -2,15 +2,18 @@
 
 ## Численная приёмка (contract 6)
 
-`numerical-acceptance` запускает только закреплённые20 сценариев
-`test_neumann_polynomial_pullback.py` через ту же очередь. Протокол фиксирует
+`numerical-acceptance` запускает через ту же очередь только один из двух
+фиксированных наборов:20 сценариев `test_neumann_polynomial_pullback.py`
+или6 файловых `test_neumann_feature_runner.py`. Протокол фиксирует
 список nodeid, SHA256 файла и CUDA-среду; произвольные pytest-файлы не допускаются.
 Для идентичности Git-текста задан `test_hash_mode=lf-normalized`: учитывается
 только перенос CRLF→LF; сырые SHA до/после также обязаны совпасть.
 Сбор сверяет setup/call/teardown и сырой журнал: пропуски, xfail/xpass и ошибка
 teardown не считаются успехом. При нарушенной полноте публикации пакета нет.
-Обучения и оценки скорости нет. Предпосылки и допуски:
-`geometry-acceptance-protocol-2026-10-18.md`.
+В геометрическом наборе обучения нет, в файловом есть только малые
+диагностические fit; оценки скорости нет в обоих. Предпосылки:
+`geometry-acceptance-protocol-2026-10-18.md` и
+`lifecycle-acceptance-protocol-2026-10-18.md`.
 
 ## Ограниченный контроль L-BFGS (contract 5)
 

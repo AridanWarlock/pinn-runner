@@ -37,6 +37,22 @@ EXPECTED = [
         for d in (1, 2, 3)
     ],
 ]
+LIFECYCLE_SUITE = "tests/integration/test_neumann_feature_runner.py"
+LIFECYCLE_EXPECTED = [
+    LIFECYCLE_SUITE
+    + "::test_feature_checkpoint_predict_retrain_and_representation_guard["
+    + "-".join(case)
+    + "]"
+    for case in (
+        ("heat_neumann_polynomial1d", "neumann_cosine", "eager"),
+        ("heat_neumann_polynomial1d", "neumann_polynomial", "neumann_analytic"),
+        ("heat_neumann_polynomial3d", "neumann_polynomial", "eager"),
+        ("heat_neumann_polynomial3d", "neumann_polynomial", "neumann_analytic"),
+        ("heat_neumann2d", "neumann_polynomial", "eager"),
+        ("heat_neumann2d", "neumann_polynomial", "neumann_analytic"),
+    )
+]
+SUITES = {SUITE: EXPECTED, LIFECYCLE_SUITE: LIFECYCLE_EXPECTED}
 FIELDS = {
     "contract",
     "kind",
@@ -64,12 +80,13 @@ def validate(manifest: Json) -> Json:
         or manifest["contract"] != 6
         or manifest["kind"] != "numerical-acceptance"
         or manifest["registration"] != "prospective"
-        or manifest["suite"] != SUITE
-        or manifest["tests"] != EXPECTED
+        or not isinstance(manifest["suite"], str)
+        or manifest["suite"] not in SUITES
+        or manifest["tests"] != SUITES[manifest["suite"]]
         or manifest["test_hash_mode"] != "lf-normalized"
         or manifest["environment_requirements"] != ENVIRONMENT
     ):
-        raise ValueError("Expected registered CUDA Neumann acceptance contract 6")
+        raise ValueError("Expected registered allowlisted CUDA acceptance contract 6")
     for key, size in (("revision", 40), ("test_sha256", 64)):
         if (
             not isinstance(manifest[key], str)
@@ -86,6 +103,25 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == LIFECYCLE_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=6,
+            training=True,
+            performance_measurement=False,
+            adam_steps_per_regular_fit=3,
+            lbfgs_outer_steps_per_regular_fit=2,
+            regular_fits=12,
+            identity_probe_fits=6,
+            identity_probe_adam_steps=1,
+            identity_probe_learning_rate=1e-300,
+            identity_probe_refinement_steps=0,
+            prediction_grid_space_points=4,
+            training_grid_space_points=3,
+            changed_representation_rejected=True,
+        )
     return dict(
         contract=1,
         kind="numerical-acceptance-plan",
@@ -121,7 +157,8 @@ def compare(evidence: Json) -> Json:
     if evidence["test_raw_sha256"] != evidence["test_raw_sha256_after"]:
         raise ValueError("Raw acceptance source changed")
     trials = evidence["trials"]
-    if evidence["collected"] != EXPECTED or [t["nodeid"] for t in trials] != EXPECTED:
+    expected = SUITES[manifest["suite"]]
+    if evidence["collected"] != expected or [t["nodeid"] for t in trials] != expected:
         raise ValueError("Incomplete acceptance test inventory")
     outcomes = {"passed", "failed", "skipped", "not_run", "xpassed", "xfailed"}
     passed = 0
@@ -142,8 +179,12 @@ def compare(evidence: Json) -> Json:
         passed=passed,
         not_passed=len(trials) - passed,
         cuda=True,
-        comparison_passed=code == 0 and passed == len(EXPECTED),
-        scope="Existing numerical tests only; no training or speed claim",
+        comparison_passed=code == 0 and passed == len(expected),
+        scope=(
+            "Existing file lifecycle tests; small training only, no accuracy/speed claim"
+            if manifest["suite"] == LIFECYCLE_SUITE
+            else "Existing numerical tests only; no training or speed claim"
+        ),
     )
 
 

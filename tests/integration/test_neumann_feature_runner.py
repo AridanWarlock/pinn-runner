@@ -1,6 +1,7 @@
 """Feature representation belongs to checkpoint meaning, independently of grid resolution."""
 
 import os
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -50,6 +51,18 @@ def test_feature_checkpoint_predict_retrain_and_representation_guard(
     state = torch.load(checkpoint, map_location="cpu")
     assert state["hyper_parameters"]["spatial_encoding"] == encoding
     assert state["hyper_parameters"]["hard_execution"] == execution
+    # A positive learning rate that rounds every finite FP32 Adam update to zero
+    # verifies actual checkpoint loading, rather than just a successful retrain exit.
+    probe = deepcopy(config)
+    probe["training"].update(steps=1, refinement={"steps": 0})
+    probe["training"].setdefault("optimizer", {}).update(learning_rate=1e-300, weight_decay=0)
+    path.write_text(yaml.safe_dump(probe))
+    result = launch(tmp_path, tmp_path / "load-probe", "retrain", str(checkpoint))
+    assert result.returncode == 0, result.stdout + result.stderr
+    loaded = torch.load(tmp_path / "load-probe/checkpoints/final.ckpt", map_location="cpu")
+    assert loaded["state_dict"].keys() == state["state_dict"].keys()
+    for key, expected in state["state_dict"].items():
+        torch.testing.assert_close(loaded["state_dict"][key], expected, rtol=0, atol=0)
     for axis in config["domain"]["space"].values():
         axis["points"] = 4
     path.write_text(yaml.safe_dump(config))

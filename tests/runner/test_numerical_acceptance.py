@@ -69,6 +69,23 @@ def test_registered_inventory_plan_bundle_and_compare(tmp_path: Path) -> None:
     assert compare(read_bundle(tmp_path / "bundle"))["comparison_passed"]
 
 
+def test_lifecycle_inventory_and_budget_are_distinct_from_pure_numerics() -> None:
+    e = evidence()
+    m = e["manifest"]
+    m["suite"] = acceptance.LIFECYCLE_SUITE
+    m["tests"] = acceptance.LIFECYCLE_EXPECTED.copy()
+    e["collected"] = acceptance.LIFECYCLE_EXPECTED.copy()
+    e["trials"] = e["trials"][:6]
+    for trial, nodeid in zip(e["trials"], acceptance.LIFECYCLE_EXPECTED):
+        trial["nodeid"] = nodeid
+    assert plan(m)["training"] is True and plan(m)["regular_fits"] == 12
+    assert plan(m)["identity_probe_fits"] == 6
+    assert compare(e)["passed"] == 6 and compare(e)["comparison_passed"]
+    e["trials"].pop()
+    with pytest.raises(ValueError, match="Incomplete"):
+        compare(e)
+
+
 @pytest.mark.parametrize("status", ["failed", "skipped", "not_run", "xpassed", "xfailed"])
 @pytest.mark.parametrize("phase", ["setup", "call", "teardown"])
 def test_no_failed_skipped_or_expected_failure_counts_as_success(status: str, phase: str) -> None:

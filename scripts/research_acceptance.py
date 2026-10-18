@@ -54,7 +54,7 @@ def main() -> None:
     import pytest
     import torch
 
-    from research_tools.numerical_acceptance import EXPECTED, SUITE, canonical_test_digest, compare
+    from research_tools.numerical_acceptance import SUITES, canonical_test_digest, compare
     from research_tools.queue import registered_manifest, verify_snapshot
     from research_tools.schema import digest
 
@@ -62,11 +62,13 @@ def main() -> None:
     manifest = registered_manifest(args.manifest.parent)
     if manifest["contract"] != 6 or os.environ.get("PINN_PINNED_REVISION") != manifest["revision"]:
         raise ValueError("Pinned acceptance source differs")
+    suite = manifest["suite"]
+    expected = SUITES[suite]
     if not torch.cuda.is_available():
         raise ValueError("CUDA unavailable")
-    if canonical_test_digest(ROOT / SUITE) != manifest["test_sha256"]:
+    if canonical_test_digest(ROOT / suite) != manifest["test_sha256"]:
         raise ValueError("Canonical numerical test SHA256 differs")
-    raw_before = digest(ROOT / SUITE)
+    raw_before = digest(ROOT / suite)
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
 
@@ -91,7 +93,7 @@ def main() -> None:
         with redirect_stdout(log), redirect_stderr(log):
             code = pytest.main(
                 [
-                    str(ROOT / SUITE),
+                    str(ROOT / suite),
                     "--rootdir",
                     str(ROOT),
                     "-o",
@@ -108,7 +110,7 @@ def main() -> None:
             )
     raw = dict(
         collected=report.collected,
-        trials=[report.records[k] for k in EXPECTED if k in report.records],
+        trials=[report.records[k] for k in expected if k in report.records],
         pytest_exit_code=int(code),
     )
     (args.output / "pytest-results.json").write_text(json.dumps(raw), encoding="utf-8")
@@ -118,9 +120,9 @@ def main() -> None:
         manifest=manifest,
         revision=manifest["revision"],
         test_sha256=manifest["test_sha256"],
-        source_unchanged=digest(ROOT / SUITE) == raw_before,
+        source_unchanged=digest(ROOT / suite) == raw_before,
         test_raw_sha256=raw_before,
-        test_raw_sha256_after=digest(ROOT / SUITE),
+        test_raw_sha256_after=digest(ROOT / suite),
         environment=before,
         environment_after=environment(),
         test_device="cuda",

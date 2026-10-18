@@ -18,6 +18,19 @@ FIXTURE = Path(__file__).parent / "fixtures/heat"
 pytestmark = pytest.mark.e2e
 
 
+def _pinned_command(command: list[str]) -> list[str]:
+    # run_path preserves the public CLI while explicitly selecting the pinned
+    # import root and the acceptance precision in each fresh child process.
+    bootstrap = (
+        "import pathlib,runpy,sys; "
+        "sys.path.insert(0,str(pathlib.Path(sys.argv[1]).parent)); "
+        "import torch; torch.backends.cuda.matmul.allow_tf32=False; "
+        "torch.backends.cudnn.allow_tf32=False; "
+        "sys.argv=sys.argv[1:]; runpy.run_path(sys.argv[0],run_name='__main__')"
+    )
+    return [command[0], "-B", "-c", bootstrap, *command[1:]]
+
+
 def prepare_input(directory: Path) -> None:
     directory.mkdir()
     for name in ("config.yaml", "functions.py"):
@@ -40,8 +53,22 @@ def launch(
     ]
     if checkpoint is not None:
         command.extend(["--checkpoint", checkpoint])
+    working_directory = ROOT
+    if sys.platform == "win32":
+        required = Path(r"C:\Projects\pinn-runner")
+        if Path.cwd() != required or not ROOT.is_relative_to(required):
+            raise RuntimeError("Windows runner tests require the guarded project directory")
+        working_directory = required
+        if os.environ.get("PINN_PINNED_REVISION"):
+            command = _pinned_command(command)
     return subprocess.run(
-        command, cwd=ROOT, env=environment, capture_output=True, text=True, timeout=90, check=False
+        command,
+        cwd=working_directory,
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=90,
+        check=False,
     )
 
 
