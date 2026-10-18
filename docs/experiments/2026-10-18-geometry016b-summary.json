@@ -1,0 +1,46 @@
+{
+  "revision": "b5cf7b0bb3f551351f7975703706e6bf0fdbb960",
+  "test_sha256": "233c235784007ce48ca1502cdbcaf37ab96ade7e9d8ab11b3021c3a73a2684ae",
+  "test_raw_sha256": "2544d31ef8b572d3a97903827303488cbee3656672017210a63c128a78069d6d",
+  "test_raw_sha256_after": "2544d31ef8b572d3a97903827303488cbee3656672017210a63c128a78069d6d",
+  "source_unchanged": true,
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "pytest_exit_code": 0,
+  "provenance": {
+    "protocol_commit": "112c655fa62bc88895cf3b44590953ae3e706c5f",
+    "protocol_sha256": "dd0bf01bd8e5fc2c0ec32055aa852d64fd5431700c07f585bbd15778eed27c23"
+  },
+  "comparison": {
+    "contract": 1,
+    "kind": "numerical-acceptance-comparison",
+    "trials": 20,
+    "passed": 20,
+    "not_passed": 0,
+    "cuda": true,
+    "comparison_passed": true,
+    "scope": "Existing numerical tests only; no training or speed claim"
+  },
+  "joint_geometry_tests": 6,
+  "all_phases_passed": true,
+  "sum_test_seconds": 0.6508747999905609
+}
