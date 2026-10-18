@@ -1,0 +1,98 @@
+{
+  "revision": "f45bd82cd81ff2d682b915c253cf47cc8b20d1f9",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "source_unchanged": true,
+  "converted_state_equal": true,
+  "cross_batch_close": true,
+  "cross_batch_max_difference": 1.1920928955078125e-07,
+  "artifact_sha256": {
+    "prediction.ckpt": "918ea54d9cf80f9f3d09d4830bfbe6166ecf6cd522cedf8ce322c4c233e19484",
+    "r0-b128-eager-runtime.json": "fdeef5da9fb038fd8f5ee64fc267e185f6feba94804b5ff8d4729e27d04c5318",
+    "r0-b128-eager.log": "9abd5a228248be16893a205b1222ec2885c1aa9781a15147aada354129e7c01d",
+    "r0-b128-eager/predictions.mat": "006dec0d5febf25724a8ed910b17ea0173248befe93fb191f373064fa94ce08e",
+    "r0-b128-neumann_analytic-runtime.json": "fdeef5da9fb038fd8f5ee64fc267e185f6feba94804b5ff8d4729e27d04c5318",
+    "r0-b128-neumann_analytic.log": "a3235e2384876c31e71a8b56f74af0fee5278b2c6971829e4fcf2600cbe40d17",
+    "r0-b128-neumann_analytic/predictions.mat": "aca50f63545cd85854613f01d185e8191f4d2d2274be91fe7f0235a95f614d97",
+    "r0-b2048-eager-runtime.json": "8c949cfe92cb1536df43ff2eb8903a852fda30693a3ad9dd1eb0e0b037427b3a",
+    "r0-b2048-eager.log": "0d8f6cb19d04b1b8ac4caa3e1d11fe05557b9815d044eb75300f84997f902950",
+    "r0-b2048-eager/predictions.mat": "988051c171a125a4a6196fc7cf20bd7bad6ad1bab4623bd0416ad2e6cee1452f",
+    "r0-b2048-neumann_analytic-runtime.json": "8c949cfe92cb1536df43ff2eb8903a852fda30693a3ad9dd1eb0e0b037427b3a",
+    "r0-b2048-neumann_analytic.log": "e2e30f379a06b68d0578533b1ad24717542a0578fa6d92c6b0a82105181f91df",
+    "r0-b2048-neumann_analytic/predictions.mat": "dd1745965547c2f0a25b91c79b89a5aa61006527e1256cc9f108e69ed5551d8f",
+    "r1-b128-neumann_analytic-runtime.json": "fdeef5da9fb038fd8f5ee64fc267e185f6feba94804b5ff8d4729e27d04c5318",
+    "r1-b128-neumann_analytic.log": "d9245c11c01e095c33fdf599c4438ee6003a457ee8c885e2a348f22a4b301c8b",
+    "r1-b128-neumann_analytic/predictions.mat": "466a3b2c37a3c186b8f98244fe4a698f005b6d677996c33a59d999a25a44b800",
+    "r1-b128-eager-runtime.json": "fdeef5da9fb038fd8f5ee64fc267e185f6feba94804b5ff8d4729e27d04c5318",
+    "r1-b128-eager.log": "9ac579f1474a9a0b421f201fad7eadaff0687ea8ee704be79ec156e42dd61931",
+    "r1-b128-eager/predictions.mat": "a0bd111735fbfa870483d3312754b3bb1c275e01a3d5b4ee0e2b2a62d8e167a6",
+    "r1-b2048-neumann_analytic-runtime.json": "8c949cfe92cb1536df43ff2eb8903a852fda30693a3ad9dd1eb0e0b037427b3a",
+    "r1-b2048-neumann_analytic.log": "eb143ff2aa520b3c3d945d5879f32be9b96f2e5dace9366f2b6109fc3c4cee6e",
+    "r1-b2048-neumann_analytic/predictions.mat": "0b3301223c1d23a8444bda0bccb825e118eff775ac051ca25056d329ad688660",
+    "r1-b2048-eager-runtime.json": "8c949cfe92cb1536df43ff2eb8903a852fda30693a3ad9dd1eb0e0b037427b3a",
+    "r1-b2048-eager.log": "c1dfff19dc09e9a188820d4d7502770aeca11c6fc5888a124130e852f8811f6d",
+    "r1-b2048-eager/predictions.mat": "2cf2a9a5de2ff3c014c09c6d6a674a773628d681d582e14f0cd711c88cc75996",
+    "r2-b128-eager-runtime.json": "fdeef5da9fb038fd8f5ee64fc267e185f6feba94804b5ff8d4729e27d04c5318",
+    "r2-b128-eager.log": "69c050094666a37a9c0c916788c69ea087ffcd61f03da42ad5e7f65018b65994",
+    "r2-b128-eager/predictions.mat": "1c9453e41a201839846cd00ed0524d983aec679b936f0693f42a15f7df53253b",
+    "r2-b128-neumann_analytic-runtime.json": "fdeef5da9fb038fd8f5ee64fc267e185f6feba94804b5ff8d4729e27d04c5318",
+    "r2-b128-neumann_analytic.log": "d36b1e1b2b64a1e7c66b052fa4e820f545cd98e8a2286e40809ddf5fcdb6c923",
+    "r2-b128-neumann_analytic/predictions.mat": "3487a25abf1f5f00919c4836b7f89a559530d7ee175b014d00ad66d9508b93c0",
+    "r2-b2048-eager-runtime.json": "8c949cfe92cb1536df43ff2eb8903a852fda30693a3ad9dd1eb0e0b037427b3a",
+    "r2-b2048-eager.log": "01130aa8d4386d5b885e8041bf825b8a2dd58536a8597b70770f2548939a9c47",
+    "r2-b2048-eager/predictions.mat": "e6ae6a491bf779180f972e6d9c7ff6df65b36211d214cb366b0bcae40535156e",
+    "r2-b2048-neumann_analytic-runtime.json": "8c949cfe92cb1536df43ff2eb8903a852fda30693a3ad9dd1eb0e0b037427b3a",
+    "r2-b2048-neumann_analytic.log": "596de24e7bbba8f63e53f8ce008bdcecaf82c0bf6c5adf2a07b73a5e4b9a6b63",
+    "r2-b2048-neumann_analytic/predictions.mat": "465f0894b06b091fc977eed73c139b12c8870521986c6a63981f5a0ef20ac3f9"
+  },
+  "provenance": {
+    "protocol_commit": "9c9155cfdb8196958541fea85aefb93f32a5e0d6",
+    "protocol_sha256": "ababaa631abf4db7e703fbc993b5c22b42218354f914e8ca0886bfe53f365567"
+  },
+  "job_id": "public019",
+  "source": ".gpu-jobs/analytic011/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-19/eager-recursive-parameters-auto-neumann_polynomial-19",
+  "weights_sha256": "85f2994d9132bd3e2c4d7eb32f7959d90db4c6afd36ae703ac31ff8406353d83",
+  "config_sha256": "8c09efd14cf09a0ad4dc0cf8ecadee880180d620b6952604412887f28a111ed2",
+  "comparison": {
+    "contract": 1,
+    "kind": "public-prediction-comparison",
+    "trials": 12,
+    "pairs": [
+      {
+        "batch": 128,
+        "median_ratio": 0.9966857417325544,
+        "worst_ratio": 0.9975205552614458,
+        "worst_allocated_ratio": 1.0,
+        "worst_reserved_ratio": 1.0
+      },
+      {
+        "batch": 2048,
+        "median_ratio": 0.9944043721457149,
+        "worst_ratio": 0.9953998624638746,
+        "worst_allocated_ratio": 1.0,
+        "worst_reserved_ratio": 1.0
+      }
+    ],
+    "comparison_passed": true,
+    "training_speedup_claim": false,
+    "scope": "Fresh processes, warm OS/driver caches"
+  },
+  "processes": 12,
+  "training_steps": 0,
+  "points": 152303,
+  "includes_interpreter_and_mat": true,
+  "os_caches_flushed": false,
+  "final_pinned_snapshot_checks": [
+    "lifecycle017",
+    "alloc018",
+    "public019"
+  ],
+  "final_pinned_snapshots_unchanged": true
+}
