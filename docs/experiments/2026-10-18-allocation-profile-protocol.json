@@ -1,0 +1,20 @@
+{
+  "contract": 7,
+  "kind": "allocation-profile",
+  "registration": "prospective",
+  "revision": "f5c94a81b0fa4937909e0546f51da3ce23fc7d27",
+  "case": "heat_neumann_polynomial2d",
+  "trial": ".gpu-jobs/analytic012/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-19/eager-recursive-parameters-auto-neumann_polynomial-19",
+  "weights": "lb-2000.pt",
+  "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+  "config_sha256": "907cbe7d11fb761dea5c3344665aadf01c639216ba4aa1aa908a50f9a3b67ad0",
+  "points": 1024,
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
