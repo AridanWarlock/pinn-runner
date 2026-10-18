@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-13 13:28'
-updated_date: '2026-10-18 12:06'
+updated_date: '2026-10-18 19:44'
 labels:
   - performance
   - hard-constraints
@@ -35,10 +35,10 @@ ordinal: 21000
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 До работы зафиксированы CUDA-результаты TASK-11, контрольный checkpoint/config/revision, hardware, FP32/TF32 и seed. Профиль разделяет сеть, g/B, derivatives, optimizer/closure, launches, allocations и transfers; profiler отделён от итогового timing.
+- [x] #1 До работы зафиксированы CUDA-результаты TASK-11, контрольный checkpoint/config/revision, hardware, FP32/TF32 и seed. Профиль разделяет сеть, g/B, derivatives, optimizer/closure, launches, allocations и transfers; profiler отделён от итогового timing.
 - [ ] #2 Для fusion, свёртки аффинных преобразований, кеша, обезразмеривания PDE и явных производных документированы применимость, эквивалентность либо изменение модели и результаты выбранных прототипов. Оценена верхняя граница ускорения по измеренной доле затрат; непроверенные возможности названы гипотезами.
 - [x] #3 Принимаемые fast paths совпадают с eager по значениям, первым/вторым координатным производным, PDE residual и parameter gradients в обоснованных float64/FP32 tolerances. Проверены IC, faces, edges/corners, interior/near-boundary и shifted bounds/time в 1D/2D/3D; деления на нулевой τB нет.
-- [ ] #4 Кеш/подготовленная модель корректны при смене сетки/resampling, bounds, initial callback, dtype/device и recipe; checkpoint/predict/fine-tune contracts сохранены. Train fast path совместим с fixed objective внутри L-BFGS closure и честным учётом evaluations.
+- [x] #4 Кеш/подготовленная модель корректны при смене сетки/resampling, bounds, initial callback, dtype/device и recipe; checkpoint/predict/fine-tune contracts сохранены. Train fast path совместим с fixed objective внутри L-BFGS closure и честным учётом evaluations.
 - [ ] #5 Windows RTX сравнение из C:\Projects\pinn-runner включает cold end-to-end с подготовкой/компиляцией/кешем, warm train step/closure и predict latency/throughput, peak allocated/reserved memory. Измерены окупаемость fixed-grid кеша, batch sizes 128/2048 и последний неполный batch.
 - [x] #6 Прозрачное ускорение сравнивается на одинаковом checkpoint/grid; траектории FP32 отдельно проверены попарно на seed 1234/4321/19/2026/73 для heat2d/heat3d в согласованном heat scope. Есть общий/final/worst-time L2, IC/BC, independent physical-autograd PDE holdout, counters и время до заранее заданной точности без analytic teacher. Другие PDE не считаются проверенными этой матрицей.
 - [x] #7 Принятие опирается на все seed, numerical gates, скорость и память, без ослабления порогов или смены FP32. Вариант выключаемый, eager fallback доступен; unsupported backend не выдаётся за compiled. Defaults не меняются до проверки комбинации.
@@ -49,6 +49,10 @@ ordinal: 21000
 
 <!-- SECTION:PLAN:BEGIN -->
 1. Завершены качество011/012, стоимостьtiming014, полный optimizer.step lbfgs015 и совместная геометрия Windows geometry016b/20 из20; критерии3/6/7/8 подтверждены, всего4/8. Завершённые серии не повторять. 2. Следующий оставшийся вопрос приёмки — файловый жизненный цикл выбранного neumann_analytic на Windows; использовать существующие реальные train/predict/retrain проверки, общую очередь и заранее заданный перечень. Новых fast paths не добавлять. 3. По критериям1/2/4/5 отдельно сверить имеющиеся доказательства профиля сети/фона/выделений, оценку доли затрат и применимость требований к нереализованному кешу/подготовленной модели. Диагностический остаток lbfgs015 не является чистым optimizer или строгим потолком Амдала. Сначала анализ имеющихся артефактов, без повторного Nsight. 4. Перед завершением сверить каждый критерий по guide task-finalization; defaults не менять, неподтверждённые пункты не отмечать. После текущей приёмки физический охват TASK-33/34 рассматривается раньше дальнейших микрооптимизаций, новые задачи имеют low.
+
+Часовой блок18.10: проверить существующий файловый train/predict/retrain/representation-guard набор на Windows через общий режим приёмкиcontract6, затем разобрать оставшиеся1/2/4/5 по имеющимся данным. Вспомогательный subprocess runner сейчас используетcwd снимка; до CUDA исправить его на обязательный C:/Projects/pinn-runner, сохранив абсолютный путь pinned run.py и проверку cwd. Разрешить только заранее перечисленные6 файловых сценариев, без новых fast paths и измененияdefaults. Контекст/журналы читать адресно.
+
+Один дополнительный ограниченный вопрос текущей приёмки: два процесса allocation-profile, без Nsight/прав администратора/обновления весов, пять областей распределителя Torch на прежнем полиноме2D. Таймаут300с; отсутствие CUDA-memory events сохранить как отрицательный результат, не разворачивать новую ветку оптимизации.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -97,4 +101,8 @@ lbfgs015 завершена12/12 через общую очередь, collect/c
 geometry016 остановилась до тестов: CUDA доступна, но Windows-снимок имел232 CRLF вместоLF, сырые SHA отличались; после одной нормализации CRLF→LF Git-SHA совпал точно. Неудачный снимок сохранён, компактная диагностика docs/experiments/2026-10-18-geometry016-preflight-failure.json. Исправлены только проверка идентичности Git-текста и раздельная сырая целостность до/после; новые кодb5cf7b0/протокол112c655, запускgeometry016b. Тестовый файл и допуски неизменны. После исправления быстрый CPU841 passed/50 e2e deselected и профильные57; предыдущий полный890 отдельно.
 
 geometry016b штатно завершена и собрана20/20, compare=true: кодb5cf7b0, протокол112c655. Все60 фаз setup/call/teardown passed, skipped/xfail/xpass нет. Шесть совместных CUDA-геометрий FP32/FP64 ×1D/2D/3D: значения, первые производные, полный гессиан, физическая невязка и весовые градиенты; IC/грани/рёбра/углы/near-boundary, shifted bounds/time и независимый oracle выходного смещения. Критерий3 отмечен по этому результату вместе с существующими CPU-численными проверками и независимыми контролями исходных полиномиальных случаев; вся TASK-21 остаётся In Progress, теперь4/8. Неудачный preflightgeometry016 сохранён, математика/допуски не изменялись. Отчёт docs/geometry-acceptance-result-2026-10-18.md.
+
+lifecycle017 завершена6/6 на Windows CUDA, все18 фаз успешны; collect/compare=true. Публичные train/checkpoint/predict/retrain, точная фактическая загрузка всех тензоров, смена разрешения, eager-контроль MAT и отказ при смене представления подтверждены. Вместе с geometry016b и lbfgs015 закрыт критерий4 для поставленного правила; новый кеш/подготовленная модель не реализованы, их будущая инвалидизация не приписывается результату. Кодb025b22, протокол590487a. Отчёт docs/lifecycle-acceptance-result-2026-10-18.md; всего5/8, TASK-21 In Progress.
+
+alloc018:2/2 диагностических процессов, CUDA-memory events получены без Nsight/повышенных прав, collect/compare=true. Выделения602→478, байты22,718→22,211MB, пик−0,57%, reserved прежний; все10 фазовых балансов байтов точны. Независимые потери/градиенты и неизменность весов подтверждены. В совокупности с n13b/структурным разложением поля/lbfgs015 закрыт критерий1; всего6/8. Условный GPU-service потолок2,6845 не подменяет end-to-end Амдал: критерии2/5 остаются открыты. Кодf5c94a8, протоколfbdeb44; отчёты docs/allocation-profile-result-2026-10-18.md и docs/native-service-budget-2026-10-18.md.
 <!-- SECTION:NOTES:END -->
