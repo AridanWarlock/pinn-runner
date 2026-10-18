@@ -149,3 +149,23 @@ def test_real_slowdown_is_kept_as_negative_result() -> None:
 def test_timing_unregistered_budget_rejected(changes: dict[str, Any]) -> None:
     with pytest.raises(ValueError):
         frozen_timing.plan(protocol() | changes)
+
+
+@pytest.mark.parametrize("details", [False, True])
+def test_timing_cli_expands_pairs_only_on_request(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], details: bool
+) -> None:
+    import json
+
+    from scripts.research import main
+
+    output = tmp_path / "bundle"
+    write_bundle(output, evidence())
+    arguments = ["compare", "--bundle", str(output)]
+    if details:
+        arguments.append("--details")
+    assert main(arguments) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["comparison_passed"] is True
+    assert ("details" in result) is details
+    assert result["cases"][0]["median_objective_ratio"] == pytest.approx(5 / 6)

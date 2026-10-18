@@ -138,6 +138,7 @@ def main(argv: list[str] | None = None) -> int:
             output = compare(read_bundle(args.bundle))
             code = 0 if output["comparison_passed"] else 1
             if not args.details:
+                output.pop("details", None)
                 for case in output.get("cases", []):
                     case.pop("details", None)
         else:
