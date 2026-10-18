@@ -1,0 +1,22 @@
+{
+  "device": "cpu",
+  "torch": "2.1.0",
+  "dtype": "torch.float32",
+  "points": 1024,
+  "axes": 1,
+  "scope": "Forward saved storage metadata, no GPU timing or training",
+  "rows": [
+    {
+      "rule": "autograd",
+      "saved_references": 7,
+      "unique_saved_storage": 6,
+      "unique_saved_bytes": 24576
+    },
+    {
+      "rule": "analytic",
+      "saved_references": 1,
+      "unique_saved_storage": 1,
+      "unique_saved_bytes": 4096
+    }
+  ]
+}

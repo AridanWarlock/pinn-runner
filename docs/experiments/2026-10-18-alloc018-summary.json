@@ -1,0 +1,69 @@
+{
+  "job_id": "alloc018",
+  "source_revision": "f5c94a81b0fa4937909e0546f51da3ce23fc7d27",
+  "provenance": {
+    "protocol_commit": "fbdeb44d09a706ae23c4e58c13f88a0af84c9970",
+    "protocol_sha256": "0bd6a30601929b87bb739b2cb4ff27d722e363ceb72af14bf6f14a1149564fe0"
+  },
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "artifact_sha256": {
+    "autograd/report.json": "03ea2b224150c2b1f69095b39da4a20cd50869ebe4500b77c00aa53cf8c6e6da",
+    "autograd.log": "f9db8c291d78b1f65f0d7328fd54fa70bedb43be10074647cca13c5ceb286e47",
+    "autograd/allocator-trace.json": "d2c31b7f7e289cb5e064a46ddfda790893ccfdbc9ce8ae4a7beb1494e192449c",
+    "analytic/report.json": "19f06cd16dbc5b4465ab019d303ff778e42d64ece9cc6d411ea5bb5470f2037e",
+    "analytic.log": "1edf990ec6fa14bb20012412a3003d2d962cf294c23963f508e78de019da5f19",
+    "analytic/allocator-trace.json": "255766e4b0e67c998ce3d98d542e2927abd3d626cd15c11cafccf3418c3cdde5"
+  },
+  "comparison_passed": true,
+  "trials": [
+    {
+      "rule": "autograd",
+      "gpu": "NVIDIA GeForce RTX 4070 Ti",
+      "state_sha256": "b955bfa01f66125368a223f6f372cb7c6339203656fb6c8465c49ecd9fb844bf",
+      "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+      "source_unchanged": true,
+      "independent_autograd_control": {
+        "loss_absolute_difference": 3.979039320256561e-13,
+        "gradient_max_absolute_difference": 4.220055416226387e-09,
+        "gradient_relative_l2_difference": 3.274129630881362e-05
+      },
+      "decomposed_gradient_passed": true,
+      "loss_value": 7.734562359473784e-07,
+      "allocation_events": 602,
+      "free_events": 541,
+      "allocated_bytes": 22718464,
+      "freed_bytes": 22496768,
+      "peak_allocated_bytes": 23717888,
+      "peak_reserved_bytes": 29360128,
+      "all_stage_byte_balances_match": true
+    },
+    {
+      "rule": "analytic",
+      "gpu": "NVIDIA GeForce RTX 4070 Ti",
+      "state_sha256": "b955bfa01f66125368a223f6f372cb7c6339203656fb6c8465c49ecd9fb844bf",
+      "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+      "source_unchanged": true,
+      "independent_autograd_control": {
+        "loss_absolute_difference": 3.979039320256561e-13,
+        "gradient_max_absolute_difference": 4.220055416226387e-09,
+        "gradient_relative_l2_difference": 3.274129630881362e-05
+      },
+      "decomposed_gradient_passed": true,
+      "loss_value": 7.734554401395144e-07,
+      "allocation_events": 478,
+      "free_events": 429,
+      "allocated_bytes": 22210560,
+      "freed_bytes": 22038016,
+      "peak_allocated_bytes": 23582720,
+      "peak_reserved_bytes": 29360128,
+      "all_stage_byte_balances_match": true
+    }
+  ]
+}
