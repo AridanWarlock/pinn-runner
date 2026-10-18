@@ -17,11 +17,12 @@ def main() -> None:
     args = parser.parse_args()
     from research_tools.allocation_profile import run as allocation_run
     from research_tools.frozen_profile import run as native_run
+    from research_tools.public_prediction import run as public_run
     from research_tools.queue import registered_manifest, verify_snapshot
 
     verify_snapshot(args.manifest.parent)
     manifest = registered_manifest(args.manifest.parent)
-    run = allocation_run if manifest["contract"] == 7 else native_run
+    run = {3: native_run, 7: allocation_run, 8: public_run}[manifest["contract"]]
     run(
         Path(r"C:\Projects\pinn-runner"),
         ROOT,

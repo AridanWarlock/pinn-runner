@@ -79,6 +79,10 @@ def load_manifest(path: Path) -> Json:
 
 
 def validate_manifest(manifest: Json, base: Path) -> Json:
+    if manifest.get("contract") == 8:
+        from .public_prediction import validate as public_validate
+
+        return public_validate(manifest)
     if manifest.get("contract") == 7:
         from .allocation_profile import validate as allocation_validate
 

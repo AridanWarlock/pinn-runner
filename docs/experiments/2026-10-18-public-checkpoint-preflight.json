@@ -1,0 +1,24 @@
+{
+  "device": "cpu",
+  "torch": "2.1.0",
+  "training_steps": 0,
+  "optimizer_history_present": false,
+  "all_state_tensors_equal": true,
+  "raw_source_unchanged": true,
+  "cli_outcomes": [
+    {
+      "kind": "raw",
+      "exit_code": 1
+    },
+    {
+      "kind": "converted",
+      "exit_code": 0
+    }
+  ],
+  "field_shape": [
+    64,
+    3
+  ],
+  "known_field_max_difference": 1.7718171863023713e-07,
+  "cold_windows_timing_claim": false
+}

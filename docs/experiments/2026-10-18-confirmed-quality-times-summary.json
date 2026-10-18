@@ -1,0 +1,28 @@
+{
+  "kind": "descriptive-reanalysis",
+  "new_training": false,
+  "pairs": 20,
+  "all_confirmed_faster": true,
+  "equal_confirmed_lb_steps": 17,
+  "equal_confirmed_closures": 3,
+  "sources": [
+    {
+      "job": "analytic011",
+      "bundle_sha256": "84b8cc2dea804ea190c4f524d95fdfef6931d89a3d580d4e26c79678b5d1a165",
+      "evidence_sha256": "569d3cde224511787d3514c920254a7d152190632357d9030249021c67edbb04",
+      "provenance": {
+        "protocol_commit": "62bb738b0d0ae3ac8880ce3314d95c7f055c6543",
+        "protocol_sha256": "66af80b50e190466ca2ceb27821571b0cbd112206b4b836af3849e1d4d92c402"
+      }
+    },
+    {
+      "job": "analytic012",
+      "bundle_sha256": "de4666a41da3b88c8352e58d72352b1dbf10e52f6e9bc8922cebf6ff16a801f1",
+      "evidence_sha256": "3b6a9ac2247f11c944531bdc3e62b733764cd0ac99433bc7e9f346c3a53e269e",
+      "provenance": {
+        "protocol_commit": "e27f96ecac6781ced5cb662015fab39e3c7b4456",
+        "protocol_sha256": "17f72c35613c3e9e604889cc1c220711c01a5eac2a03be6a8db5831223e42d78"
+      }
+    }
+  ]
+}

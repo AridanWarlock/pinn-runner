@@ -70,7 +70,10 @@ def prepare(root: Path, request: Json) -> Json:
     if hashlib.sha256(source).hexdigest() != request["protocol_sha256"]:
         raise ValueError("Published protocol differs from request")
     manifest = validate_manifest(object_value(json.loads(source), "manifest"), root)
-    if manifest["contract"] not in (2, 3, 4, 5, 6, 7) or manifest["registration"] != "prospective":
+    if (
+        manifest["contract"] not in (2, 3, 4, 5, 6, 7, 8)
+        or manifest["registration"] != "prospective"
+    ):
         raise ValueError("Only prospective protocols may be submitted")
     plan(manifest)
     published(root, manifest["revision"])
@@ -302,6 +305,7 @@ def execute(root: Path, directory: Path) -> None:
                 5: "checkout/scripts/research_lbfgs.py",
                 6: "checkout/scripts/research_acceptance.py",
                 7: "checkout/scripts/research_profile.py",
+                8: "checkout/scripts/research_profile.py",
             }[manifest["contract"]]
         )
         command = [
