@@ -1,0 +1,69 @@
+{
+  "comparison": {
+    "contract": 1,
+    "kind": "frozen-profile-comparison",
+    "comparison_passed": false,
+    "cuda_trace_captured": false,
+    "numerical_accuracy_claim": false,
+    "performance_claim": false,
+    "rules": 2
+  },
+  "manifest": {
+    "contract": 3,
+    "kind": "frozen-profile",
+    "registration": "prospective",
+    "revision": "73e00ef0e1bc5a58475381b840b39afb61140d4e",
+    "case": "heat_neumann_polynomial2d",
+    "trial": ".gpu-jobs/analytic012/r/c1/processes/eager-recursive-parameters-auto-neumann_polynomial-19/eager-recursive-parameters-auto-neumann_polynomial-19",
+    "weights": "lb-2000.pt",
+    "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+    "config_sha256": "907cbe7d11fb761dea5c3344665aadf01c639216ba4aa1aa908a50f9a3b67ad0",
+    "points": 1024,
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "provenance": {
+    "protocol_commit": "a3ac174ccb26179c59c016363a28c8c926bfb8b8",
+    "protocol_sha256": "885814fe0dc2284cd6d6b338b399becce2c5e570b0d4d320b822cadbaac8b779"
+  },
+  "trials": [
+    {
+      "rule": "autograd",
+      "profile_exit_code": 0,
+      "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+      "source_unchanged": true,
+      "trace": {},
+      "diagnostic_tail": "Unexpected exception thrown while launching the application.\nC:\\dvs\\p4\\build\\sw\\devtools\\Agora\\Rel\\DTC_F\\QuadD\\Target\\quadd_d\\quadd_d\\jni\\EventSource\\ETWSession.cpp(152): Throw in function void __cdecl QuadDDaemon::EventSource::ETWSession::Start(void)\nDynamic exception type: class QuadDCommon::AccessDeniedException\nstd::exception::what: AccessDeniedException\n[struct QuadDCommon::tag_message * __ptr64] = Microsoft-Windows-DxgKrnl provider requires administrator privileges\nC:\\dvs\\p4\\build\\sw\\devtools\\Agora\\Rel\\DTC_F\\QuadD\\Target\\quadd_d\\quadd_d\\jni\\EventSource\\ETWSession.cpp(152): Throw in function void __cdecl QuadDDaemon::EventSource::ETWSession::Start(void)\nDynamic exception type: class QuadDCommon::AccessDeniedException\nstd::exception::what: AccessDeniedException\n[struct QuadDCommon::tag_message * __ptr64] = Microsoft-Windows-DxgKrnl provider requires administrator privileges\n\n",
+      "artifact_sha256": {
+        "autograd.log": "5f7880857148494c48b7d738fc2cf1ccf3a0b91932a488ccbf8a20c7605e1463"
+      },
+      "workload_present": false
+    },
+    {
+      "rule": "analytic",
+      "profile_exit_code": 0,
+      "weights_sha256": "dacd591d124eff8b99ba41eba3926878d9f6afa24c5dabe2abc90c7b5cefebc4",
+      "source_unchanged": true,
+      "trace": {},
+      "diagnostic_tail": "Unexpected exception thrown while launching the application.\nC:\\dvs\\p4\\build\\sw\\devtools\\Agora\\Rel\\DTC_F\\QuadD\\Target\\quadd_d\\quadd_d\\jni\\EventSource\\ETWSession.cpp(152): Throw in function void __cdecl QuadDDaemon::EventSource::ETWSession::Start(void)\nDynamic exception type: class QuadDCommon::AccessDeniedException\nstd::exception::what: AccessDeniedException\n[struct QuadDCommon::tag_message * __ptr64] = Microsoft-Windows-DxgKrnl provider requires administrator privileges\nC:\\dvs\\p4\\build\\sw\\devtools\\Agora\\Rel\\DTC_F\\QuadD\\Target\\quadd_d\\quadd_d\\jni\\EventSource\\ETWSession.cpp(152): Throw in function void __cdecl QuadDDaemon::EventSource::ETWSession::Start(void)\nDynamic exception type: class QuadDCommon::AccessDeniedException\nstd::exception::what: AccessDeniedException\n[struct QuadDCommon::tag_message * __ptr64] = Microsoft-Windows-DxgKrnl provider requires administrator privileges\n\n",
+      "artifact_sha256": {
+        "analytic.log": "5f7880857148494c48b7d738fc2cf1ccf3a0b91932a488ccbf8a20c7605e1463"
+      },
+      "workload_present": false
+    }
+  ]
+}
