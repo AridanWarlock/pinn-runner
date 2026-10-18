@@ -4,11 +4,15 @@ title: Подтвердить точность PINN для переменной 
 status: To Do
 assignee: []
 created_date: '2026-10-18 11:30'
+updated_date: '2026-10-18 19:52'
 labels:
   - accuracy
   - physics
 dependencies:
   - TASK-21
+documentation:
+  - >-
+    https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/variable-conductivity-experiment-draft-2026-10-18.md
 priority: low
 type: spike
 ordinal: 33000
@@ -27,3 +31,9 @@ ordinal: 33000
 - [ ] #3 До CUDA-обучения опубликован протокол с фиксированными бюджетами, абсолютными порогами и несколькими начальными состояниями; отчёт содержит качество, время и неудачи.
 - [ ] #4 Проверены файловые train/predict/retrain и защита от подмены коэффициента; обратная задача не объявлена решённой.
 <!-- AC:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Подготовительный математический проект без запуска обучения: консервативная PDE с положительной аффинной kappa=(1/8)(1+beta*mean(x)), beta0/1, совместимые Neumann IC/BC, независимый полиномиальный источник и отрицательный контроль пропущенного grad(kappa)·grad(T). CPU-эталон16 сочетаний FP32/64×1D/2D×формула/таблица×beta прошёл; это не CUDA-приёмка и не проверка обучения PINN. Предложена одна будущая2D-матрица20 обучений; до запуска после TASK-21 нужны регистрация каталога/машинный протокол и отдельные SHA. Приоритетlow, статусTo Do и зависимостьTASK-21 сохраняются.
+<!-- SECTION:PLAN:END -->

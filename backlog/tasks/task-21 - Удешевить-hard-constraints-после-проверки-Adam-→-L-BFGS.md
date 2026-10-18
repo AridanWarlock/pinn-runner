@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@codex'
 created_date: '2026-10-13 13:28'
-updated_date: '2026-10-18 19:44'
+updated_date: '2026-10-18 20:06'
 labels:
   - performance
   - hard-constraints
@@ -39,7 +39,7 @@ ordinal: 21000
 - [ ] #2 Для fusion, свёртки аффинных преобразований, кеша, обезразмеривания PDE и явных производных документированы применимость, эквивалентность либо изменение модели и результаты выбранных прототипов. Оценена верхняя граница ускорения по измеренной доле затрат; непроверенные возможности названы гипотезами.
 - [x] #3 Принимаемые fast paths совпадают с eager по значениям, первым/вторым координатным производным, PDE residual и parameter gradients в обоснованных float64/FP32 tolerances. Проверены IC, faces, edges/corners, interior/near-boundary и shifted bounds/time в 1D/2D/3D; деления на нулевой τB нет.
 - [x] #4 Кеш/подготовленная модель корректны при смене сетки/resampling, bounds, initial callback, dtype/device и recipe; checkpoint/predict/fine-tune contracts сохранены. Train fast path совместим с fixed objective внутри L-BFGS closure и честным учётом evaluations.
-- [ ] #5 Windows RTX сравнение из C:\Projects\pinn-runner включает cold end-to-end с подготовкой/компиляцией/кешем, warm train step/closure и predict latency/throughput, peak allocated/reserved memory. Измерены окупаемость fixed-grid кеша, batch sizes 128/2048 и последний неполный batch.
+- [x] #5 Windows RTX сравнение из C:\Projects\pinn-runner включает cold end-to-end с подготовкой/компиляцией/кешем, warm train step/closure и predict latency/throughput, peak allocated/reserved memory. Измерены окупаемость fixed-grid кеша, batch sizes 128/2048 и последний неполный batch.
 - [x] #6 Прозрачное ускорение сравнивается на одинаковом checkpoint/grid; траектории FP32 отдельно проверены попарно на seed 1234/4321/19/2026/73 для heat2d/heat3d в согласованном heat scope. Есть общий/final/worst-time L2, IC/BC, independent physical-autograd PDE holdout, counters и время до заранее заданной точности без analytic teacher. Другие PDE не считаются проверенными этой матрицей.
 - [x] #7 Принятие опирается на все seed, numerical gates, скорость и память, без ослабления порогов или смены FP32. Вариант выключаемый, eager fallback доступен; unsupported backend не выдаётся за compiled. Defaults не меняются до проверки комбинации.
 - [x] #8 Сохранён отчёт с исходными измерениями, ограничениями, отрицательными результатами и решением по вариантам; docs обновлены для поставленного fast path. Выполнены профильные тесты, необходимый full CPU check и Windows CUDA acceptance с точным названием набора. При отсутствии пользы допускается обоснованный отказ от внедрения.
@@ -53,6 +53,8 @@ ordinal: 21000
 Часовой блок18.10: проверить существующий файловый train/predict/retrain/representation-guard набор на Windows через общий режим приёмкиcontract6, затем разобрать оставшиеся1/2/4/5 по имеющимся данным. Вспомогательный subprocess runner сейчас используетcwd снимка; до CUDA исправить его на обязательный C:/Projects/pinn-runner, сохранив абсолютный путь pinned run.py и проверку cwd. Разрешить только заранее перечисленные6 файловых сценариев, без новых fast paths и измененияdefaults. Контекст/журналы читать адресно.
 
 Один дополнительный ограниченный вопрос текущей приёмки: два процесса allocation-profile, без Nsight/прав администратора/обновления весов, пять областей распределителя Torch на прежнем полиноме2D. Таймаут300с; отсутствие CUDA-memory events сохранить как отрицательный результат, не разворачивать новую ветку оптимизации.
+
+Последняя недостающая часть критерия5: prospective public-prediction contract8, одна существующая3D-модель seed19, batch128/2048×3 пары, всего12 свежих публичных CLI без обучения. Таймаут900с, FP32/TF32 off в каждом процессе, точный парный MAT/контроль между пакетами, median latency ratio≤1.10/worst≤1.25, peak ratios≤1.10. Сырые state_dict упаковываются с проверенными метаданными, CPU negative/positive preflight пройден. Не вводить новый кеш/fast path; отрицательный исход сохранять.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -105,4 +107,6 @@ geometry016b штатно завершена и собрана20/20, compare=tru
 lifecycle017 завершена6/6 на Windows CUDA, все18 фаз успешны; collect/compare=true. Публичные train/checkpoint/predict/retrain, точная фактическая загрузка всех тензоров, смена разрешения, eager-контроль MAT и отказ при смене представления подтверждены. Вместе с geometry016b и lbfgs015 закрыт критерий4 для поставленного правила; новый кеш/подготовленная модель не реализованы, их будущая инвалидизация не приписывается результату. Кодb025b22, протокол590487a. Отчёт docs/lifecycle-acceptance-result-2026-10-18.md; всего5/8, TASK-21 In Progress.
 
 alloc018:2/2 диагностических процессов, CUDA-memory events получены без Nsight/повышенных прав, collect/compare=true. Выделения602→478, байты22,718→22,211MB, пик−0,57%, reserved прежний; все10 фазовых балансов байтов точны. Независимые потери/градиенты и неизменность весов подтверждены. В совокупности с n13b/структурным разложением поля/lbfgs015 закрыт критерий1; всего6/8. Условный GPU-service потолок2,6845 не подменяет end-to-end Амдал: критерии2/5 остаются открыты. Кодf5c94a8, протоколfbdeb44; отчёты docs/allocation-profile-result-2026-10-18.md и docs/native-service-budget-2026-10-18.md.
+
+public019 завершена12/12,6 пар свежего публичного predict без обучения, collect/compare=true. Время включает интерпретатор/подготовку/CUDA/MAT; кеши ОС не сбрасывались. Парные медианы analytic/eager0.996686(batch128)/0.994404(batch2048), пики одинаковы, MAT точен внутри пар, между пакетами max1.192e-7. Исходная3D-модель/конфигурация не изменены; контейнер все тензоры сохраняет. В совокупности с timing014/lbfgs015 закрыт критерий5 для поставленного правила; кеш/компиляция не реализованы и их окупаемость не приписывается. Всего7/8, открыт2; TASK-21 In Progress. Кодf45bd82, протокол9c9155c, фактический лимит600с. Отчёт docs/public-prediction-result-2026-10-18.md; full CPU926/303.28с, профильные32.
 <!-- SECTION:NOTES:END -->
