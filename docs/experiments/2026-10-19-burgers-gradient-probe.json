@@ -1,0 +1,24 @@
+{
+  "solver_source_revision": "8f1f37e88d9f1fb79a068d5119c3bc205cbba6f3",
+  "registration": "retrospective_diagnostic",
+  "device": "cpu",
+  "dtype": "torch.float64",
+  "neural_network_claim": false,
+  "training_runs": 0,
+  "operator_source_sha256": "d3ea10959c3f016eb003197ef0e4367131dc3e6b79dce9ec6d70ef8795d66c2a",
+  "document_sha256": "fa244872ef92df4b356552872e07592ba02a2df70b6f4937ed7dc970315d18b8",
+  "rows": [
+    {
+      "amplitude": 1.0,
+      "residual_max": 1.1102230246251565e-16,
+      "gradient": -2.225078374602919e-18,
+      "detached_gradient": -2.550175871776339e-19
+    },
+    {
+      "amplitude": 0.7,
+      "residual_max": 0.5439020264462396,
+      "gradient": -0.39216487206619766,
+      "detached_gradient": -0.3487378874459274
+    }
+  ]
+}
