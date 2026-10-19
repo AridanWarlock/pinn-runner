@@ -17,6 +17,7 @@ Family = Literal[
     "homogeneous",
     "advection",
     "burgers",
+    "conductivity",
 ]
 CONSTRAINTS = ("soft", "hard_initial_dirichlet", "hard_initial_robin")
 EXECUTIONS = ("eager", "product_rule", "robin_batch", "robin_grouped", "neumann_analytic")
@@ -80,6 +81,8 @@ SPECS = (
     CaseSpec("heat_neumann_homogeneous3d", "homogeneous", 3, (6, 9)),
     CaseSpec("heat_neumann_polynomial2d", "polynomial", 2, (8, 17)),
     CaseSpec("heat_neumann_polynomial3d", "polynomial", 3, (6, 9)),
+    CaseSpec("heat_conductivity_beta0", "conductivity", 2, (8, 41)),
+    CaseSpec("heat_conductivity_beta1", "conductivity", 2, (8, 41)),
     CaseSpec("advection", "advection", 1),
     CaseSpec("burgers", "burgers", 1),
 )

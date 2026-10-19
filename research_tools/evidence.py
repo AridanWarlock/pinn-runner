@@ -170,7 +170,26 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
             "control_prediction_background",
         )
     }
+    if "physics" in manifest:
+        from benchmarks.conductivity import source_sha256
+
+        representation = raw.get("coefficient_representation")
+        if representation not in ("formula", "table"):
+            raise ValueError("Missing coefficient representation")
+        if raw.get("physics") != manifest["physics"][raw["case"]]:
+            raise ValueError("Trial physics differs from protocol")
+        expected_source = source_sha256(raw["case"], representation)
+        if raw.get("problem_source_sha256") != expected_source:
+            raise ValueError("Problem source differs from registered representation")
+        compact.update(
+            coefficient_representation=representation,
+            physics=raw["physics"],
+            problem_source_sha256=expected_source,
+        )
+    elif "coefficient_representation" in raw:
+        raise ValueError("Coefficient trials require a physics protocol")
     for key in (
+        *(("initial_parameters_sha256",) if "physics" in manifest else ()),
         "initial_state_sha256",
         "fixed_objective_sha256",
         *(("objective_prefix_sha256",) if "density" in manifest else ()),
@@ -387,6 +406,8 @@ def write_bundle(output: Path, evidence: Json) -> None:
                 "spatial_encoding",
             )
         }
+        if "physics" in evidence["manifest"]:
+            common["coefficient_representation"] = trial["coefficient_representation"]
         if "density" in evidence["manifest"]:
             common["points_override"] = trial["points_override"]
         rows.append(

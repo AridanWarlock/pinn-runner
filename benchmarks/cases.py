@@ -33,6 +33,11 @@ class BenchmarkCase(ABC):
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
         """Independent analytical solution, with NumPy broadcasting."""
 
+    def prepare_source(self, directory: Path, representation: str | None = None) -> Path:
+        if representation is not None:
+            raise ValueError("Coefficient representation requires a conductivity case")
+        return self.source
+
     def additional_errors(
         self, spatial: dict[str, Array], time: Array, error: Array
     ) -> dict[str, float]:
@@ -227,6 +232,32 @@ class PolynomialNeumannHeatCase(BenchmarkCase):
         return [dict(kind="neumann", field="u", axis=axis, value=0) for axis in axes]
 
 
+class ConductivityHeatCase(PolynomialNeumannHeatCase):
+    def additional_errors(
+        self, spatial: dict[str, Array], time: Array, error: Array
+    ) -> dict[str, float]:
+        x, y = (np.unique(spatial[axis]) for axis in ("x", "y"))
+        order = np.lexsort((spatial["y"].reshape(-1), spatial["x"].reshape(-1)))
+        if len(x) * len(y) != len(error):
+            raise ValueError("Mean heat requires a Cartesian evaluation grid")
+        volume_error = error[order].reshape(len(x), len(y), -1)
+        integral = np.trapz(np.trapz(volume_error, y, axis=1), x, axis=0)
+        return {"mean_heat_max_error": float(np.max(np.abs(integral)))}
+
+    @property
+    def source(self) -> Path:
+        raise ValueError("Conductivity source requires explicit formula/table preparation")
+
+    def prepare_source(self, directory: Path, representation: str | None = None) -> Path:
+        from .conductivity import materialized_source
+
+        if representation not in ("formula", "table"):
+            raise ValueError("Conductivity case requires formula/table representation")
+        path = directory / "functions.py"
+        path.write_text(materialized_source(self.name, representation), encoding="utf-8")
+        return path
+
+
 class MixedBoxHeatCase(BoxNeumannHeatCase):
     def mode_for(self, axis: str) -> HeatAxisMode:
         return (
@@ -270,6 +301,7 @@ FACTORIES: dict[Family, type[BenchmarkCase]] = {
     "mixed": MixedBoxHeatCase,
     "polynomial": PolynomialNeumannHeatCase,
     "homogeneous": HomogeneousNeumannHeatCase,
+    "conductivity": ConductivityHeatCase,
     "advection": AdvectionCase,
     "burgers": BurgersCase,
 }
@@ -277,7 +309,10 @@ CASES: dict[str, BenchmarkCase] = {
     spec.name: FACTORIES[spec.family](
         spec.name,
         spec.dimensions,
-        grid=CartesianGrid(spec.grid_counts) if spec.grid_counts is not None else CartesianGrid(),
+        grid=CartesianGrid(
+            spec.grid_counts or (16, 41),
+            time_interval=(0, 1) if spec.family == "conductivity" else (0, 0.5),
+        ),
         budget=TrainingBudget(layers=spec.layers),
     )
     for spec in SPECS

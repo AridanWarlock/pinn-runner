@@ -49,6 +49,11 @@ def identity(trial: Json) -> tuple[str | int, ...]:
         elif not isinstance(value, str) or not value:
             raise ValueError(f"{key}: expected nonempty string")
         values.append(value)
+    if "coefficient_representation" in trial:
+        representation = trial["coefficient_representation"]
+        if representation not in ("formula", "table"):
+            raise ValueError("Invalid coefficient representation")
+        values.append(representation)
     if "points_override" in trial:
         points = trial["points_override"]
         if type(points) is not int or points <= 0:
@@ -58,6 +63,8 @@ def identity(trial: Json) -> tuple[str | int, ...]:
 
 
 def arm_fields(manifest: Json) -> tuple[str, ...]:
+    if "physics" in manifest:
+        return (*ARM_FIELDS, "coefficient_representation")
     return (*ARM_FIELDS, "points_override") if "density" in manifest else ARM_FIELDS
 
 
@@ -118,6 +125,8 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
         required |= {"case_faces", "environment_requirements", "network"}
         if "density" in manifest:
             required.add("density")
+        if "physics" in manifest:
+            required.add("physics")
     if set(manifest) != required or manifest["contract"] not in (1, 2):
         raise ValueError("Manifest contract 1/2 with exactly the documented fields required")
     if manifest["registration"] not in ("prospective", "retrospective_import"):
@@ -186,13 +195,10 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
     for key, value in physical.items():
         number(value, key, positive=True)
     comparison = object_value(manifest["comparison"], "comparison")
-    if set(comparison) != {
-        "baseline",
-        "candidate",
-        "quality_factor",
-        "median_training_ratio_max",
-        "worst_training_ratio_max",
-    }:
+    comparison_fields = {"baseline", "candidate", "quality_factor"}
+    if "physics" not in manifest:
+        comparison_fields |= {"median_training_ratio_max", "worst_training_ratio_max"}
+    if set(comparison) != comparison_fields:
         raise ValueError("Explicit paired comparison and timing gates required")
     fields = arm_fields(manifest)
     for name in ("baseline", "candidate"):
@@ -211,8 +217,28 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
     for case, seed in {(t["case"], t["seed"]) for t in expected}:
         if sum(t["case"] == case and t["seed"] == seed for t in expected) != 2:
             raise ValueError("Every case/seed must have exactly one baseline and one candidate")
-    for key in ("quality_factor", "median_training_ratio_max", "worst_training_ratio_max"):
+    for key in comparison_fields - {"baseline", "candidate"}:
         number(comparison[key], key, positive=True)
+    if "physics" in manifest:
+        from benchmarks.conductivity import physics
+
+        if manifest["contract"] != 2 or "density" in manifest:
+            raise ValueError("Coefficient comparison requires contract2 without density")
+        definitions = object_value(manifest["physics"], "physics")
+        if set(definitions) != set(case_limits) or any(
+            definitions[case] != physics(case) for case in case_limits
+        ):
+            raise ValueError("Physics differs from registered conductivity cases")
+        left, right = comparison["baseline"], comparison["candidate"]
+        if (
+            left["coefficient_representation"] != "formula"
+            or right["coefficient_representation"] != "table"
+        ):
+            raise ValueError("Coefficient comparison requires formula/table arms")
+        if any(left[k] != right[k] for k in ARM_FIELDS):
+            raise ValueError("Coefficient comparison must preserve execution and features")
+        if any(t.get("coefficient_representation") not in ("formula", "table") for t in expected):
+            raise ValueError("Expected coefficient representation required")
     if "density" in manifest:
         density = object_value(manifest["density"], "density")
         if set(density) != {"training_seconds", "snapshot_seconds", "sampling", "prefix_points"}:

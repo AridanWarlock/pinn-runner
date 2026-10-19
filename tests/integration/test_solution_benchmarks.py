@@ -31,6 +31,7 @@ from benchmarks.variants import (
     TrainingComposition,
 )
 from pinnstorch.api import Coordinates, Equation
+from pinnstorch.runner.factory import SolverFactory
 from pinnstorch.runner.problem import load_problem
 from pinnstorch.runner.settings import TaskSettings
 from scripts.benchmark_solutions import compare
@@ -129,8 +130,19 @@ def analytical_tensor(case: BenchmarkCase, coordinates: Coordinates) -> torch.Te
     return field
 
 
-@pytest.mark.parametrize("name", list(CASES))
-def test_analytical_field_satisfies_equation_initial_and_boundaries(name: str) -> None:
+@pytest.mark.parametrize(
+    ("name", "representation"),
+    [
+        (name, representation)
+        for name in CASES
+        for representation in (
+            ("formula", "table") if name.startswith("heat_conductivity_beta") else (None,)
+        )
+    ],
+)
+def test_analytical_field_satisfies_equation_initial_and_boundaries(
+    name: str, representation: str | None, tmp_path: Path
+) -> None:
     case = CASES[name]
     generator = torch.Generator().manual_seed(19)
     columns = [
@@ -140,8 +152,12 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(name: str) -
     coordinates = Coordinates(dict(zip(("x", "y", "z"), columns[:-1])), columns[-1])
     time = coordinates.t
     field = analytical_tensor(case, coordinates)
-    problem = load_problem(case.source)
-    equation = Equation({"u": field}, coordinates)
+    source = case.prepare_source(tmp_path, representation)
+    problem = load_problem(source)
+    settings = TaskSettings.read(case.config("cpu", 3, 1234))
+    factory = SolverFactory(settings, problem, tmp_path, source.parent)
+    factory.adapter.coefficients.double()
+    equation = Equation({"u": field}, factory.adapter.context(columns[:-1], columns[-1]))
     for function in problem.equations.values():
         torch.testing.assert_close(function(equation), torch.zeros_like(field), atol=2e-12, rtol=0)
     numpy_spatial = {axis: value.detach().numpy() for axis, value in coordinates.spatial.items()}

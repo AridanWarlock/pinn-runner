@@ -18,7 +18,10 @@ def test_all_published_case_configs_and_references_are_preserved() -> None:
     path = Path(__file__).parent / "fixtures/case-catalog-2026-10-17.csv"
     with path.open() as stream:
         rows = list(csv.DictReader(stream))
-    assert set(CASES) == {r["name"] for r in rows}
+    assert set(CASES) == {r["name"] for r in rows} | {
+        "heat_conductivity_beta0",
+        "heat_conductivity_beta1",
+    }
     for row in rows:
         case = CASES[row["name"]]
         assert type(case).__name__ == row["class"]

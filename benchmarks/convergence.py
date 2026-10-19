@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import math
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +45,7 @@ class ConvergenceArm:
     background: str = "general"
     encoding: str = "identity"
     points: int | None = None
+    coefficient_representation: str | None = None
 
     @property
     def name(self) -> str:
@@ -51,6 +53,8 @@ class ConvergenceArm:
         if self.background != "general":
             base += f"-{self.background}"
         base = base if self.encoding == "identity" else f"{base}-{self.encoding}"
+        if self.coefficient_representation is not None:
+            base += f"-{self.coefficient_representation}"
         return base if self.points is None else f"{base}-n{self.points}"
 
     def apply(self, config: dict[str, Any]) -> None:
@@ -138,6 +142,7 @@ class SnapshotTraining:
     def run(self) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         objects, device = self.objects, self.plan.device
         initial_fingerprint = tensor_fingerprint(objects.model.state_dict())
+        initial_parameters = tensor_fingerprint(dict(objects.model.named_parameters()))
         if device == "cuda":
             torch.cuda.reset_peak_memory_stats()
         synchronize(device)
@@ -182,6 +187,7 @@ class SnapshotTraining:
             "snapshot_seconds": overhead,
             "training_seconds_with_snapshots": training_seconds,
             "initial_state_sha256": initial_fingerprint,
+            "initial_parameters_sha256": initial_parameters,
             "fixed_objective_sha256": objective_fingerprint(stage.objective.batches),
             "adam_steps": objects.trainer.global_step,
             "peak_allocated_bytes": peak_allocated,
@@ -239,6 +245,20 @@ class SnapshotEvaluation:
                 [residuals[name] for name in self.factory.problem.equations], dim=1
             )
             metrics["pde_rmse"] = float(residual.detach().square().mean().sqrt().cpu())
+        if self.plan.case.name.startswith("heat_conductivity_beta"):
+            flux_settings = replace(
+                self.factory.settings,
+                boundaries=tuple(
+                    replace(boundary, kind="heat_flux", conductivity="conductivity")
+                    for boundary in self.factory.settings.boundaries
+                ),
+            )
+            metrics["physical_flux_max"] = max(
+                row.max_error
+                for row in boundary_operator_errors(
+                    flux_settings, self.factory.adapter, self.model, self.plan.device
+                )
+            )
         if not all(math.isfinite(v) for v in metrics.values()):
             raise ValueError("Nonfinite snapshot metric")
         return metrics, {
@@ -263,8 +283,9 @@ def convergence_trial(
     directory.mkdir(parents=True, exist_ok=False)
     config = plan.config(seed, arm)
     (directory / "config.yaml").write_text(yaml.safe_dump(config), encoding="utf-8")
-    problem = load_problem(plan.case.source)
-    factory = SolverFactory(TaskSettings.read(config), problem, directory, plan.case.source.parent)
+    source = plan.case.prepare_source(directory, arm.coefficient_representation)
+    problem = load_problem(source)
+    factory = SolverFactory(TaskSettings.read(config), problem, directory, source.parent)
     objects = factory.build(predicting=False)
     setup_seconds = time.perf_counter() - started
     if plan.density is None:
@@ -280,9 +301,7 @@ def convergence_trial(
     )
     evaluator = SnapshotEvaluation(
         plan,
-        SolverFactory(
-            TaskSettings.read(evaluator_config), problem, directory, plan.case.source.parent
-        ),
+        SolverFactory(TaskSettings.read(evaluator_config), problem, directory, source.parent),
     )
     for row in rows:
         metrics, diagnostics = evaluator.evaluate(directory / f"lb-{row['lb_steps']}.pt")
@@ -309,7 +328,20 @@ def convergence_trial(
         evaluation_seconds=time.perf_counter() - evaluation_started,
         trial_wall_seconds=time.perf_counter() - started,
     )
+    physical_identity: dict[str, Any] = {}
+    if arm.coefficient_representation is not None:
+        from .conductivity import physics, source_sha256
+
+        actual_source = hashlib.sha256(source.read_text(encoding="utf-8").encode()).hexdigest()
+        if actual_source != source_sha256(plan.case.name, arm.coefficient_representation):
+            raise ValueError("Materialized problem differs from registered source")
+        physical_identity = dict(
+            coefficient_representation=arm.coefficient_representation,
+            physics=physics(plan.case.name),
+            problem_source_sha256=actual_source,
+        )
     return {
+        **physical_identity,
         **({"points_override": arm.points} if plan.density is not None else {}),
         "case": plan.case.name,
         "backend": arm.execution,

@@ -113,7 +113,14 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
         if name not in CATALOG or not CATALOG[name].convergence:
             raise ValueError(f"No convergence executor registered for {name}")
         spec = CATALOG[name]
-        if set(limits) - {"relative_l2", "final_relative_l2", "pde_rmse", "mode_relative_l2"}:
+        supported = {"relative_l2", "final_relative_l2", "pde_rmse", "mode_relative_l2"}
+        if "physics" in manifest:
+            supported |= {"worst_time_relative_l2", "physical_flux_max"}
+            if not supported - {"mode_relative_l2"} <= limits.keys():
+                raise ValueError("Coefficient study requires temporal and physical flux gates")
+        elif spec.family == "conductivity":
+            raise ValueError("Conductivity cases require explicit physics")
+        if set(limits) - supported:
             raise ValueError("Unsupported quality metric")
         if "mode_relative_l2" in limits and not spec.modal_metric:
             raise ValueError("The selected case has no modal error evaluator")
@@ -155,6 +162,7 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
         "arms": {name: manifest["comparison"][name] for name in ("baseline", "candidate")},
         "constraints": parameters["constraints"],
         "catalog_scope": "current_tool_version",
+        "comparison_purpose": "absolute_accuracy" if "physics" in manifest else "paired_cost",
         "cases": rows,
         "trials": count,
         "adam_steps_total": count * parameters["adam_steps"],

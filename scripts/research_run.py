@@ -40,6 +40,9 @@ def main() -> None:
                 for key in ("backend", "lifting", "backward", "background", "spatial_encoding")
             ),
             points=manifest["comparison"][name].get("points_override"),
+            coefficient_representation=manifest["comparison"][name].get(
+                "coefficient_representation"
+            ),
         )
         for name in ("baseline", "candidate")
     ]

@@ -89,7 +89,7 @@ def compare(evidence: Json) -> Json:
                 "objective_prefix_sha256" if "density" in manifest else "fixed_objective_sha256"
             )
             for key in (
-                "initial_state_sha256",
+                "initial_parameters_sha256" if "physics" in manifest else "initial_state_sha256",
                 fingerprint,
                 "prediction_points",
                 "prediction_batch_size",
@@ -167,6 +167,9 @@ def compare(evidence: Json) -> Json:
                 "confirmed_crossing_preserved": all(
                     p["confirmed_crossing_preserved"] for p in paired
                 ),
+                "baseline_final_target_passed": sum(
+                    p["baseline_final_target_passed"] for p in paired
+                ),
                 "candidate_final_target_passed": sum(
                     p["candidate_final_target_passed"] for p in paired
                 ),
@@ -175,8 +178,12 @@ def compare(evidence: Json) -> Json:
                 ),
                 "median_training_ratio": median,
                 "worst_training_ratio": worst,
-                "timing_passed": median <= settings["median_training_ratio_max"]
-                and worst <= settings["worst_training_ratio_max"],
+                "timing_passed": (
+                    median <= settings["median_training_ratio_max"]
+                    and worst <= settings["worst_training_ratio_max"]
+                )
+                if "physics" not in manifest
+                else None,
                 "details": paired,
             }
         )
@@ -198,11 +205,20 @@ def compare(evidence: Json) -> Json:
     )
     if "density" in manifest:
         passed = all(case["density_target_passed"] for case in results)
+    if "physics" in manifest:
+        passed = all(
+            case["physical_passed"]
+            and case["paired_quality_passed"]
+            and case["baseline_final_target_passed"] == case["pairs"]
+            and case["candidate_final_target_passed"] == case["pairs"]
+            for case in results
+        )
     return {
         "contract": 1,
         "kind": "research-comparison",
         "registration": manifest["registration"],
         "revision": manifest["revision"],
+        "comparison_purpose": "absolute_accuracy" if "physics" in manifest else "paired_cost",
         "trials": len(trials),
         "comparison_passed": passed,
         "working_tree_dirty": evidence["environment"].get("working_tree_dirty"),

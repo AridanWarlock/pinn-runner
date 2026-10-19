@@ -79,6 +79,9 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
         default=["identity"],
         help="Neumann features use eager or analytic derivatives without projection",
     )
+    parser.add_argument("--coefficient-representation", choices=("formula", "table"))
+    parser.add_argument("--worst-time-relative-l2", type=float)
+    parser.add_argument("--physical-flux-max", type=float)
     parser.add_argument("--relative-l2", type=float, default=LIMITS["relative_l2"])
     parser.add_argument("--final-relative-l2", type=float, default=LIMITS["final_relative_l2"])
     parser.add_argument("--pde-rmse", type=float, default=LIMITS["pde_rmse"])
@@ -107,6 +110,9 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     }
     if args.mode_relative_l2 is not None:
         limits["mode_relative_l2"] = args.mode_relative_l2
+    for name in ("worst_time_relative_l2", "physical_flux_max"):
+        if getattr(args, name) is not None:
+            limits[name] = getattr(args, name)
     plan = ConvergencePlan(
         CASES[args.case],
         args.steps,
@@ -128,6 +134,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
                 background,
                 encoding,
                 args.points if args.density is not None else None,
+                args.coefficient_representation,
             )
             for execution, lifting, backward, background, encoding in itertools.product(
                 args.hard_execution,
