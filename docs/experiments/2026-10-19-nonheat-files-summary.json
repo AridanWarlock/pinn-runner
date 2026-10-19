@@ -1,0 +1,29 @@
+{
+  "kind": "cpu_public_file_acceptance",
+  "solver_source_revision": "fbcc9a29c6027eec4ffb89499fe8479ff774dbcc",
+  "tests": 2,
+  "passed": 2,
+  "device": "cpu",
+  "test_file_sha256": "f81a4a9b9fa5f0b5c5b028bff3b8672f837838f5b32c03290d7092fa268d1575",
+  "scenarios": [
+    {
+      "name": "test_nonheat_train_exact_load_predict_and_retrain[advection]",
+      "seconds": 6.466
+    },
+    {
+      "name": "test_nonheat_train_exact_load_predict_and_retrain[burgers]",
+      "seconds": 6.184
+    }
+  ],
+  "cli_processes": 8,
+  "fit_invocations": 6,
+  "phases_per_pde": [
+    "train_3_adam_2_lbfgs",
+    "exact_weight_load_probe_1_tiny_adam_no_lbfgs",
+    "predict_changed_grid_5x6",
+    "retrain_3_adam_2_lbfgs"
+  ],
+  "weights_exact_after_load_probe": true,
+  "default_soft_eager_preserved": true,
+  "limitations": "CPU public file lifecycle only. Tiny fits do not establish solution accuracy or Windows GPU file acceptance."
+}

@@ -1,0 +1,27 @@
+{
+  "solver_source_revision": "fbcc9a29c6027eec4ffb89499fe8479ff774dbcc",
+  "full_cpu": {
+    "passed": 965,
+    "seconds": 366.14,
+    "mypy_files": 133,
+    "ruff": true,
+    "format": true
+  },
+  "latest_fast_cpu": {
+    "passed": 908,
+    "e2e_deselected": 59,
+    "seconds": 18.69,
+    "mypy_files": 133,
+    "ruff": true,
+    "format": true
+  },
+  "additional_public_file_tests": {
+    "passed": 2,
+    "source_sha256": "f81a4a9b9fa5f0b5c5b028bff3b8672f837838f5b32c03290d7092fa268d1575"
+  },
+  "conductivity_network_cpu_gradient_models": 48,
+  "conductivity_cuda_numeric_tests": 16,
+  "nonheat_cpu_gradient_models": 8,
+  "nonheat_cpu_directional_differences": 4,
+  "limitations": "Full965 predates two newly added file tests. They passed separately; excluded e2e are not reported as rerun. No production Python code changed after fbcc9a2."
+}

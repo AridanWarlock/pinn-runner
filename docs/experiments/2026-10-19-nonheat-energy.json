@@ -1,0 +1,16 @@
+{
+  "device": "cpu",
+  "models": 0,
+  "optimizer_steps": 0,
+  "quadrature_nodes": 64,
+  "checks": 12,
+  "max_absolute_error": 2.220446049250313e-16,
+  "burgers_viscosity": 0.1,
+  "burgers_horizon": 0.5,
+  "critical_time": 0.4647080265847003,
+  "burgers_max_homogeneous_growth_bound": 1.1333608796654253,
+  "burgers_final_homogeneous_growth_bound": 1.132672601621889,
+  "burgers_bound_without_diffusion": 1.8553255780454798,
+  "script_sha256": "b373f6e52163e8120e1b2d8ccede7d2529bd9f57a0a0d4f3dd3f6932e11df22a",
+  "limitations": "Continuous smooth error identities with stated boundary assumptions. No trained PINN accuracy or continuous certification from finite holdouts."
+}
