@@ -1,0 +1,68 @@
+{
+  "date": "2026-10-19",
+  "kind": "existing-evidence-revalidation",
+  "new_training_runs": 0,
+  "new_gpu_jobs": 0,
+  "scope": "conditional GPU kernel service only; no wall-time ceiling claim",
+  "budget_csv_sha256": "954e038b254970e3d063585676f0bdbe84ab6ee05f1d8b0f84d5b2a290b0c05f",
+  "arithmetic": {
+    "autograd": {
+      "calls": 9,
+      "conditional_gpu_service_ceiling_median": 2.6845060175733444,
+      "min": 2.6833475166113425,
+      "max": 2.685120590134534
+    },
+    "analytic": {
+      "calls": 9,
+      "conditional_gpu_service_ceiling_median": 2.3596166707584465,
+      "min": 2.3581610090138874,
+      "max": 2.3618768560011056
+    }
+  },
+  "bundles": {
+    "analytic011": {
+      "comparison_passed": true,
+      "bundle_marker_sha256": "84b8cc2dea804ea190c4f524d95fdfef6931d89a3d580d4e26c79678b5d1a165"
+    },
+    "analytic012": {
+      "comparison_passed": true,
+      "bundle_marker_sha256": "de4666a41da3b88c8352e58d72352b1dbf10e52f6e9bc8922cebf6ff16a801f1"
+    },
+    "n13b1018120325": {
+      "comparison_passed": true,
+      "bundle_marker_sha256": "dc2463d244401a5d859d37f1bea7794aefb8cb241c3b52b02c677d3211c19404"
+    },
+    "timing014": {
+      "comparison_passed": true,
+      "bundle_marker_sha256": "801892cff12bbe9cb5e16ffda35ab8f9bf6e686a1d1a262761d6a796434f8958"
+    },
+    "lbfgs015": {
+      "comparison_passed": true,
+      "bundle_marker_sha256": "cdeef6d94e619ec4712b17df6461cc838eaf73eb16856fffa195096f25d37517"
+    },
+    "geometry016b": {
+      "comparison_passed": true,
+      "bundle_marker_sha256": "bd43eebdb17881d76f882e0453e7c987077b223ebac1ea9232fe47819d0c4d0e"
+    },
+    "lifecycle017": {
+      "comparison_passed": true,
+      "bundle_marker_sha256": "93ccdf363912bbc6102b89b640916bd795fa2531475e16221988234ea578f5a5"
+    },
+    "alloc018": {
+      "comparison_passed": true,
+      "bundle_marker_sha256": "6a097d4ca2031f527498f2fef854685c719d83d0ac806590f5506d3320635f56"
+    },
+    "public019": {
+      "comparison_passed": true,
+      "bundle_marker_sha256": "68d415a8c1631cddfe5ac8723b44e52e0c3a27c500e306809b263ece48da5caf"
+    }
+  },
+  "cpu_tests": {
+    "selection": [
+      "tests/runner/test_trace_budget.py",
+      "tests/runner/test_native_trace_analysis.py"
+    ],
+    "passed": 14,
+    "full_suite_repeated": false
+  }
+}
