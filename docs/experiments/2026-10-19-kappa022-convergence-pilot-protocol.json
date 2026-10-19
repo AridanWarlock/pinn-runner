@@ -1,0 +1,263 @@
+{
+  "contract": 2,
+  "registration": "prospective",
+  "revision": "fbcc9a29c6027eec4ffb89499fe8479ff774dbcc",
+  "reports": [
+    "c0/report.json",
+    "c1/report.json"
+  ],
+  "expected_trials": [
+    {
+      "case": "heat_conductivity_beta0",
+      "seed": 19,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "neumann_polynomial",
+      "coefficient_representation": "formula"
+    },
+    {
+      "case": "heat_conductivity_beta0",
+      "seed": 19,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "neumann_polynomial",
+      "coefficient_representation": "table"
+    },
+    {
+      "case": "heat_conductivity_beta0",
+      "seed": 73,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "neumann_polynomial",
+      "coefficient_representation": "formula"
+    },
+    {
+      "case": "heat_conductivity_beta0",
+      "seed": 73,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "neumann_polynomial",
+      "coefficient_representation": "table"
+    },
+    {
+      "case": "heat_conductivity_beta1",
+      "seed": 19,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "neumann_polynomial",
+      "coefficient_representation": "formula"
+    },
+    {
+      "case": "heat_conductivity_beta1",
+      "seed": 19,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "neumann_polynomial",
+      "coefficient_representation": "table"
+    },
+    {
+      "case": "heat_conductivity_beta1",
+      "seed": 73,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "neumann_polynomial",
+      "coefficient_representation": "formula"
+    },
+    {
+      "case": "heat_conductivity_beta1",
+      "seed": 73,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "neumann_polynomial",
+      "coefficient_representation": "table"
+    }
+  ],
+  "report_parameters": {
+    "adam_steps": 500,
+    "lbfgs_snapshots": [
+      0,
+      100,
+      250,
+      500
+    ],
+    "constraints": "hard_initial_robin",
+    "points_override": 1024,
+    "lbfgs_tolerance_change": 1e-12,
+    "execution_lifecycle": "isolated_trials"
+  },
+  "case_limits": {
+    "heat_conductivity_beta0": {
+      "relative_l2": 0.002,
+      "final_relative_l2": 0.003,
+      "pde_rmse": 0.003,
+      "worst_time_relative_l2": 0.005,
+      "physical_flux_max": 2e-05
+    },
+    "heat_conductivity_beta1": {
+      "relative_l2": 0.002,
+      "final_relative_l2": 0.003,
+      "pde_rmse": 0.003,
+      "worst_time_relative_l2": 0.005,
+      "physical_flux_max": 2e-05
+    }
+  },
+  "physical_limits": {
+    "initial_rmse": 2e-06,
+    "boundary_max": 2e-05
+  },
+  "comparison": {
+    "baseline": {
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "neumann_polynomial",
+      "coefficient_representation": "formula"
+    },
+    "candidate": {
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "neumann_polynomial",
+      "coefficient_representation": "table"
+    },
+    "quality_factor": 1.5
+  },
+  "case_faces": {
+    "heat_conductivity_beta0": [
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "x",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "x",
+        "side": "upper"
+      },
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "y",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "y",
+        "side": "upper"
+      }
+    ],
+    "heat_conductivity_beta1": [
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "x",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "x",
+        "side": "upper"
+      },
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "y",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "neumann",
+        "axis": "y",
+        "side": "upper"
+      }
+    ]
+  },
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "network": {
+    "hidden_layers": [
+      32,
+      32,
+      32
+    ],
+    "spatial_encoding": "neumann_polynomial"
+  },
+  "physics": {
+    "heat_conductivity_beta0": {
+      "equation": "dt(u)-div(kappa*grad(u))=manufactured_source",
+      "dimensions": 2,
+      "volumetric_heat_capacity": 1,
+      "beta": 0,
+      "kappa0": 0.125,
+      "space": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "time": [
+        0,
+        1
+      ],
+      "initial": "product(3*x_i**2-2*x_i**3)",
+      "boundary": "zero_normal_heat_flux",
+      "template_sha256": "ae900d77f0c2f73c9ab42cf5fef4dd26c2f167003247d93a8ac8e4c7e95ebb6e"
+    },
+    "heat_conductivity_beta1": {
+      "equation": "dt(u)-div(kappa*grad(u))=manufactured_source",
+      "dimensions": 2,
+      "volumetric_heat_capacity": 1,
+      "beta": 1,
+      "kappa0": 0.125,
+      "space": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "time": [
+        0,
+        1
+      ],
+      "initial": "product(3*x_i**2-2*x_i**3)",
+      "boundary": "zero_normal_heat_flux",
+      "template_sha256": "ae900d77f0c2f73c9ab42cf5fef4dd26c2f167003247d93a8ac8e4c7e95ebb6e"
+    }
+  }
+}

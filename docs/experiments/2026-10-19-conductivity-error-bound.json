@@ -1,0 +1,24 @@
+{
+  "residual_only_counterexample": {
+    "pde_rms": 0.0029000000000000002,
+    "relative_l2": 0.007559515153086866,
+    "final_relative_l2": 0.019107870648509048,
+    "initial_error": 0,
+    "physical_flux": 0
+  },
+  "kind": "analytic_quadrature_diagnostic",
+  "device": "cpu",
+  "optimizer_steps": 0,
+  "quadrature_nodes": 64,
+  "passed": 19,
+  "max_absolute_error": 2.220446049250313e-16,
+  "reference_global_l2": 0.2442216600507913,
+  "reference_final_l2": 0.13664093529225002,
+  "continuous_residual_bound_global_relative": 0.007820188089400206,
+  "continuous_residual_bound_final_relative": 0.021955353229861516,
+  "preregistered_global_relative_gate": 0.002,
+  "preregistered_final_relative_gate": 0.003,
+  "trace_constant_upper_bound": 1.1426290083515547,
+  "script_sha256": "4a260f575e311370185d0776d7262f792644b2f1f8d8d22c1230017bd4fd9d4c",
+  "limitations": "Exact continuous norm assumptions; finite PINN holdouts do not certify these norms. No training or GPU timing."
+}
