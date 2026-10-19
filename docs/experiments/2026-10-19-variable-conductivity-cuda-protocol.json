@@ -1,0 +1,35 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "8f1f37e88d9f1fb79a068d5119c3bc205cbba6f3",
+  "suite": "tests/numerics/test_variable_conductivity_network.py",
+  "tests": [
+    "tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype0-0-1]",
+    "tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype0-0-2]",
+    "tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype0-1-1]",
+    "tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype0-1-2]",
+    "tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype1-0-1]",
+    "tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype1-0-2]",
+    "tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype1-1-1]",
+    "tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype1-1-2]",
+    "tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype0-formula-1]",
+    "tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype0-formula-2]",
+    "tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype0-table-1]",
+    "tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype0-table-2]",
+    "tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype1-formula-1]",
+    "tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype1-formula-2]",
+    "tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype1-table-1]",
+    "tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype1-table-2]"
+  ],
+  "test_sha256": "c5efc7ad2d4123247aa0282afefc22c408b38a3242a68cae6a88ddf00048f3cf",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
