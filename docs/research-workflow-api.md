@@ -2,9 +2,12 @@
 
 ## Численная приёмка (contract 6)
 
-`numerical-acceptance` запускает через ту же очередь только один из двух
+`numerical-acceptance` запускает через ту же очередь только один из трёх
 фиксированных наборов:20 сценариев `test_neumann_polynomial_pullback.py`
-или6 файловых `test_neumann_feature_runner.py`. Протокол фиксирует
+либо6 файловых `test_neumann_feature_runner.py`, либо16 численных
+`test_variable_conductivity_network.py`. Последний проверяет формулу/таблицу,
+все весовые градиенты, FP32/FP64 и1D/2D без шагов оптимизатора; один seed19.
+Протокол фиксирует
 список nodeid, SHA256 файла и CUDA-среду; произвольные pytest-файлы не допускаются.
 Для идентичности Git-текста задан `test_hash_mode=lf-normalized`: учитывается
 только перенос CRLF→LF; сырые SHA до/после также обязаны совпасть.
@@ -14,6 +17,7 @@ teardown не считаются успехом. При нарушенной п�
 диагностические fit; оценки скорости нет в обоих. Предпосылки:
 `geometry-acceptance-protocol-2026-10-18.md` и
 `lifecycle-acceptance-protocol-2026-10-18.md`.
+Переменная теплопроводность: `variable-conductivity-cuda-protocol-2026-10-19.md`.
 
 ## Ограниченный контроль L-BFGS (contract 5)
 

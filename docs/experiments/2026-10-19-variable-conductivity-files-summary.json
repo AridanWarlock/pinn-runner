@@ -1,0 +1,18 @@
+{
+  "source_revision": "20c13c83d341ff39ac0be3cfabdb6a153af3ef37",
+  "device": "cpu",
+  "tests": 5,
+  "passed": 5,
+  "suite": "tests/integration/test_variable_conductivity_runner.py",
+  "fits_per_successful_suite": 13,
+  "accuracy_training_claim": false,
+  "first_attempt": {
+    "failed": 4,
+    "cause": "Test expected coefficient guard; functions.py change is rejected first by hard-constraint signature",
+    "solver_changed": false,
+    "log_sha256": "0e3592987b8b2ee051063599ba01c91eeb646f7ea691d21ece9ae7becdbb03e4"
+  },
+  "successful_attempt": {
+    "log_sha256": "4d2df7a96ce4a667da3ccf295f2d16c728a65ed0e861a3baa919f7bb469b02b5"
+  }
+}

@@ -52,7 +52,28 @@ LIFECYCLE_EXPECTED = [
         ("heat_neumann2d", "neumann_polynomial", "neumann_analytic"),
     )
 ]
-SUITES = {SUITE: EXPECTED, LIFECYCLE_SUITE: LIFECYCLE_EXPECTED}
+CONDUCTIVITY_SUITE = "tests/numerics/test_variable_conductivity_network.py"
+CONDUCTIVITY_EXPECTED = [
+    *[
+        CONDUCTIVITY_SUITE
+        + f"::test_every_network_parameter_matches_expanded_operator[dtype{dtype}-{beta}-{d}]"
+        for dtype in (0, 1)
+        for beta in (0, 1)
+        for d in (1, 2)
+    ],
+    *[
+        CONDUCTIVITY_SUITE
+        + f"::test_exact_field_detects_missing_conductivity_derivative[dtype{dtype}-{kind}-{d}]"
+        for dtype in (0, 1)
+        for kind in ("formula", "table")
+        for d in (1, 2)
+    ],
+]
+SUITES = {
+    SUITE: EXPECTED,
+    LIFECYCLE_SUITE: LIFECYCLE_EXPECTED,
+    CONDUCTIVITY_SUITE: CONDUCTIVITY_EXPECTED,
+}
 FIELDS = {
     "contract",
     "kind",
@@ -103,6 +124,23 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == CONDUCTIVITY_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=16,
+            dimensions=[1, 2],
+            dtypes=["float32", "float64"],
+            coefficient_representations=["formula", "table"],
+            beta=[0, 1],
+            seeds=[19],
+            network_models=16,
+            finite_difference_checks=8,
+            optimizer_updates=0,
+            training=False,
+            performance_measurement=False,
+        )
     if manifest["suite"] == LIFECYCLE_SUITE:
         return dict(
             contract=1,

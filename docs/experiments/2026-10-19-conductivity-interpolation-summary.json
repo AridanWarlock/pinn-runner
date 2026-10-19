@@ -1,0 +1,22 @@
+{
+  "kind": "cpu-coefficient-refinement",
+  "source_revision": "20c13c83d341ff39ac0be3cfabdb6a153af3ef37",
+  "cells": [
+    4,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256
+  ],
+  "dtype": "torch.float64",
+  "new_training_runs": 0,
+  "neural_solution_error_measured": false,
+  "csv_sha256": "53467525c12205da6137e89e6850937f1073bb7abaf32c48efac1b55e72f1716",
+  "script_sha256": "f4a97a3a1eed889377cd5a81ff03d82bad8fd96d9a6cedb41cf0b6ba7fb975c9",
+  "max_rms_formula_absolute_error": 5.941427905220564e-17,
+  "max_absolute_spatial_mean": 4.388308293135079e-17,
+  "finest_residual_observed_order": 1.000033018689648,
+  "asymptotic_rms_over_h": 0.05198150863418245
+}

@@ -86,6 +86,25 @@ def test_lifecycle_inventory_and_budget_are_distinct_from_pure_numerics() -> Non
         compare(e)
 
 
+def test_variable_conductivity_inventory_preserves_zero_training_budget() -> None:
+    e = evidence()
+    m = e["manifest"]
+    m["suite"] = acceptance.CONDUCTIVITY_SUITE
+    m["tests"] = acceptance.CONDUCTIVITY_EXPECTED.copy()
+    e["collected"] = acceptance.CONDUCTIVITY_EXPECTED.copy()
+    e["trials"] = e["trials"][:16]
+    for trial, nodeid in zip(e["trials"], acceptance.CONDUCTIVITY_EXPECTED):
+        trial["nodeid"] = nodeid
+    planned = plan(m)
+    assert planned["tests"] == 16 and planned["network_models"] == 16
+    assert planned["finite_difference_checks"] == 8
+    assert planned["optimizer_updates"] == 0 and planned["training"] is False
+    assert compare(e)["passed"] == 16 and compare(e)["comparison_passed"]
+    m["tests"].pop()
+    with pytest.raises(ValueError, match="allowlisted"):
+        acceptance.validate(m)
+
+
 @pytest.mark.parametrize("status", ["failed", "skipped", "not_run", "xpassed", "xfailed"])
 @pytest.mark.parametrize("phase", ["setup", "call", "teardown"])
 def test_no_failed_skipped_or_expected_failure_counts_as_success(status: str, phase: str) -> None:

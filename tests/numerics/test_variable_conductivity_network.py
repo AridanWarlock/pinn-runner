@@ -1,5 +1,6 @@
 """Independent conservative-operator controls on exact fields and actual PINN weights."""
 
+import os
 from pathlib import Path
 
 import pytest
@@ -11,14 +12,19 @@ from scripts.audit_variable_conductivity import audit_pair, make_factory, points
 
 @pytest.mark.parametrize("dimensions", [1, 2])
 @pytest.mark.parametrize("beta", [0, 1])
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
 def test_every_network_parameter_matches_expanded_operator(
-    tmp_path: Path, dimensions: int, beta: int
+    tmp_path: Path, dimensions: int, beta: int, dtype: torch.dtype
 ) -> None:
-    rows = audit_pair(tmp_path / "pair", dimensions, torch.float64, beta, 19)
+    rows = audit_pair(
+        tmp_path / "pair", dimensions, dtype, beta, 19, os.environ.get("PINN_TEST_DEVICE", "cpu")
+    )
     assert len(rows) == 2
     assert all(row["state_unchanged"] for row in rows)
     assert all(row["parameters"] > 2000 for row in rows)
-    assert all(row["directional_absolute_error"] is not None for row in rows)
+    assert all(
+        (row["directional_absolute_error"] is not None) == (dtype == torch.float64) for row in rows
+    )
 
 
 @pytest.mark.parametrize("dimensions", [1, 2])
@@ -27,9 +33,11 @@ def test_every_network_parameter_matches_expanded_operator(
 def test_exact_field_detects_missing_conductivity_derivative(
     tmp_path: Path, dimensions: int, representation: str, dtype: torch.dtype
 ) -> None:
-    factory = make_factory(tmp_path / "case", dimensions, 1, representation, 19)
-    factory.adapter.coefficients.to(dtype=dtype)
-    values = points(dimensions, dtype)
+    device = os.environ.get("PINN_TEST_DEVICE", "cpu")
+    factory = make_factory(tmp_path / "case", dimensions, 1, representation, 19, device)
+    factory.adapter.coefficients.to(device=device, dtype=dtype)
+    values = points(dimensions, dtype).to(device)
+    assert values.device.type == device
     columns = [values[:, i : i + 1].clone().requires_grad_() for i in range(dimensions + 1)]
     context = factory.adapter.context(columns[:-1], columns[-1])
     exact = factory.problem.initial(context)["u"] * (-context.t).exp()

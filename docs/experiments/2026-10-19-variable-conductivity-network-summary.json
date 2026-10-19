@@ -1,0 +1,49 @@
+{
+  "device": "cpu",
+  "torch": "2.1.0",
+  "cases": 48,
+  "passed": true,
+  "training_runs": 0,
+  "optimizer_steps": 0,
+  "gpu_jobs": 0,
+  "finite_difference_step": 0.0001,
+  "finite_difference_checks": 24,
+  "all_states_unchanged": true,
+  "source_revision": "b5bf0484410064ebc68633179be267eb5da652f7",
+  "platform": "macOS-15.7.2-arm64-arm-64bit",
+  "python": "3.10.20",
+  "csv_sha256": "a8d8eaa057ac68912576249b1b576f39b019d4a143711dbfb9fb41ae79615fce",
+  "source_files_sha256": {
+    "benchmarks/problems/heat_variable_conductivity/functions.py": "ae900d77f0c2f73c9ab42cf5fef4dd26c2f167003247d93a8ac8e4c7e95ebb6e",
+    "scripts/audit_variable_conductivity.py": "4c4999a2a99c2194377d7ffc7be0d1b78fe74eefc9f79e37e5a7e5af20022de6",
+    "docs/variable-conductivity-network-protocol-2026-10-19.md": "be610c45d11342cbcff0aece6cd997bb5d0875dd90f786150642ef09216f53e8"
+  },
+  "maxima": {
+    "torch.float32": {
+      "residual_control_max_abs": 1.1920928955078125e-06,
+      "gradient_control_max_abs": 1.0728836059570312e-06,
+      "gradient_control_relative_l2": 2.121988131875696e-07,
+      "physical_flux_max_abs": 0.0,
+      "initial_max_abs": 0.0,
+      "pair_residual_max_abs": 9.5367431640625e-07,
+      "pair_gradient_max_abs": 9.5367431640625e-07
+    },
+    "torch.float64": {
+      "residual_control_max_abs": 2.6645352591003757e-15,
+      "gradient_control_max_abs": 1.7763568394002505e-15,
+      "gradient_control_relative_l2": 3.778364535921878e-16,
+      "physical_flux_max_abs": 0.0,
+      "initial_max_abs": 0.0,
+      "directional_absolute_error": 1.5324341795519558e-10,
+      "pair_residual_max_abs": 1.7763568394002505e-15,
+      "pair_gradient_max_abs": 8.881784197001252e-16
+    }
+  },
+  "repeat": {
+    "source_revision": "20c13c83d341ff39ac0be3cfabdb6a153af3ef37",
+    "csv_byte_identical": true,
+    "script_sha256": "4930d6a88eef9a0805debb4deb86be4745d698eb0a9911214c50b7c47fa5934e",
+    "cases": 48,
+    "independent_replication": false
+  }
+}

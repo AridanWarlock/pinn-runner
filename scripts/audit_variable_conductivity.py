@@ -63,7 +63,12 @@ def numpy_source(values: NDArray[np.float64], beta: int) -> NDArray[np.float64]:
 
 
 def make_factory(
-    directory: Path, dimensions: int, beta: int, representation: str, seed: int
+    directory: Path,
+    dimensions: int,
+    beta: int,
+    representation: str,
+    seed: int,
+    device: str = "cpu",
 ) -> SolverFactory:
     directory.mkdir(parents=True, exist_ok=False)
     text = SOURCE.read_text()
@@ -76,7 +81,7 @@ def make_factory(
         text = text.replace(before, after)
     path = directory / "functions.py"
     path.write_text(text)
-    config = CASES[f"heat_neumann_polynomial{dimensions}d"].config("cpu", 1, seed)
+    config = CASES[f"heat_neumann_polynomial{dimensions}d"].config(device, 1, seed)
     config["domain"]["time"]["interval"] = [0, 1]
     config["network"].update(hidden_layers=[32, 32, 32], spatial_encoding="neumann_polynomial")
     config["training"].update(
@@ -102,7 +107,11 @@ def residuals(
     gradient = [differentiate(field, x) for x in spatial]
     laplacian = sum(differentiate(g, x) for g, x in zip(gradient, spatial))
     kappa = K0 * (1 + beta / len(spatial) * sum(spatial))
-    forcing = torch.tensor(numpy_source(values.double().numpy(), beta), dtype=values.dtype)
+    forcing = torch.tensor(
+        numpy_source(values.detach().cpu().double().numpy(), beta),
+        dtype=values.dtype,
+        device=values.device,
+    )
     control = (
         differentiate(field, clock)
         - kappa * laplacian
@@ -121,11 +130,19 @@ class Audit:
 
 
 def audit(
-    directory: Path, dimensions: int, dtype: torch.dtype, beta: int, kind: str, seed: int
+    directory: Path,
+    dimensions: int,
+    dtype: torch.dtype,
+    beta: int,
+    kind: str,
+    seed: int,
+    device: str = "cpu",
 ) -> Audit:
-    factory = make_factory(directory, dimensions, beta, kind, seed)
-    model = factory.build(predicting=True).model.to(dtype=dtype).eval()
-    values = points(dimensions, dtype)
+    factory = make_factory(directory, dimensions, beta, kind, seed, device)
+    model = factory.build(predicting=True).model.to(device=device, dtype=dtype).eval()
+    assert model.device.type == device
+    assert all(p.device.type == device for p in model.parameters())
+    values = points(dimensions, dtype).to(device)
     parameters = tuple(model.parameters())
     before = tensor_fingerprint(model.state_dict())
     parameter_sha = tensor_fingerprint(dict(model.named_parameters()))
@@ -166,7 +183,7 @@ def audit(
     if dtype == torch.float64:
         direction = torch.randn(
             flat.shape, dtype=dtype, generator=torch.Generator().manual_seed(815)
-        )
+        ).to(device)
         direction /= direction.norm()
         originals = [p.detach().clone() for p in parameters]
         ends = list(itertools.accumulate(p.numel() for p in parameters))
@@ -217,10 +234,15 @@ def audit(
 
 
 def audit_pair(
-    directory: Path, dimensions: int, dtype: torch.dtype, beta: int, seed: int
+    directory: Path,
+    dimensions: int,
+    dtype: torch.dtype,
+    beta: int,
+    seed: int,
+    device: str = "cpu",
 ) -> list[dict[str, Any]]:
     formula, table = [
-        audit(directory / kind, dimensions, dtype, beta, kind, seed)
+        audit(directory / kind, dimensions, dtype, beta, kind, seed, device)
         for kind in ("formula", "table")
     ]
     assert formula.row["parameter_sha256"] == table.row["parameter_sha256"]
