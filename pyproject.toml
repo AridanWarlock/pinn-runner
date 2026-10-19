@@ -34,6 +34,7 @@ files = [
   "scripts/benchmark_hard_execution.py",
   "scripts/benchmark_hard_derivatives.py",
   "scripts/audit_variable_conductivity.py",
+  "scripts/audit_nonheat.py",
   "scripts/audit_conductivity_interpolation.py",
   "benchmarks",
   "tests/hardware",
