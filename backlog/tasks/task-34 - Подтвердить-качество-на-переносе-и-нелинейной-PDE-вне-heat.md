@@ -4,11 +4,15 @@ title: Подтвердить качество на переносе и нели
 status: To Do
 assignee: []
 created_date: '2026-10-18 11:30'
+updated_date: '2026-10-19 06:08'
 labels:
   - accuracy
   - physics
 dependencies:
   - TASK-21
+documentation:
+  - >-
+    https://github.com/AridanWarlock/pinn-runner/blob/codex/research-tools/docs/burgers-gradient-preparation-2026-10-19.md
 priority: low
 type: spike
 ordinal: 34000
@@ -27,3 +31,9 @@ ordinal: 34000
 - [ ] #3 До CUDA-обучения опубликованы бюджеты и абсолютные пороги для каждой PDE и нескольких начальных состояний; отчёт содержит неудачи и область применимости.
 - [ ] #4 Сохранены общий файловый контракт и исходный режим; точность и ускорения heat не перенесены на другие PDE без проверки.
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+19.10: предварительный read-only CPU FP64-контроль существующего Бюргерса, без сети/обучения/CUDA. Неверный detach первого множителя u*u_x сохраняет невязку точно, но меняет градиент скалярного пробника с -0.3921648721 на -0.3487378874; независимая формула верный градиент подтверждает. На точном поле нулевой функционал эту ошибку скрывает. Математика/воспроизводимый код/срез: docs/burgers-gradient-preparation-2026-10-19.md, код отчёта046f02c. Это подготовка, не проверка качества; критерии0/4, To Do и low сохранены.
+<!-- SECTION:NOTES:END -->
