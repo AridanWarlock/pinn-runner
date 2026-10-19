@@ -1,0 +1,20 @@
+{
+  "solver_source_revision": "8f1f37e88d9f1fb79a068d5119c3bc205cbba6f3",
+  "registration": "retrospective_diagnostic",
+  "device": "cpu",
+  "dtype": "torch.float64",
+  "cases": 8,
+  "training_runs": 0,
+  "neural_network_claim": false,
+  "csv_sha256": "bc5d09ca51b6fec37e9525fedadcf760113b6732f4ffa25c1635cc5d6cb056dc",
+  "script_sha256": "d60c8038a6e26945380ba00bb277a847c65aab57f9e436f780128fcb0acc6ca7",
+  "helper_source_sha256": "10ac3c9a4bfea429f4034ea252322d5e17f5597c4b9f592efbada6c1dc7cd2fc",
+  "maxima": {
+    "exact_residual_max": 5.551115123125783e-17,
+    "exact_residual_x_max": 6.661338147750939e-16,
+    "residual_x_identity_max": 4.440892098500626e-16,
+    "amplitude_slope_identity_max": 6.661338147750939e-16,
+    "physical_flux_max": 0.0
+  },
+  "beta1_amplitude_slope_lower": 0.9129384071007656
+}

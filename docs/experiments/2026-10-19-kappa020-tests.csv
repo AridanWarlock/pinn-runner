@@ -1,0 +1,17 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype0-0-1],passed,passed,passed,0.6078629999537952
+tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype0-0-2],passed,passed,passed,0.09900210006162524
+tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype0-1-1],passed,passed,passed,0.06389150000177324
+tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype0-1-2],passed,passed,passed,0.09038279997184873
+tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype1-0-1],passed,passed,passed,0.0999621000373736
+tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype1-0-2],passed,passed,passed,0.1612205999554135
+tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype1-1-1],passed,passed,passed,0.08625880000181496
+tests/numerics/test_variable_conductivity_network.py::test_every_network_parameter_matches_expanded_operator[dtype1-1-2],passed,passed,passed,0.16050550004001707
+tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype0-formula-1],passed,passed,passed,0.007142100075725466
+tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype0-formula-2],passed,passed,passed,0.011058299918659031
+tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype0-table-1],passed,passed,passed,0.0077818999998271465
+tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype0-table-2],passed,passed,passed,0.011900599929504097
+tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype1-formula-1],passed,passed,passed,0.006840399990323931
+tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype1-formula-2],passed,passed,passed,0.010209100088104606
+tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype1-table-1],passed,passed,passed,0.007691399950999767
+tests/numerics/test_variable_conductivity_network.py::test_exact_field_detects_missing_conductivity_derivative[dtype1-table-2],passed,passed,passed,0.01203670003451407

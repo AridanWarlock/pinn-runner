@@ -1,0 +1,40 @@
+{
+  "revision": "8f1f37e88d9f1fb79a068d5119c3bc205cbba6f3",
+  "test_sha256": "c5efc7ad2d4123247aa0282afefc22c408b38a3242a68cae6a88ddf00048f3cf",
+  "test_raw_sha256": "bbe4ea302e5dda81395b1aa302e090b48f939da3d413e24da2779dbf4bdbd691",
+  "test_raw_sha256_after": "bbe4ea302e5dda81395b1aa302e090b48f939da3d413e24da2779dbf4bdbd691",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "cuda_available": true,
+  "test_device": "cuda",
+  "source_unchanged": true,
+  "provenance": {
+    "protocol_commit": "0e5012726bac0b282d2e10c90d78b23f281c9c5c",
+    "protocol_sha256": "82ca76831641bcf08592e67972ddc4acd49f13cb91928faa802fbe152adca25c"
+  },
+  "job_id": "kappa020",
+  "tests": 16,
+  "phases_passed": 48,
+  "network_models": 16,
+  "finite_difference_checks": 8,
+  "optimizer_updates": 0,
+  "training": false,
+  "comparison_passed": true,
+  "csv_sha256": "2b49c244aece22dcc9fc20ffaa6cc0081cf49cb91913afad32b61f143f6c7c32",
+  "bundle_marker_sha256": "713fffff29668d4455f1edb04b2a65df014ec8d19478ae6f4a4db65ca9f4db6f"
+}

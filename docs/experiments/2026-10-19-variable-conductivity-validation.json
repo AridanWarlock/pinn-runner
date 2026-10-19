@@ -1,0 +1,25 @@
+{
+  "source_revision": "8f1f37e88d9f1fb79a068d5119c3bc205cbba6f3",
+  "full_cpu": {
+    "command": ".venv/bin/python scripts/check.py --full",
+    "passed": 948,
+    "seconds": 364.16,
+    "e2e_included": 55,
+    "ruff": true,
+    "format": true,
+    "strict_mypy_files": 132,
+    "log_sha256": "48bbc6a39e0d62aa3675948cd3084c37015d84f490b64abdff49ad0cfcbebb97"
+  },
+  "preceding_fast_cpu": {
+    "passed": 893,
+    "e2e_deselected": 55
+  },
+  "profile_tests_passed": 43,
+  "cuda": {
+    "job_id": "kappa020",
+    "passed": 16,
+    "phases_passed": 48,
+    "training": false,
+    "all_windows_hardware_suite_run": false
+  }
+}
