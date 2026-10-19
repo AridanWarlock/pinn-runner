@@ -1,12 +1,5 @@
 {
   "solver_source_revision": "fbcc9a29c6027eec4ffb89499fe8479ff774dbcc",
-  "full_cpu": {
-    "passed": 965,
-    "seconds": 366.14,
-    "mypy_files": 133,
-    "ruff": true,
-    "format": true
-  },
   "latest_fast_cpu": {
     "passed": 908,
     "e2e_deselected": 59,
@@ -23,5 +16,22 @@
   "conductivity_cuda_numeric_tests": 16,
   "nonheat_cpu_gradient_models": 8,
   "nonheat_cpu_directional_differences": 4,
-  "limitations": "Full965 predates two newly added file tests. They passed separately; excluded e2e are not reported as rerun. No production Python code changed after fbcc9a2."
+  "limitations": "Full975 supersedes the earlier full965 and fast908. Documentation-only audits are not counted as pytest tests. The trained solver code remains fbcc9a2; e169f01 adds the typed nonheat audit and tests, with no solver changes.",
+  "initial_full_cpu": {
+    "passed": 965,
+    "seconds": 366.14,
+    "mypy_files": 133,
+    "ruff": true,
+    "format": true
+  },
+  "final_full_cpu": {
+    "code_revision": "e169f01f5aab7669d391b37253d82864070d6d4e",
+    "passed": 975,
+    "seconds": 378.61,
+    "mypy_files": 134,
+    "ruff": true,
+    "format": true,
+    "includes_new_nonheat_numerical_tests": 8,
+    "includes_new_nonheat_file_tests": 2
+  }
 }

@@ -1,0 +1,15 @@
+{
+  "kind": "nonheat_audit_promotion",
+  "models": 8,
+  "same_initial_states_as_original": true,
+  "independent_new_states": 0,
+  "all_original_csv_fields_identical": true,
+  "optimizer_steps": 0,
+  "device": "cpu",
+  "gpu_executed": false,
+  "helper_sha256": "03c61c67b9e7b348be30bb2a5638cd5bbafa40b0155fb5d60aa3e888cec068c1",
+  "test_sha256": "f4b43607b0cc69ca9609f226b2403e6dfa9bf3ea03006aba01fc8287041a8dc4",
+  "strict_mypy": true,
+  "limitations": "Promotion equivalence on CPU only; CUDA registration and execution remain outstanding.",
+  "code_revision": "e169f01f5aab7669d391b37253d82864070d6d4e"
+}
