@@ -1,0 +1,12 @@
+{
+  "source_revision": "fbcc9a29c6027eec4ffb89499fe8479ff774dbcc",
+  "stage": "before_model_construction",
+  "models_built": 0,
+  "optimizer_steps": 0,
+  "requested_constraints": "hard_initial_dirichlet",
+  "case": "advection",
+  "error": "Hard constraints require all faces for every physical field",
+  "script_sha256": "eff7e2c478a4720e73ebbbfb8badf975155510435916bc1294e2c2676d96676e",
+  "log_sha256": "0d611c1743aa9c92a4d1d603f674bfbb979f82a8c941f98a753e9b2f3b7d7a06",
+  "disposition": "Preserved failure. Revised CPU operator audit uses original soft mode and unchanged inflow-only data; no solver modification."
+}

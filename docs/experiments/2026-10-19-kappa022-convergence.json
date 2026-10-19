@@ -1,0 +1,221 @@
+{
+  "absolute_passed": 8,
+  "comparison_passed": true,
+  "distinct_initial_states": 2,
+  "evidence_sha256": "4709c4a2a25f19ef7213c9e5d8ebdcd5f73ec25752c65a66e6db566be90480df",
+  "failed_by_metric": {
+    "boundary_max": 0,
+    "final_relative_l2": 0,
+    "initial_rmse": 0,
+    "pde_rmse": 0,
+    "physical_flux_max": 0,
+    "relative_l2": 0,
+    "worst_time_relative_l2": 0
+  },
+  "groups": [
+    {
+      "case": "heat_conductivity_beta0",
+      "coefficient_representation": "formula",
+      "metrics": {
+        "closures": {
+          "max": 1019.0,
+          "median": 1018.0,
+          "min": 1017.0
+        },
+        "final_relative_l2": {
+          "max": 0.0005972955313846276,
+          "median": 0.0005916843784494607,
+          "min": 0.0005860732255142938
+        },
+        "mean_heat_max_error": {
+          "max": 3.450223352629776e-05,
+          "median": 2.8122680413134753e-05,
+          "min": 2.1743127299971744e-05
+        },
+        "pde_rmse": {
+          "max": 0.001153083168901503,
+          "median": 0.0010358926956541836,
+          "min": 0.0009187022224068642
+        },
+        "physical_flux_max": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0
+        },
+        "relative_l2": {
+          "max": 0.00022575471790538054,
+          "median": 0.0001972212951119587,
+          "min": 0.00016868787231853684
+        },
+        "training_seconds": {
+          "max": 41.006842399947345,
+          "median": 40.90776899998309,
+          "min": 40.80869560001884
+        },
+        "worst_time_relative_l2": {
+          "max": 0.0005972955313846276,
+          "median": 0.0005916843784494607,
+          "min": 0.0005860732255142938
+        }
+      },
+      "passed": 2,
+      "trials": 2
+    },
+    {
+      "case": "heat_conductivity_beta0",
+      "coefficient_representation": "table",
+      "metrics": {
+        "closures": {
+          "max": 1021.0,
+          "median": 1020.0,
+          "min": 1019.0
+        },
+        "final_relative_l2": {
+          "max": 0.0007033512593696325,
+          "median": 0.0006197123313903542,
+          "min": 0.0005360734034110759
+        },
+        "mean_heat_max_error": {
+          "max": 2.875121324953644e-05,
+          "median": 2.511047645189572e-05,
+          "min": 2.1469739654255003e-05
+        },
+        "pde_rmse": {
+          "max": 0.0012334134662523866,
+          "median": 0.0010746413609012961,
+          "min": 0.0009158692555502057
+        },
+        "physical_flux_max": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0
+        },
+        "relative_l2": {
+          "max": 0.00025120215475880615,
+          "median": 0.000212862087212703,
+          "min": 0.00017452201966659984
+        },
+        "training_seconds": {
+          "max": 42.79668000002857,
+          "median": 42.70957445001113,
+          "min": 42.62246889999369
+        },
+        "worst_time_relative_l2": {
+          "max": 0.0007033512593696325,
+          "median": 0.0006197123313903542,
+          "min": 0.0005360734034110759
+        }
+      },
+      "passed": 2,
+      "trials": 2
+    },
+    {
+      "case": "heat_conductivity_beta1",
+      "coefficient_representation": "formula",
+      "metrics": {
+        "closures": {
+          "max": 1023.0,
+          "median": 1019.5,
+          "min": 1016.0
+        },
+        "final_relative_l2": {
+          "max": 0.0008651731891688039,
+          "median": 0.0006853266912242935,
+          "min": 0.0005054801932797831
+        },
+        "mean_heat_max_error": {
+          "max": 7.029199031794872e-05,
+          "median": 5.201844523609055e-05,
+          "min": 3.3744900154232376e-05
+        },
+        "pde_rmse": {
+          "max": 0.0015566396759822965,
+          "median": 0.0013298549456521869,
+          "min": 0.0011030702153220773
+        },
+        "physical_flux_max": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0
+        },
+        "relative_l2": {
+          "max": 0.00026439208113708903,
+          "median": 0.00021436806667673062,
+          "min": 0.0001643440522163722
+        },
+        "training_seconds": {
+          "max": 41.12348549999297,
+          "median": 40.96460485001444,
+          "min": 40.80572420003591
+        },
+        "worst_time_relative_l2": {
+          "max": 0.0008651731891688039,
+          "median": 0.0006853266912242935,
+          "min": 0.0005054801932797831
+        }
+      },
+      "passed": 2,
+      "trials": 2
+    },
+    {
+      "case": "heat_conductivity_beta1",
+      "coefficient_representation": "table",
+      "metrics": {
+        "closures": {
+          "max": 1022.0,
+          "median": 1020.0,
+          "min": 1018.0
+        },
+        "final_relative_l2": {
+          "max": 0.000766907379311241,
+          "median": 0.0007000634097953859,
+          "min": 0.0006332194402795307
+        },
+        "mean_heat_max_error": {
+          "max": 6.195504233849779e-05,
+          "median": 5.6564551122567236e-05,
+          "min": 5.117405990663668e-05
+        },
+        "pde_rmse": {
+          "max": 0.0015004456508904696,
+          "median": 0.0013206091243773699,
+          "min": 0.0011407725978642702
+        },
+        "physical_flux_max": {
+          "max": 0.0,
+          "median": 0.0,
+          "min": 0.0
+        },
+        "relative_l2": {
+          "max": 0.0002352746307904562,
+          "median": 0.0002248999663202316,
+          "min": 0.00021452530185000698
+        },
+        "training_seconds": {
+          "max": 42.97417050000513,
+          "median": 42.8715297000017,
+          "min": 42.768888899998274
+        },
+        "worst_time_relative_l2": {
+          "max": 0.000766907379311241,
+          "median": 0.0007000634097953859,
+          "min": 0.0006332194402795307
+        }
+      },
+      "passed": 2,
+      "trials": 2
+    }
+  ],
+  "limitations": "Registered completed matrix only. Timing is diagnostic. Two states do not replace five-state confirmation; cancelled kappa021 is not pooled.",
+  "max_peak_allocated_bytes": 25547264.0,
+  "max_peak_reserved_bytes": 31457280.0,
+  "process_seconds_total": 370.0181524999789,
+  "provenance": {
+    "protocol_commit": "439b1ec98ee88dd8dacffbcebb766369a2171d41",
+    "protocol_sha256": "1b7edcd73e416114a7669862eeb4a54dab9e8adc8f932e212e050aceca839167"
+  },
+  "script_sha256": "89897aa09e1f1d4314f06c43a242f812a8948eeb646df7fedbed1b850c2f1ad5",
+  "source_revision": "fbcc9a29c6027eec4ffb89499fe8479ff774dbcc",
+  "training_seconds_total": 334.9069560000207,
+  "trials": 8
+}

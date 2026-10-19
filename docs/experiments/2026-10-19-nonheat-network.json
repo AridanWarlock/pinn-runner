@@ -1,0 +1,18 @@
+{
+  "device": "cpu",
+  "torch": "2.1.0",
+  "optimizer_steps": 0,
+  "models": 8,
+  "finite_differences": 4,
+  "max_residual_control": 5.960464477539062e-07,
+  "max_gradient_control": 2.384185791015625e-07,
+  "min_detached_gradient_relative_l2": 0.12252142280340195,
+  "incorrect_zero_outflow_error": 1.0,
+  "all_states_unchanged": true,
+  "script_sha256": "92b5eb7873e8694c91f198f6d1ff088f0e54e138fd4c2048d1235cdf1a9e5741",
+  "sources": {
+    "advection": "c1cb8f98ec6e0d945ca8a74486c85257b6f3ab6ce52f6efc40950678ca1c00d1",
+    "burgers": "d3ea10959c3f016eb003197ef0e4367131dc3e6b79dce9ec6d70ef8795d66c2a"
+  },
+  "limitations": "Untrained networks only, two states, CPU FP32/64. No CUDA, convergence or public file acceptance."
+}
