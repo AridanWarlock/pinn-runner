@@ -223,5 +223,9 @@ def compare(evidence: Json) -> Json:
         "comparison_passed": passed,
         "working_tree_dirty": evidence["environment"].get("working_tree_dirty"),
         "cases": results,
-        "limitations": "Paired gates do not imply absolute target accuracy or authorize default promotion. Crossing times are sampled intervals. Dirty source requires separate provenance review.",
+        "limitations": (
+            "Registered absolute targets are required for both representations on finite evaluation samples. This does not certify continuous norms, arbitrary materials or default promotion. Crossing times are sampled intervals."
+            if "physics" in manifest
+            else "Paired gates do not imply absolute target accuracy or authorize default promotion. Crossing times are sampled intervals. Dirty source requires separate provenance review."
+        ),
     }

@@ -1,12 +1,14 @@
 {
   "solver_source_revision": "fbcc9a29c6027eec4ffb89499fe8479ff774dbcc",
   "latest_fast_cpu": {
-    "passed": 908,
+    "passed": 916,
     "e2e_deselected": 59,
-    "seconds": 18.69,
-    "mypy_files": 133,
+    "seconds": 18.38,
+    "mypy_files": 134,
     "ruff": true,
-    "format": true
+    "format": true,
+    "reason": "After clarification of compare limitation text only; numerical gates unchanged",
+    "comparison_file_sha256": "385124849156365eccec10895c34ae33fe2edb969883bc2ea92a97e71caa9fa6"
   },
   "additional_public_file_tests": {
     "passed": 2,
@@ -33,5 +35,13 @@
     "format": true,
     "includes_new_nonheat_numerical_tests": 8,
     "includes_new_nonheat_file_tests": 2
+  },
+  "intermediate_fast_cpu": {
+    "passed": 908,
+    "e2e_deselected": 59,
+    "seconds": 18.69,
+    "mypy_files": 133,
+    "ruff": true,
+    "format": true
   }
 }
