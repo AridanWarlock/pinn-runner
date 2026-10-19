@@ -9,7 +9,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import torch
@@ -55,9 +55,10 @@ def numpy_source(values: NDArray[np.float64], beta: int) -> NDArray[np.float64]:
         laplacian += (6 - 12 * xs[:, axis]) * others
         gradient += 6 * xs[:, axis] * (1 - xs[:, axis]) * others
     kappa = K0 * (1 + beta * np.mean(xs, axis=1))
-    return (
+    return cast(
+        NDArray[np.float64],
         np.exp(-values[:, -1:])
-        * (-product - kappa * laplacian - K0 * beta / dimensions * gradient)[:, None]
+        * (-product - kappa * laplacian - K0 * beta / dimensions * gradient)[:, None],
     )
 
 
@@ -128,18 +129,18 @@ def audit(
     parameters = tuple(model.parameters())
     before = tensor_fingerprint(model.state_dict())
     parameter_sha = tensor_fingerprint(dict(model.named_parameters()))
-    tolerance = (
-        dict(rtol=2e-4, atol=5e-6) if dtype == torch.float32 else dict(rtol=1e-10, atol=1e-11)
-    )
+    rtol, atol = (2e-4, 5e-6) if dtype == torch.float32 else (1e-10, 1e-11)
     actual, control, field, spatial_gradient, kappa = residuals(model, factory, values, beta)
-    torch.testing.assert_close(actual, control, **tolerance)
+    torch.testing.assert_close(actual, control, rtol=rtol, atol=atol)
     loss, reference_loss = actual.square().mean(), control.square().mean()
     assert float(loss.detach()) > 1e-5, "The gradient check must not use a solved zero residual"
     grads = torch.autograd.grad(loss, parameters, retain_graph=True)
     reference_grads = torch.autograd.grad(reference_loss, parameters, retain_graph=True)
     for (name, _), g, expected in zip(model.named_parameters(), grads, reference_grads):
         assert torch.isfinite(g).all(), f"Nonfinite gradient: {name}"
-        torch.testing.assert_close(g, expected, **tolerance, msg=lambda msg: f"{name}: {msg}")
+        torch.testing.assert_close(
+            g, expected, rtol=rtol, atol=atol, msg=lambda msg: f"{name}: {msg}"
+        )
     flat, reference_flat = (
         torch.cat([g.flatten() for g in grads]),
         torch.cat([g.flatten() for g in reference_grads]),
@@ -151,7 +152,7 @@ def audit(
         for face, normal in ((0, -1), (1, 1)):
             mask = values[:, axis : axis + 1] == face
             flux_max = max(
-                flux_max, float((-normal * kappa * derivative)[mask].detach().abs().max())
+                flux_max, float((kappa.mul(-normal) * derivative)[mask].detach().abs().max())
             )
     assert flux_max <= (2e-5 if dtype == torch.float32 else 1e-11)
     initial_mask = values[:, -1] == 0
@@ -168,7 +169,8 @@ def audit(
         )
         direction /= direction.norm()
         originals = [p.detach().clone() for p in parameters]
-        directions = direction.split([p.numel() for p in parameters])
+        ends = list(itertools.accumulate(p.numel() for p in parameters))
+        directions = [direction[a:b] for a, b in zip([0, *ends[:-1]], ends)]
         losses = []
         try:
             for sign in (-1, 1):
@@ -223,11 +225,9 @@ def audit_pair(
     ]
     assert formula.row["parameter_sha256"] == table.row["parameter_sha256"]
     assert torch.equal(formula.field, table.field)
-    tolerance = (
-        dict(rtol=2e-4, atol=5e-6) if dtype == torch.float32 else dict(rtol=1e-10, atol=1e-11)
-    )
-    torch.testing.assert_close(table.residual, formula.residual, **tolerance)
-    torch.testing.assert_close(table.gradient, formula.gradient, **tolerance)
+    rtol, atol = (2e-4, 5e-6) if dtype == torch.float32 else (1e-10, 1e-11)
+    torch.testing.assert_close(table.residual, formula.residual, rtol=rtol, atol=atol)
+    torch.testing.assert_close(table.gradient, formula.gradient, rtol=rtol, atol=atol)
     for result in (formula, table):
         result.row.update(
             pair_residual_max_abs=float((table.residual - formula.residual).abs().max()),
