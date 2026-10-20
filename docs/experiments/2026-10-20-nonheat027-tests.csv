@@ -1,0 +1,5 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_burgers_hard_network.py::test_burgers_hard_operator_and_every_weight[19-dtype0],passed,passed,passed,0.2174848000286147
+tests/numerics/test_burgers_hard_network.py::test_burgers_hard_operator_and_every_weight[19-dtype1],passed,passed,passed,0.038250999932643026
+tests/numerics/test_burgers_hard_network.py::test_burgers_hard_operator_and_every_weight[73-dtype0],passed,passed,passed,0.022816199983935803
+tests/numerics/test_burgers_hard_network.py::test_burgers_hard_operator_and_every_weight[73-dtype1],passed,passed,passed,0.03160429996205494

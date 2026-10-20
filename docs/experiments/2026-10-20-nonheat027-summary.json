@@ -1,0 +1,26 @@
+{
+  "revision": "c8bc42d876b823332537a28ca98ebe40172d8a98",
+  "test_sha256": "acc200474546835a56867e8e26ff653f811302c44e03b6f74ff2e0a200edc359",
+  "helper_sha256": "cb730c6c6effeaa555075d7f76727c7db61c1c5b81b71c80dd4bf8d4ec2429b0",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "source_unchanged": true,
+  "job_id": "nonheat027",
+  "provenance": {
+    "protocol_commit": "f240ce0480ca2eed2aed963110cdf74362af067a",
+    "protocol_sha256": "4958e3077d5e91537344313b497f902a44c80654682a73add7c44be0d076130a"
+  },
+  "evidence_sha256": "d5e1c54535926bdd7a1c2875aafe55e3b997309b644f8e7c91f3fab85054a876",
+  "tests": 4,
+  "passed": 4,
+  "finite_differences": 2,
+  "optimizer_steps": 0,
+  "comparison_passed": true
+}

@@ -1,0 +1,122 @@
+{
+  "contract": 2,
+  "registration": "prospective",
+  "revision": "c8bc42d876b823332537a28ca98ebe40172d8a98",
+  "reports": [
+    "burgers/report.json"
+  ],
+  "expected_trials": [
+    {
+      "case": "burgers",
+      "seed": 19,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers",
+      "seed": 73,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers",
+      "seed": 1234,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers",
+      "seed": 2026,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers",
+      "seed": 4321,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    }
+  ],
+  "report_parameters": {
+    "adam_steps": 500,
+    "lbfgs_snapshots": [
+      0,
+      100,
+      250,
+      500
+    ],
+    "constraints": "hard_initial_dirichlet",
+    "points_override": 1024,
+    "lbfgs_tolerance_change": 1e-12,
+    "execution_lifecycle": "isolated_trials"
+  },
+  "case_limits": {
+    "burgers": {
+      "relative_l2": 0.002,
+      "final_relative_l2": 0.003,
+      "worst_time_relative_l2": 0.005,
+      "pde_rmse": 0.003
+    }
+  },
+  "physical_limits": {
+    "initial_rmse": 0.001,
+    "boundary_max": 0.001
+  },
+  "case_faces": {
+    "burgers": [
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "upper"
+      }
+    ]
+  },
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "network": {
+    "hidden_layers": [
+      32,
+      32,
+      32
+    ],
+    "spatial_encoding": "identity"
+  },
+  "absolute_quality": {
+    "backend": "eager",
+    "lifting": "recursive",
+    "backward": "all",
+    "background": "general",
+    "spatial_encoding": "identity"
+  },
+  "problem_sha256": {
+    "burgers": "d3ea10959c3f016eb003197ef0e4367131dc3e6b79dce9ec6d70ef8795d66c2a"
+  }
+}
