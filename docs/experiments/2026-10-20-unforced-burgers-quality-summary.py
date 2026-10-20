@@ -95,6 +95,11 @@ def main() -> None:
             final_rows.append(
                 last
                 | dict(
+                    warm_prediction_seconds=trial["warm_prediction_seconds"],
+                    prediction_points=trial["prediction_points"],
+                    prediction_batch_size=trial["prediction_batch_size"],
+                    prediction_warmup_passes=trial["prediction_warmup_passes"],
+                    prediction_measurement_passes=trial["prediction_measurement_passes"],
                     training_seconds=trial["training_seconds_with_snapshots"],
                     process_seconds=trial["process_seconds"],
                     peak_allocated_bytes=trial["peak_allocated_bytes"],
