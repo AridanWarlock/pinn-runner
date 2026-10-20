@@ -1,0 +1,76 @@
+{
+  "networks": 0,
+  "optimizer_steps": 0,
+  "rows": 16,
+  "audit_sha256": "b6420bf4dc31b0748dccbb71369d3f3e93d881cdcb839b369aab8da0efd7102c",
+  "reference_sha256": "7402ec49ce57f073c04c651997ba939ea91c129172ce5780d5db7b43fb518e68",
+  "refinement_max": 1.0480505352461478e-13,
+  "field_pass_slope_fail": [
+    {
+      "nu": 0.1,
+      "delta": 0.005,
+      "amplitude": 0.01,
+      "quadrature_per_panel": 256,
+      "relative_field_l2": 0.0021349515884970627,
+      "relative_slope_l2": 0.15602497800104193,
+      "center_slope_error": 2.0,
+      "residual_rms_final": 3.6457591164976497,
+      "field_target_passed": true,
+      "slope_target_passed": false,
+      "pde_target_passed": false
+    },
+    {
+      "nu": 0.1,
+      "delta": 0.0025,
+      "amplitude": 0.01,
+      "quadrature_per_panel": 256,
+      "relative_field_l2": 0.0015096812052497635,
+      "relative_slope_l2": 0.22065470844073182,
+      "center_slope_error": 4.0,
+      "residual_rms_final": 10.312425116882366,
+      "field_target_passed": true,
+      "slope_target_passed": false,
+      "pde_target_passed": false
+    },
+    {
+      "nu": 0.01,
+      "delta": 0.01,
+      "amplitude": 0.01,
+      "quadrature_per_panel": 256,
+      "relative_field_l2": 0.0016227431511643222,
+      "relative_slope_l2": 0.023113863021368888,
+      "center_slope_error": 1.0,
+      "residual_rms_final": 0.1119175478478047,
+      "field_target_passed": true,
+      "slope_target_passed": false,
+      "pde_target_passed": false
+    },
+    {
+      "nu": 0.01,
+      "delta": 0.005,
+      "amplitude": 0.01,
+      "quadrature_per_panel": 256,
+      "relative_field_l2": 0.0011475817860342181,
+      "relative_slope_l2": 0.03268916403952308,
+      "center_slope_error": 2.0,
+      "residual_rms_final": 0.3514304838444809,
+      "field_target_passed": true,
+      "slope_target_passed": false,
+      "pde_target_passed": false
+    },
+    {
+      "nu": 0.01,
+      "delta": 0.0025,
+      "amplitude": 0.01,
+      "quadrature_per_panel": 256,
+      "relative_field_l2": 0.0008114856857632199,
+      "relative_slope_l2": 0.04622989250005888,
+      "center_slope_error": 4.0,
+      "residual_rms_final": 1.0218327726920262,
+      "field_target_passed": true,
+      "slope_target_passed": false,
+      "pde_target_passed": false
+    }
+  ],
+  "scope": "Explicit smooth perturbations at t=1, exact IC/BC, no PINN. These examples fail PDE too; they do not defeat the combined criteria."
+}

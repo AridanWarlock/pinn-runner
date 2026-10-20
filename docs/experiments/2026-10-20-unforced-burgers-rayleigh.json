@@ -1,0 +1,96 @@
+{
+  "networks": 0,
+  "optimizer_steps": 0,
+  "rows": 36,
+  "audit_sha256": "14839a675223769a2dae4e03aa7c442dca37240f68f3fc475af897785bcea08d",
+  "reference_sha256": "7402ec49ce57f073c04c651997ba939ea91c129172ce5780d5db7b43fb518e68",
+  "quadrature_difference_max": 1.6751044995544362e-12,
+  "initial_tolerance": 0.025,
+  "all_grids_within_initial_tolerance": false,
+  "failed_initial_tolerance": [
+    {
+      "nu": 0.01,
+      "t": 0.5375,
+      "nx": 401,
+      "quadrature_per_cell": 4,
+      "finite_difference_eigenvalue": 8.496008021505702,
+      "continuous_trial_quotient": 8.465310900165097,
+      "difference": 0.030697121340605094,
+      "within_initial_tolerance": false
+    },
+    {
+      "nu": 0.01,
+      "t": 0.5375,
+      "nx": 401,
+      "quadrature_per_cell": 8,
+      "finite_difference_eigenvalue": 8.496008021505702,
+      "continuous_trial_quotient": 8.465310900163422,
+      "difference": 0.030697121342280198,
+      "within_initial_tolerance": false
+    }
+  ],
+  "refinement_checks_passed": true,
+  "finest": [
+    {
+      "nu": 0.1,
+      "t": 0,
+      "nx": 1601,
+      "quadrature_per_cell": 8,
+      "finite_difference_eigenvalue": 0.752583268248407,
+      "continuous_trial_quotient": 0.7525821440665932,
+      "difference": 1.1241818138607584e-06,
+      "within_initial_tolerance": true
+    },
+    {
+      "nu": 0.1,
+      "t": 0.2375,
+      "nx": 1601,
+      "quadrature_per_cell": 8,
+      "finite_difference_eigenvalue": 0.6715710354722755,
+      "continuous_trial_quotient": 0.6715686514689019,
+      "difference": 2.384003373601118e-06,
+      "within_initial_tolerance": true
+    },
+    {
+      "nu": 0.1,
+      "t": 1,
+      "nx": 1601,
+      "quadrature_per_cell": 8,
+      "finite_difference_eigenvalue": 0.04891130608317647,
+      "continuous_trial_quotient": 0.04891076760943307,
+      "difference": 5.38473743399992e-07,
+      "within_initial_tolerance": true
+    },
+    {
+      "nu": 0.01,
+      "t": 0,
+      "nx": 1601,
+      "quadrature_per_cell": 8,
+      "finite_difference_eigenvalue": 1.2986959002069753,
+      "continuous_trial_quotient": 1.298694498334783,
+      "difference": 1.4018721923303445e-06,
+      "within_initial_tolerance": true
+    },
+    {
+      "nu": 0.01,
+      "t": 0.5375,
+      "nx": 1601,
+      "quadrature_per_cell": 8,
+      "finite_difference_eigenvalue": 8.481625011879457,
+      "continuous_trial_quotient": 8.479719860785705,
+      "difference": 0.0019051510937515559,
+      "within_initial_tolerance": true
+    },
+    {
+      "nu": 0.01,
+      "t": 1,
+      "nx": 1601,
+      "quadrature_per_cell": 8,
+      "finite_difference_eigenvalue": 4.732029081195233,
+      "continuous_trial_quotient": 4.731360022126256,
+      "difference": 0.0006690590689766296,
+      "within_initial_tolerance": true
+    }
+  ],
+  "scope": "Continuous trial quotient is evaluated numerically; it is not a certified upper bound on the continuous largest eigenvalue."
+}

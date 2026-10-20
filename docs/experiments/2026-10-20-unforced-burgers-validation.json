@@ -1,0 +1,61 @@
+{
+  "recorded_at_utc": "2026-10-20T08:18:52.093363+00:00",
+  "kind": "mathematical-cpu-validation",
+  "scope": "Documentation and independent mathematical audits only; solver, training contracts and dependencies unchanged",
+  "repository_head_before_changes": "c26b9bb944687f7775228f99f9cff94a91318d14",
+  "checks": {
+    "command": ".venv/bin/python scripts/check.py",
+    "ruff": true,
+    "format_files": 257,
+    "mypy_files": 134,
+    "cpu_passed": 926,
+    "e2e_deselected": 62,
+    "pytest_duration_seconds": 24.46,
+    "full_run": false,
+    "cuda_run": false
+  },
+  "audits": [
+    {
+      "script": "docs/experiments/2026-10-20-unforced-burgers-stability-audit.py",
+      "script_sha256": "0b4ed7d61cbe812879bf658ea5ee0aafdbf389bc7139af7fe97f55ea6b47c032",
+      "summary": "docs/experiments/2026-10-20-unforced-burgers-stability.json",
+      "summary_sha256": "7e4867b2028407860e3f4ff36be3e0f159781c48683b8865e8fd49b0e93fbdc6",
+      "rows": 26,
+      "networks": 0,
+      "optimizer_steps": 0
+    },
+    {
+      "script": "docs/experiments/2026-10-20-unforced-burgers-layer-audit.py",
+      "script_sha256": "b6420bf4dc31b0748dccbb71369d3f3e93d881cdcb839b369aab8da0efd7102c",
+      "summary": "docs/experiments/2026-10-20-unforced-burgers-layer.json",
+      "summary_sha256": "6066fb9d8284a0068fbd8501b2e6943a5b7898709179511743a6e71c5ec3d887",
+      "rows": 16,
+      "networks": 0,
+      "optimizer_steps": 0
+    },
+    {
+      "script": "docs/experiments/2026-10-20-unforced-burgers-rayleigh-audit.py",
+      "script_sha256": "14839a675223769a2dae4e03aa7c442dca37240f68f3fc475af897785bcea08d",
+      "summary": "docs/experiments/2026-10-20-unforced-burgers-rayleigh.json",
+      "summary_sha256": "658f49b8716f3f8fb1f15bd18b5eb9a757aeb8097dfd7ac11e9fd27d32e80c01",
+      "rows": 36,
+      "networks": 0,
+      "optimizer_steps": 0
+    },
+    {
+      "script": "docs/experiments/2026-10-20-unforced-burgers-sampling-audit.py",
+      "script_sha256": "a35d90b41e477ecce0940b9e2a98d1e6315aa3fcfb82dd5c9232f4300daa0fab",
+      "summary": "docs/experiments/2026-10-20-unforced-burgers-sampling.json",
+      "summary_sha256": "8762bb264c3bc9e3670cc38d53d2ea9887af0ca4eee3c0bd328484c04ab621ea",
+      "rows": 64,
+      "networks": 0,
+      "optimizer_steps": 0
+    }
+  ],
+  "preserved_negative_diagnostic": {
+    "audit": "rayleigh",
+    "initial_tolerance": 0.025,
+    "all_grids_within_initial_tolerance": false,
+    "refinement_checks_passed": true
+  }
+}

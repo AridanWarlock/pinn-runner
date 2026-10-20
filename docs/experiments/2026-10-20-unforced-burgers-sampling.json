@@ -1,0 +1,36 @@
+{
+  "networks": 0,
+  "optimizer_steps": 0,
+  "rows": 64,
+  "audit_sha256": "a35d90b41e477ecce0940b9e2a98d1e6315aa3fcfb82dd5c9232f4300daa0fab",
+  "reference_sha256": "7402ec49ce57f073c04c651997ba939ea91c129172ce5780d5db7b43fb518e68",
+  "statistics": {
+    "global": {
+      "reference_rms": 0.5883509527426477,
+      "relative_quadrature_change": 1.9092756591065907e-05,
+      "shape_factor": 572.1991285256352,
+      "shape_factor_relative_refinement": 5.130489648075276e-05,
+      "squared_rms_relative_sd_from_moments": 0.5281153514862145,
+      "squared_rms_relative_sd_observed": 0.43468780574317006,
+      "relative_error_min": -0.6609548802653681,
+      "relative_error_max": 0.3675517364916268,
+      "relative_error_median": 0.018535290426775056,
+      "absolute_relative_error_median": 0.15356804740298607,
+      "absolute_relative_error_p90": 0.3325775513844778
+    },
+    "regional": {
+      "reference_rms": 2.0145265784236717,
+      "relative_quadrature_change": 1.1766316685202227e-05,
+      "shape_factor": 48.971388448108534,
+      "shape_factor_relative_refinement": 4.487383988993621e-05,
+      "squared_rms_relative_sd_from_moments": 0.15304747471186186,
+      "squared_rms_relative_sd_observed": 0.1681811790556732,
+      "relative_error_min": -0.14532485336387044,
+      "relative_error_max": 0.1993249872305961,
+      "relative_error_median": 0.003297947667981844,
+      "absolute_relative_error_median": 0.042698111072288394,
+      "absolute_relative_error_p90": 0.1259911888703336
+    }
+  },
+  "scope": "Paired uniform draws for two different integration domains of one explicit field; not a PINN or continuous residual certificate. No training threshold is calibrated."
+}
