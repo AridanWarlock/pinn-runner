@@ -69,10 +69,19 @@ CONDUCTIVITY_EXPECTED = [
         for d in (1, 2)
     ],
 ]
+NONHEAT_SUITE = "tests/numerics/test_nonheat_network.py"
+NONHEAT_HELPER = "scripts/audit_nonheat.py"
+NONHEAT_EXPECTED = [
+    NONHEAT_SUITE + f"::test_nonheat_network_operator_and_every_weight[{seed}-dtype{dtype}-{case}]"
+    for seed in (19, 73)
+    for dtype in (0, 1)
+    for case in ("advection", "burgers")
+]
 SUITES = {
     SUITE: EXPECTED,
     LIFECYCLE_SUITE: LIFECYCLE_EXPECTED,
     CONDUCTIVITY_SUITE: CONDUCTIVITY_EXPECTED,
+    NONHEAT_SUITE: NONHEAT_EXPECTED,
 }
 FIELDS = {
     "contract",
@@ -96,8 +105,9 @@ ENVIRONMENT = dict(
 
 
 def validate(manifest: Json) -> Json:
+    fields = FIELDS | ({"helper_sha256"} if manifest.get("suite") == NONHEAT_SUITE else set())
     if (
-        set(manifest) != FIELDS
+        set(manifest) != fields
         or manifest["contract"] != 6
         or manifest["kind"] != "numerical-acceptance"
         or manifest["registration"] != "prospective"
@@ -114,6 +124,11 @@ def validate(manifest: Json) -> Json:
             or re.fullmatch(f"[0-9a-f]{{{size}}}", manifest[key]) is None
         ):
             raise ValueError("Invalid acceptance source hash")
+    if manifest["suite"] == NONHEAT_SUITE and (
+        not isinstance(manifest["helper_sha256"], str)
+        or re.fullmatch("[0-9a-f]{64}", manifest["helper_sha256"]) is None
+    ):
+        raise ValueError("Invalid numerical helper hash")
     return manifest
 
 
@@ -124,6 +139,22 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == NONHEAT_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=8,
+            cases=["advection", "burgers"],
+            dtypes=["float32", "float64"],
+            seeds=[19, 73],
+            network_models=8,
+            parameters_per_model=2241,
+            finite_difference_checks=4,
+            optimizer_updates=0,
+            training=False,
+            performance_measurement=False,
+        )
     if manifest["suite"] == CONDUCTIVITY_SUITE:
         return dict(
             contract=1,
@@ -194,6 +225,15 @@ def compare(evidence: Json) -> Json:
             raise ValueError("Invalid raw acceptance test hash")
     if evidence["test_raw_sha256"] != evidence["test_raw_sha256_after"]:
         raise ValueError("Raw acceptance source changed")
+    if manifest["suite"] == NONHEAT_SUITE:
+        if (
+            evidence.get("helper_sha256") != manifest["helper_sha256"]
+            or evidence.get("helper_sha256_after") != manifest["helper_sha256"]
+            or not isinstance(evidence.get("helper_raw_sha256"), str)
+            or re.fullmatch("[0-9a-f]{64}", evidence["helper_raw_sha256"]) is None
+            or evidence.get("helper_raw_sha256_after") != evidence["helper_raw_sha256"]
+        ):
+            raise ValueError("Numerical helper source changed or differs")
     trials = evidence["trials"]
     expected = SUITES[manifest["suite"]]
     if evidence["collected"] != expected or [t["nodeid"] for t in trials] != expected:

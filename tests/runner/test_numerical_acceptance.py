@@ -205,3 +205,35 @@ def test_hash_normalizes_only_git_line_endings_and_keeps_raw_integrity(tmp_path:
     e["test_raw_sha256_after"] = "d" * 64
     with pytest.raises(ValueError, match="Raw acceptance source changed"):
         compare(e)
+
+
+def test_nonheat_inventory_requires_pinned_helper_and_unchanged_sources() -> None:
+    e = evidence()
+    m = e["manifest"]
+    m.update(suite=acceptance.NONHEAT_SUITE, tests=acceptance.NONHEAT_EXPECTED.copy())
+    with pytest.raises(ValueError, match="allowlisted"):
+        acceptance.validate(m)
+    m["helper_sha256"] = "d" * 64
+    e.update(
+        helper_sha256=m["helper_sha256"],
+        helper_sha256_after=m["helper_sha256"],
+        helper_raw_sha256="e" * 64,
+        helper_raw_sha256_after="e" * 64,
+        collected=m["tests"].copy(),
+    )
+    e["trials"] = [
+        dict(nodeid=n, phases=dict(setup="passed", call="passed", teardown="passed"), seconds=0.1)
+        for n in m["tests"]
+    ]
+    planned = plan(m)
+    assert planned["tests"] == 8 and planned["finite_difference_checks"] == 4
+    assert planned["optimizer_updates"] == 0 and planned["training"] is False
+    assert compare(e)["passed"] == 8 and compare(e)["comparison_passed"]
+    for key in ("helper_sha256", "helper_sha256_after", "helper_raw_sha256_after"):
+        altered = copy.deepcopy(e)
+        altered[key] = "f" * 64
+        with pytest.raises(ValueError, match="helper"):
+            compare(altered)
+    m["tests"].pop()
+    with pytest.raises(ValueError, match="allowlisted"):
+        acceptance.validate(m)

@@ -54,7 +54,13 @@ def main() -> None:
     import pytest
     import torch
 
-    from research_tools.numerical_acceptance import SUITES, canonical_test_digest, compare
+    from research_tools.numerical_acceptance import (
+        NONHEAT_HELPER,
+        NONHEAT_SUITE,
+        SUITES,
+        canonical_test_digest,
+        compare,
+    )
     from research_tools.queue import registered_manifest, verify_snapshot
     from research_tools.schema import digest
 
@@ -68,6 +74,11 @@ def main() -> None:
         raise ValueError("CUDA unavailable")
     if canonical_test_digest(ROOT / suite) != manifest["test_sha256"]:
         raise ValueError("Canonical numerical test SHA256 differs")
+    helper_before = None
+    if suite == NONHEAT_SUITE:
+        if canonical_test_digest(ROOT / NONHEAT_HELPER) != manifest["helper_sha256"]:
+            raise ValueError("Canonical numerical helper SHA256 differs")
+        helper_before = digest(ROOT / NONHEAT_HELPER)
     raw_before = digest(ROOT / suite)
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
@@ -135,6 +146,13 @@ def main() -> None:
             name: digest(args.output / name) for name in ("pytest.log", "pytest-results.json")
         },
     )
+    if suite == NONHEAT_SUITE:
+        evidence.update(
+            helper_sha256=manifest["helper_sha256"],
+            helper_sha256_after=canonical_test_digest(ROOT / NONHEAT_HELPER),
+            helper_raw_sha256=helper_before,
+            helper_raw_sha256_after=digest(ROOT / NONHEAT_HELPER),
+        )
     comparison = compare(evidence)
     verify_snapshot(args.manifest.parent)
     (args.output / "acceptance.json").write_text(
