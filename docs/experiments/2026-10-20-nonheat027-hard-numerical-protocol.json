@@ -1,0 +1,24 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "c8bc42d876b823332537a28ca98ebe40172d8a98",
+  "suite": "tests/numerics/test_burgers_hard_network.py",
+  "tests": [
+    "tests/numerics/test_burgers_hard_network.py::test_burgers_hard_operator_and_every_weight[19-dtype0]",
+    "tests/numerics/test_burgers_hard_network.py::test_burgers_hard_operator_and_every_weight[19-dtype1]",
+    "tests/numerics/test_burgers_hard_network.py::test_burgers_hard_operator_and_every_weight[73-dtype0]",
+    "tests/numerics/test_burgers_hard_network.py::test_burgers_hard_operator_and_every_weight[73-dtype1]"
+  ],
+  "test_sha256": "acc200474546835a56867e8e26ff653f811302c44e03b6f74ff2e0a200edc359",
+  "helper_sha256": "cb730c6c6effeaa555075d7f76727c7db61c1c5b81b71c80dd4bf8d4ec2429b0",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
