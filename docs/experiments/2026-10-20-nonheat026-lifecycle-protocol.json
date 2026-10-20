@@ -1,0 +1,21 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "fabf4fca8096aa99083518c5ef40f572d28a2c88",
+  "suite": "tests/integration/test_nonheat_runner.py",
+  "tests": [
+    "tests/integration/test_nonheat_runner.py::test_nonheat_train_exact_load_predict_and_retrain[advection]",
+    "tests/integration/test_nonheat_runner.py::test_nonheat_train_exact_load_predict_and_retrain[burgers]"
+  ],
+  "test_sha256": "9fb876a77d96463548068b80251b1cac95ee9c22c1c7a3377b4e347cc7a31c0d",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
