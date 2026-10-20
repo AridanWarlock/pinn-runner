@@ -1,0 +1,28 @@
+{
+  "revision": "fabf4fca8096aa99083518c5ef40f572d28a2c88",
+  "test_sha256": "9fb876a77d96463548068b80251b1cac95ee9c22c1c7a3377b4e347cc7a31c0d",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "source_unchanged": true,
+  "job_id": "nonheat026",
+  "provenance": {
+    "protocol_commit": "edc8630fec303da02938b101f007dcdd14fc2f45",
+    "protocol_sha256": "39b026386f7459746a341a8c5b655b84a6e9dfc9beb3807875c3f42c6d355027"
+  },
+  "evidence_sha256": "25dc044267a2d0356802901d940c4648dd1dd4c74a1b7e8e3b90407565a9d862",
+  "tests": 2,
+  "passed": 2,
+  "cli_processes": 8,
+  "small_fits": 6,
+  "comparison_passed": true,
+  "scope": "Public CUDA file lifecycle only; no trained-field quality or speed claim"
+}

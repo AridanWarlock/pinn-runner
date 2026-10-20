@@ -1,0 +1,3 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_nonheat_runner.py::test_nonheat_train_exact_load_predict_and_retrain[advection],passed,passed,passed,11.053670399996918
+tests/integration/test_nonheat_runner.py::test_nonheat_train_exact_load_predict_and_retrain[burgers],passed,passed,passed,10.980464499967638

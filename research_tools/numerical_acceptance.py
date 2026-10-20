@@ -82,12 +82,20 @@ NONHEAT_LIFECYCLE_EXPECTED = [
     NONHEAT_LIFECYCLE_SUITE + f"::test_nonheat_train_exact_load_predict_and_retrain[{case}]"
     for case in ("advection", "burgers")
 ]
+BURGERS_HARD_SUITE = "tests/numerics/test_burgers_hard_network.py"
+BURGERS_HARD_EXPECTED = [
+    BURGERS_HARD_SUITE + f"::test_burgers_hard_operator_and_every_weight[{seed}-dtype{dtype}]"
+    for seed in (19, 73)
+    for dtype in (0, 1)
+]
+HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE)
 SUITES = {
     SUITE: EXPECTED,
     LIFECYCLE_SUITE: LIFECYCLE_EXPECTED,
     CONDUCTIVITY_SUITE: CONDUCTIVITY_EXPECTED,
     NONHEAT_SUITE: NONHEAT_EXPECTED,
     NONHEAT_LIFECYCLE_SUITE: NONHEAT_LIFECYCLE_EXPECTED,
+    BURGERS_HARD_SUITE: BURGERS_HARD_EXPECTED,
 }
 FIELDS = {
     "contract",
@@ -111,7 +119,7 @@ ENVIRONMENT = dict(
 
 
 def validate(manifest: Json) -> Json:
-    fields = FIELDS | ({"helper_sha256"} if manifest.get("suite") == NONHEAT_SUITE else set())
+    fields = FIELDS | ({"helper_sha256"} if manifest.get("suite") in HELPER_SUITES else set())
     if (
         set(manifest) != fields
         or manifest["contract"] != 6
@@ -130,7 +138,7 @@ def validate(manifest: Json) -> Json:
             or re.fullmatch(f"[0-9a-f]{{{size}}}", manifest[key]) is None
         ):
             raise ValueError("Invalid acceptance source hash")
-    if manifest["suite"] == NONHEAT_SUITE and (
+    if manifest["suite"] in HELPER_SUITES and (
         not isinstance(manifest["helper_sha256"], str)
         or re.fullmatch("[0-9a-f]{64}", manifest["helper_sha256"]) is None
     ):
@@ -145,18 +153,20 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
-    if manifest["suite"] == NONHEAT_SUITE:
+    if manifest["suite"] in HELPER_SUITES:
+        hard = manifest["suite"] == BURGERS_HARD_SUITE
         return dict(
             contract=1,
             kind="numerical-acceptance-plan",
             revision=manifest["revision"],
-            tests=8,
-            cases=["advection", "burgers"],
+            tests=4 if hard else 8,
+            cases=["burgers"] if hard else ["advection", "burgers"],
+            constraints="hard_initial_dirichlet" if hard else "soft",
             dtypes=["float32", "float64"],
             seeds=[19, 73],
-            network_models=8,
+            network_models=4 if hard else 8,
             parameters_per_model=2241,
-            finite_difference_checks=4,
+            finite_difference_checks=2 if hard else 4,
             optimizer_updates=0,
             training=False,
             performance_measurement=False,
@@ -232,7 +242,7 @@ def compare(evidence: Json) -> Json:
             raise ValueError("Invalid raw acceptance test hash")
     if evidence["test_raw_sha256"] != evidence["test_raw_sha256_after"]:
         raise ValueError("Raw acceptance source changed")
-    if manifest["suite"] == NONHEAT_SUITE:
+    if manifest["suite"] in HELPER_SUITES:
         if (
             evidence.get("helper_sha256") != manifest["helper_sha256"]
             or evidence.get("helper_sha256_after") != manifest["helper_sha256"]

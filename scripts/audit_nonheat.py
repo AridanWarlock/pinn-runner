@@ -22,15 +22,24 @@ from pinnstorch.runner.settings import TaskSettings  # noqa: E402
 
 
 def audit(
-    directory: Path, case_name: str, dtype: torch.dtype, seed: int, device: str = "cpu"
+    directory: Path,
+    case_name: str,
+    dtype: torch.dtype,
+    seed: int,
+    device: str = "cpu",
+    constraints: str = "soft",
 ) -> dict[str, Any]:
     if case_name not in ("advection", "burgers") or dtype not in (torch.float32, torch.float64):
         raise ValueError("Expected transport/Burgers and FP32/FP64")
     if device not in ("cpu", "cuda"):
         raise ValueError("Explicit CPU/CUDA device required")
+    if constraints != "soft" and not (
+        case_name == "burgers" and constraints == "hard_initial_dirichlet"
+    ):
+        raise ValueError("Only Burgers permits the registered exact Dirichlet control")
     case = CASES[case_name]
     config = case.config(device, 1, seed)
-    config["training"].update(constraints="soft", hard_execution="eager")
+    config["training"].update(constraints=constraints, hard_execution="eager")
     settings = TaskSettings.read(config)
     expected_faces = [("x", "lower")] if case_name == "advection" else [("x", "both")]
     assert [(b.axis, b.side) for b in settings.boundaries] == expected_faces
@@ -136,6 +145,9 @@ def audit(
         )
         target = target.to(device)
         boundary_max = max(boundary_max, float((u[mask].detach() - target).abs().max()))
+    if constraints == "hard_initial_dirichlet":
+        assert initial_max < (2e-6 if dtype == torch.float32 else 1e-11)
+        assert boundary_max < (2e-6 if dtype == torch.float32 else 1e-11)
     # Soft constraints: an untrained network need not fit these data.
     # Validate the prescribed data independently instead of assuming hard satisfaction.
     x_initial = values[initial_mask, :1]
@@ -188,6 +200,7 @@ def audit(
     assert tensor_fingerprint(model.state_dict()) == original_sha
     return dict(
         case=case_name,
+        constraints=constraints,
         device=device,
         dtype=str(dtype),
         seed=seed,

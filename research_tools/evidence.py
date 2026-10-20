@@ -177,6 +177,10 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
         )
     }
     if "absolute_quality" in manifest:
+        if manifest["report_parameters"]["constraints"] != "soft" or "constraints" in raw:
+            if raw.get("constraints") != manifest["report_parameters"]["constraints"]:
+                raise ValueError("Actual constraint representation differs from protocol")
+            compact["constraints"] = raw["constraints"]
         checksum = raw.get("problem_source_sha256")
         if checksum != manifest["problem_sha256"][raw["case"]]:
             raise ValueError("Problem source differs from absolute-quality protocol")
@@ -200,7 +204,12 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
     elif "coefficient_representation" in raw:
         raise ValueError("Coefficient trials require a physics protocol")
     for key in (
-        *(("initial_parameters_sha256",) if "physics" in manifest else ()),
+        *(
+            ("initial_parameters_sha256",)
+            if "physics" in manifest
+            or ("absolute_quality" in manifest and "initial_parameters_sha256" in raw)
+            else ()
+        ),
         "initial_state_sha256",
         "fixed_objective_sha256",
         *(("objective_prefix_sha256",) if "density" in manifest else ()),

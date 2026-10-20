@@ -1,0 +1,11 @@
+{
+  "models": 4,
+  "optimizer_steps": 0,
+  "finite_differences": 2,
+  "initial_max": 1.7881393432617188e-07,
+  "boundary_max": 8.742277657347586e-08,
+  "residual_max": 5.662441253662109e-07,
+  "gradient_relative_l2_max": 7.086391207167253e-08,
+  "detach_gradient_relative_l2_min": 0.19210721524704027,
+  "finite_difference_error_max": 1.6795215218579074e-10
+}

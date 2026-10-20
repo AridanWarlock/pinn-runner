@@ -345,6 +345,7 @@ def convergence_trial(
         **physical_identity,
         **({"points_override": arm.points} if plan.density is not None else {}),
         "case": plan.case.name,
+        "constraints": objects.model.hparams["constraint_kind"],
         "backend": arm.execution,
         "lifting": arm.lifting,
         "backward": arm.backward,

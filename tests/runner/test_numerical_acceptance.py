@@ -256,3 +256,17 @@ def test_nonheat_lifecycle_is_two_small_file_scenarios_not_quality_training() ->
     assert planned["prediction_grid_space_points"] == 5
     assert compare(e)["passed"] == 2 and compare(e)["comparison_passed"]
     assert "small training only" in compare(e)["scope"]
+
+
+def test_exact_burgers_control_has_distinct_inventory_and_two_finite_differences() -> None:
+    m = protocol()
+    m.update(
+        suite=acceptance.BURGERS_HARD_SUITE,
+        tests=acceptance.BURGERS_HARD_EXPECTED,
+        helper_sha256="d" * 64,
+    )
+    p = plan(m)
+    assert p["tests"] == p["network_models"] == 4
+    assert p["finite_difference_checks"] == 2 and p["optimizer_updates"] == 0
+    assert p["constraints"] == "hard_initial_dirichlet"
+    assert p["cases"] == ["burgers"]

@@ -17,9 +17,12 @@ from tests.numerics.test_absolute_quality import manifest
 pytestmark = pytest.mark.e2e
 
 
-@pytest.mark.parametrize("name", ["advection", "burgers"])
+@pytest.mark.parametrize(
+    "name,constraints",
+    [("advection", "soft"), ("burgers", "soft"), ("burgers", "hard_initial_dirichlet")],
+)
 def test_nonheat_actual_soft_convergence_collects_negative_quality(
-    tmp_path: Path, name: str
+    tmp_path: Path, name: str, constraints: str
 ) -> None:
     torch.set_num_threads(1)
     m = manifest()
@@ -30,9 +33,9 @@ def test_nonheat_actual_soft_convergence_collects_negative_quality(
         t for t in m["expected_trials"] if t["case"] == name and t["seed"] == 19
     ]
     m["reports"] = ["case/report.json"]
-    m["report_parameters"]["points_override"] = 7
+    m["report_parameters"].update(points_override=7, constraints=constraints)
     case = replace(CASES[name], grid=CartesianGrid((3, 5), (3, 6)))
-    p = ConvergencePlan(case, 1, (0, 1), m["case_limits"][name], "soft", 7, "cpu", 1e-12)
+    p = ConvergencePlan(case, 1, (0, 1), m["case_limits"][name], constraints, 7, "cpu", 1e-12)
     trial = convergence_trial(p, ConvergenceArm(), 19, tmp_path / "trial")
     assert trial["feature_derivatives"] == trial["control_feature_derivatives"] == "autograd"
     assert trial["problem_source_sha256"] == m["problem_sha256"][name]
@@ -60,6 +63,9 @@ def test_nonheat_actual_soft_convergence_collects_negative_quality(
     protocol = tmp_path / "protocol.json"
     protocol.write_text(json.dumps(m))
     e = collect(tmp_path, m, protocol)
+    if constraints == "hard_initial_dirichlet":
+        assert e["trials"][0]["constraints"] == constraints
+        assert e["trials"][0]["initial_parameters_sha256"] == trial["initial_parameters_sha256"]
     result = compare(e)
     assert result["trials"] == 1 and result["passed"] == 0 and not result["comparison_passed"]
     assert result["results"][0]["failed_metrics"]

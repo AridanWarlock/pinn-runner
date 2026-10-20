@@ -39,8 +39,10 @@ def validate_arm(arm: Json, constraints: str, spec: CaseSpec) -> None:
         raise ValueError("product_rule is a Dirichlet executor")
     if not robin and (arm["lifting"] != "recursive" or arm["background"] != "general"):
         raise ValueError("Expanded lifting and background selection require hard_initial_robin")
-    if spec.family in ("advection", "burgers") and constraints != "soft":
-        raise ValueError("Nonheat convergence currently requires soft constraints")
+    if spec.family == "advection" and constraints != "soft":
+        raise ValueError("Advection convergence requires soft inflow without an outflow face")
+    if spec.family == "burgers" and constraints not in ("soft", "hard_initial_dirichlet"):
+        raise ValueError("Burgers requires soft or compatible exact Dirichlet constraints")
     kinds = {face["kind"] for face in spec.faces()}
     if constraints == "hard_initial_dirichlet" and kinds != {"dirichlet"}:
         raise ValueError("Dirichlet hard constraints require Dirichlet faces")

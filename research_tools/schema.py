@@ -208,8 +208,13 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
             background="general",
             spatial_encoding="identity",
         )
-        if arm != expected_arm or parameters["constraints"] != "soft":
-            raise ValueError("Absolute quality currently requires original soft/eager execution")
+        hard_burgers = parameters["constraints"] == "hard_initial_dirichlet" and set(
+            case_limits
+        ) == {"burgers"}
+        if arm != expected_arm or (parameters["constraints"] != "soft" and not hard_burgers):
+            raise ValueError(
+                "Absolute quality requires soft or exact Burgers Dirichlet with eager execution"
+            )
         if any(
             set(t) != {"case", "seed", *ARM_FIELDS} or {k: t[k] for k in ARM_FIELDS} != arm
             for t in expected

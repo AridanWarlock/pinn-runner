@@ -164,3 +164,15 @@ def test_absolute_comparison_keeps_negative_quality_and_rechecks_every_gate(
     broken["trials"][0]["problem_source_sha256"] = "d" * 64
     with pytest.raises(ValueError, match="Problem source"):
         compare(broken)
+
+
+def test_exact_burgers_quality_does_not_admit_a_spurious_advection_outflow() -> None:
+    m = manifest()
+    m["report_parameters"]["constraints"] = "hard_initial_dirichlet"
+    with pytest.raises(ValueError):
+        plan(m)
+    for name in ("case_limits", "case_faces", "problem_sha256"):
+        m[name] = {"burgers": m[name]["burgers"]}
+    m["reports"] = ["burgers/report.json"]
+    m["expected_trials"] = [t for t in m["expected_trials"] if t["case"] == "burgers"]
+    assert plan(m)["trials"] == 2
