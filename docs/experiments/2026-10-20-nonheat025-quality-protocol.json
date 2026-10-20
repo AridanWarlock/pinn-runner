@@ -1,0 +1,183 @@
+{
+  "contract": 2,
+  "registration": "prospective",
+  "revision": "23ac7cdafa4d7fec02046aecfd73ad6eec57a20b",
+  "reports": [
+    "advection/report.json",
+    "burgers/report.json"
+  ],
+  "expected_trials": [
+    {
+      "case": "advection",
+      "seed": 19,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "advection",
+      "seed": 73,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "advection",
+      "seed": 1234,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "advection",
+      "seed": 2026,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "advection",
+      "seed": 4321,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers",
+      "seed": 19,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers",
+      "seed": 73,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers",
+      "seed": 1234,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers",
+      "seed": 2026,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers",
+      "seed": 4321,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    }
+  ],
+  "report_parameters": {
+    "adam_steps": 500,
+    "lbfgs_snapshots": [
+      0,
+      100,
+      250,
+      500
+    ],
+    "constraints": "soft",
+    "points_override": 1024,
+    "lbfgs_tolerance_change": 1e-12,
+    "execution_lifecycle": "isolated_trials"
+  },
+  "case_limits": {
+    "advection": {
+      "relative_l2": 0.002,
+      "final_relative_l2": 0.003,
+      "worst_time_relative_l2": 0.005,
+      "pde_rmse": 0.003
+    },
+    "burgers": {
+      "relative_l2": 0.002,
+      "final_relative_l2": 0.003,
+      "worst_time_relative_l2": 0.005,
+      "pde_rmse": 0.003
+    }
+  },
+  "physical_limits": {
+    "initial_rmse": 0.001,
+    "boundary_max": 0.001
+  },
+  "case_faces": {
+    "advection": [
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "lower"
+      }
+    ],
+    "burgers": [
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "upper"
+      }
+    ]
+  },
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "network": {
+    "hidden_layers": [
+      32,
+      32,
+      32
+    ],
+    "spatial_encoding": "identity"
+  },
+  "absolute_quality": {
+    "backend": "eager",
+    "lifting": "recursive",
+    "backward": "all",
+    "background": "general",
+    "spatial_encoding": "identity"
+  },
+  "problem_sha256": {
+    "advection": "c1cb8f98ec6e0d945ca8a74486c85257b6f3ab6ce52f6efc40950678ca1c00d1",
+    "burgers": "d3ea10959c3f016eb003197ef0e4367131dc3e6b79dce9ec6d70ef8795d66c2a"
+  }
+}
