@@ -1,0 +1,9 @@
+{
+  "points": 18,
+  "networks": 0,
+  "optimizer_steps": 0,
+  "field_difference_max": 6.661338147750939e-16,
+  "slope_difference_max": 3.019806626980426e-14,
+  "finite_difference_error_max": 1.0893153046254156e-08,
+  "scope": "Independent kernel moments at selected steep-front and boundary points; not a continuous certificate"
+}
