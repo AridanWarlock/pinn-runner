@@ -1,0 +1,176 @@
+{
+  "pairs": [
+    {
+      "seed": 11,
+      "initial_state_equal": true,
+      "initial_parameters_equal": true,
+      "samples_changed": true
+    },
+    {
+      "seed": 29,
+      "initial_state_equal": true,
+      "initial_parameters_equal": true,
+      "samples_changed": true
+    },
+    {
+      "seed": 83,
+      "initial_state_equal": true,
+      "initial_parameters_equal": true,
+      "samples_changed": true
+    },
+    {
+      "seed": 271,
+      "initial_state_equal": true,
+      "initial_parameters_equal": true,
+      "samples_changed": true
+    },
+    {
+      "seed": 997,
+      "initial_state_equal": true,
+      "initial_parameters_equal": true,
+      "samples_changed": true
+    }
+  ],
+  "metrics": {
+    "relative_l2": {
+      "minimum_ratio": 0.44790798027128736,
+      "median_ratio": 0.574939197402764,
+      "maximum_ratio": 1.0832005474387452,
+      "improved": 4,
+      "regressed": 1
+    },
+    "final_relative_l2": {
+      "minimum_ratio": 0.2703449044851483,
+      "median_ratio": 0.7108933234329474,
+      "maximum_ratio": 2.158736804225352,
+      "improved": 3,
+      "regressed": 2
+    },
+    "worst_time_relative_l2": {
+      "minimum_ratio": 0.2799683439144694,
+      "median_ratio": 0.5970718559245358,
+      "maximum_ratio": 1.0067327133021753,
+      "improved": 4,
+      "regressed": 1
+    },
+    "pde_rmse": {
+      "minimum_ratio": 0.40642228425647353,
+      "median_ratio": 0.6690246783050482,
+      "maximum_ratio": 0.9109239419399491,
+      "improved": 5,
+      "regressed": 0
+    },
+    "regional_pde_rmse": {
+      "minimum_ratio": 0.3218188214584804,
+      "median_ratio": 0.6061269977470524,
+      "maximum_ratio": 0.6769371136213542,
+      "improved": 5,
+      "regressed": 0
+    },
+    "worst_time_gradient_relative_l2": {
+      "minimum_ratio": 0.2566911753979938,
+      "median_ratio": 0.48510460115195575,
+      "maximum_ratio": 1.0959949099155033,
+      "improved": 4,
+      "regressed": 1
+    },
+    "grid_refinement_ratio": {
+      "minimum_ratio": 0.048012798358138986,
+      "median_ratio": 0.48752080507555284,
+      "maximum_ratio": 0.8533042593166592,
+      "improved": 5,
+      "regressed": 0
+    },
+    "initial_rmse": {
+      "minimum_ratio": 1.0,
+      "median_ratio": 1.0,
+      "maximum_ratio": 1.0,
+      "improved": 0,
+      "regressed": 0
+    },
+    "boundary_max": {
+      "minimum_ratio": 1.0,
+      "median_ratio": 1.0,
+      "maximum_ratio": 1.0,
+      "improved": 0,
+      "regressed": 0
+    }
+  },
+  "cost": {
+    "nonheat032": {
+      "trials": 5,
+      "training_seconds": 65.5847880000947,
+      "process_seconds": 143.94912929995917,
+      "closures": 5179.0,
+      "adam_residual_points": 320000.0,
+      "lbfgs_residual_points": 5303296.0,
+      "passed": 0
+    },
+    "nonheat033": {
+      "trials": 5,
+      "training_seconds": 64.99552389991004,
+      "process_seconds": 142.93895860004704,
+      "closures": 5165.0,
+      "adam_residual_points": 320000.0,
+      "lbfgs_residual_points": 21155840.0,
+      "passed": 0
+    }
+  },
+  "objective": {
+    "nonheat032:burgers_unforced_nu001": {
+      "training_rms": {
+        "minimum": 0.014969764368116567,
+        "maximum": 0.029420488510152557
+      },
+      "holdout_to_training_rms": {
+        "minimum": 1.370889355656903,
+        "maximum": 1.5770723052161912
+      },
+      "central_squared_residual_share": {
+        "minimum": 0.4766070223993596,
+        "maximum": 0.6908511285831707
+      },
+      "late_squared_residual_share": {
+        "minimum": 0.08034937933323956,
+        "maximum": 0.2729709304401586
+      }
+    },
+    "nonheat032:burgers_unforced_nu010": {
+      "training_rms": {
+        "minimum": 0.005056058817408525,
+        "maximum": 0.006113685091740378
+      },
+      "holdout_to_training_rms": {
+        "minimum": 1.0700734962409144,
+        "maximum": 1.288281289204261
+      },
+      "central_squared_residual_share": {
+        "minimum": 0.08574238151328817,
+        "maximum": 0.17646475169910122
+      },
+      "late_squared_residual_share": {
+        "minimum": 0.06459147266816263,
+        "maximum": 0.12755950168960128
+      }
+    },
+    "nonheat033:burgers_unforced_nu001": {
+      "training_rms": {
+        "minimum": 0.01342607229204071,
+        "maximum": 0.02814868059036041
+      },
+      "holdout_to_training_rms": {
+        "minimum": 1.0140644392979208,
+        "maximum": 1.0913747734721473
+      },
+      "central_squared_residual_share": {
+        "minimum": 0.2551850102137264,
+        "maximum": 0.42814525287437405
+      },
+      "late_squared_residual_share": {
+        "minimum": 0.14571509603427574,
+        "maximum": 0.23827290328849088
+      }
+    }
+  },
+  "scope": "Post-hoc descriptive pairs on five fixed states; different objectives and costs, no speedup or causal attribution. CPU residual audit does not replace CUDA acceptance."
+}

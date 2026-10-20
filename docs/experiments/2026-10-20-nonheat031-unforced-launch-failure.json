@@ -1,0 +1,15 @@
+{
+  "job_id": "nonheat031",
+  "source_revision": "2a75fc1d2d2a9c26446a7274e65d788b073bca35",
+  "protocol_commit": "846b99982d8ed7547b9d3f5daa5b0538d18d7236",
+  "state": "failed",
+  "exit_code": 1,
+  "child_exit_code": 2,
+  "started_at_utc": "2026-10-20T14:04:15.894300+00:00",
+  "finished_at_utc": "2026-10-20T14:04:20.882513+00:00",
+  "completed_cases": 0,
+  "completed_trajectories": 0,
+  "training_started": false,
+  "reason": "Child argparse rejected --regional-pde-rmse, --worst-time-gradient-relative-l2 and --grid-refinement-ratio before model construction or training.",
+  "scope": "Technical launch failure; not an accuracy outcome. Original job and protocol are preserved; no bundle.json is fabricated."
+}

@@ -1,0 +1,122 @@
+{
+  "initial_pairs": [],
+  "layer_evaluation": {
+    "coarse_grid": [
+      801,
+      201
+    ],
+    "fine_grid": [
+      1601,
+      401
+    ],
+    "global_points": 2048,
+    "global_seed": 20261013,
+    "regional_points": 2048,
+    "regional_seed": 20261014,
+    "regional_space": [
+      -0.1,
+      0.1
+    ],
+    "regional_time": [
+      0.15,
+      1.0
+    ],
+    "field_norm": "array_l2",
+    "gradient_norm": "spatial_trapezoid_worst_time",
+    "refinement_norm": "difference_over_registered_limit",
+    "reference_order": 512,
+    "reference_sha256": "e70de0f3942f36d2f7b61db24eb922d794a9521a1291106340dacee9d2ebb24c"
+  },
+  "job_id": "nonheat033",
+  "revision": "d57bf9a06e432efc64eb0cf009204a884f5341c9",
+  "provenance": {
+    "protocol_commit": "3b3c195d4beb1ce28bcbcc17cf002878b1f98cf9",
+    "protocol_sha256": "5909d2506974d1b3f496fffea8a2c01990c0ab5e6aa8071ef7132036c88101ad"
+  },
+  "evidence_sha256": "128a0b0b3b5d4da44092ffc97298b3128666ececd882d3dbf9665a806e4093ff",
+  "environment": {
+    "revision": "d57bf9a06e432efc64eb0cf009204a884f5341c9",
+    "working_tree_dirty": false,
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "cpu_threads": 6,
+    "default_dtype": "torch.float32",
+    "cudnn_allow_tf32": false,
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti",
+    "packages": {
+      "numpy": "1.26.4",
+      "lightning": "2.1.0"
+    }
+  },
+  "trials": 5,
+  "passed": 0,
+  "comparison_passed": false,
+  "cases": {
+    "burgers_unforced_nu001": {
+      "trials": 5,
+      "passed": 0,
+      "failed_metrics": {
+        "relative_l2": 5,
+        "final_relative_l2": 5,
+        "worst_time_relative_l2": 4,
+        "pde_rmse": 5,
+        "regional_pde_rmse": 5,
+        "worst_time_gradient_relative_l2": 3
+      },
+      "maxima": {
+        "relative_l2": 0.008032803043320198,
+        "final_relative_l2": 0.016280170120779654,
+        "worst_time_relative_l2": 0.016280170120779654,
+        "pde_rmse": 0.028544628992676735,
+        "regional_pde_rmse": 0.06680973619222641,
+        "worst_time_gradient_relative_l2": 0.052360696449347585,
+        "grid_refinement_ratio": 0.0012254087160771393,
+        "initial_rmse": 5.887378910783137e-08,
+        "boundary_max": 8.742277657347586e-08
+      },
+      "minima": {
+        "relative_l2": 0.0029326642486756233,
+        "final_relative_l2": 0.004014335842749668,
+        "worst_time_relative_l2": 0.004157233737959586,
+        "pde_rmse": 0.014537615701556206,
+        "regional_pde_rmse": 0.0336962454020977,
+        "worst_time_gradient_relative_l2": 0.01707966409139764,
+        "grid_refinement_ratio": 0.00020511160030503572,
+        "initial_rmse": 5.887378910783137e-08,
+        "boundary_max": 8.742277657347586e-08
+      },
+      "snapshots": {
+        "0": {
+          "passed": 0,
+          "trials": 5
+        },
+        "100": {
+          "passed": 0,
+          "trials": 5
+        },
+        "250": {
+          "passed": 0,
+          "trials": 5
+        },
+        "500": {
+          "passed": 0,
+          "trials": 5
+        }
+      },
+      "confirmed_crossings": 0
+    }
+  },
+  "total_snapshots": 20,
+  "failed_snapshots": 20,
+  "training_seconds": 64.99552389991004,
+  "process_seconds": 142.93895860004704,
+  "lbfgs_closures": 5165.0,
+  "adam_residual_points": 320000.0,
+  "lbfgs_residual_points": 21155840.0,
+  "scope": "Fixed matrix only; failed quality retained; no speedup or continuous certificate"
+}

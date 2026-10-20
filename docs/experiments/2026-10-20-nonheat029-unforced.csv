@@ -1,0 +1,9 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[11-dtype0-burgers_unforced_nu010],passed,passed,passed,0.3087607999332249
+tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[11-dtype0-burgers_unforced_nu001],passed,passed,passed,0.036608300055377185
+tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[11-dtype1-burgers_unforced_nu010],passed,passed,passed,0.05473499989602715
+tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[11-dtype1-burgers_unforced_nu001],passed,passed,passed,0.0494326000334695
+tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[29-dtype0-burgers_unforced_nu010],passed,passed,passed,0.03644940000958741
+tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[29-dtype0-burgers_unforced_nu001],passed,passed,passed,0.03545649989973754
+tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[29-dtype1-burgers_unforced_nu010],passed,passed,passed,0.04897619993425906
+tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[29-dtype1-burgers_unforced_nu001],passed,passed,passed,0.04939670010935515

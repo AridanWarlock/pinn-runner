@@ -1,0 +1,202 @@
+{
+  "initial_pairs": [
+    {
+      "seed": 11,
+      "same_initial_network_state": true,
+      "same_initial_parameters": true,
+      "same_objective_sample_hash": true
+    },
+    {
+      "seed": 29,
+      "same_initial_network_state": true,
+      "same_initial_parameters": true,
+      "same_objective_sample_hash": true
+    },
+    {
+      "seed": 83,
+      "same_initial_network_state": true,
+      "same_initial_parameters": true,
+      "same_objective_sample_hash": true
+    },
+    {
+      "seed": 271,
+      "same_initial_network_state": true,
+      "same_initial_parameters": true,
+      "same_objective_sample_hash": true
+    },
+    {
+      "seed": 997,
+      "same_initial_network_state": true,
+      "same_initial_parameters": true,
+      "same_objective_sample_hash": true
+    }
+  ],
+  "layer_evaluation": {
+    "coarse_grid": [
+      801,
+      201
+    ],
+    "fine_grid": [
+      1601,
+      401
+    ],
+    "global_points": 2048,
+    "global_seed": 20261013,
+    "regional_points": 2048,
+    "regional_seed": 20261014,
+    "regional_space": [
+      -0.1,
+      0.1
+    ],
+    "regional_time": [
+      0.15,
+      1.0
+    ],
+    "field_norm": "array_l2",
+    "gradient_norm": "spatial_trapezoid_worst_time",
+    "refinement_norm": "difference_over_registered_limit",
+    "reference_order": 512,
+    "reference_sha256": "e70de0f3942f36d2f7b61db24eb922d794a9521a1291106340dacee9d2ebb24c"
+  },
+  "job_id": "nonheat032",
+  "revision": "d57bf9a06e432efc64eb0cf009204a884f5341c9",
+  "provenance": {
+    "protocol_commit": "d8ab09f1573cae0be45333c6a5edc7cb4217d78b",
+    "protocol_sha256": "a4619203c0abd18864d2eb616da6b68eb8d408e804e58833db26ad6e3422329c"
+  },
+  "evidence_sha256": "85202e4dd131a88e075482592915d9172954d8bac8ba33a73499230b5fc8ef74",
+  "environment": {
+    "revision": "d57bf9a06e432efc64eb0cf009204a884f5341c9",
+    "working_tree_dirty": false,
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "cpu_threads": 6,
+    "default_dtype": "torch.float32",
+    "cudnn_allow_tf32": false,
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti",
+    "packages": {
+      "numpy": "1.26.4",
+      "lightning": "2.1.0"
+    }
+  },
+  "trials": 10,
+  "passed": 0,
+  "comparison_passed": false,
+  "cases": {
+    "burgers_unforced_nu010": {
+      "trials": 5,
+      "passed": 0,
+      "failed_metrics": {
+        "pde_rmse": 5,
+        "regional_pde_rmse": 5
+      },
+      "maxima": {
+        "relative_l2": 0.0007686040233161646,
+        "final_relative_l2": 0.0016625517780721492,
+        "worst_time_relative_l2": 0.0016625517780721492,
+        "pde_rmse": 0.00756077328696847,
+        "regional_pde_rmse": 0.007987414486706257,
+        "worst_time_gradient_relative_l2": 0.0052828528570124725,
+        "grid_refinement_ratio": 0.0005704421231461209,
+        "initial_rmse": 5.887378910171763e-08,
+        "boundary_max": 8.742277657347586e-08
+      },
+      "minima": {
+        "relative_l2": 0.0005855800828126272,
+        "final_relative_l2": 0.0009177531843150647,
+        "worst_time_relative_l2": 0.0011901943978348658,
+        "pde_rmse": 0.006372313015162945,
+        "regional_pde_rmse": 0.004169871564954519,
+        "worst_time_gradient_relative_l2": 0.002888597486954775,
+        "grid_refinement_ratio": 0.00024394642934567846,
+        "initial_rmse": 5.887378910171763e-08,
+        "boundary_max": 8.742277657347586e-08
+      },
+      "snapshots": {
+        "0": {
+          "passed": 0,
+          "trials": 5
+        },
+        "100": {
+          "passed": 0,
+          "trials": 5
+        },
+        "250": {
+          "passed": 0,
+          "trials": 5
+        },
+        "500": {
+          "passed": 0,
+          "trials": 5
+        }
+      },
+      "confirmed_crossings": 0
+    },
+    "burgers_unforced_nu001": {
+      "trials": 5,
+      "passed": 0,
+      "failed_metrics": {
+        "relative_l2": 5,
+        "final_relative_l2": 5,
+        "worst_time_relative_l2": 5,
+        "pde_rmse": 5,
+        "regional_pde_rmse": 5,
+        "worst_time_gradient_relative_l2": 5
+      },
+      "maxima": {
+        "relative_l2": 0.010905708627384107,
+        "final_relative_l2": 0.02600711452199668,
+        "worst_time_relative_l2": 0.02600711452199668,
+        "pde_rmse": 0.043271299451589584,
+        "regional_pde_rmse": 0.12230633199214935,
+        "worst_time_gradient_relative_l2": 0.08669685602933075,
+        "grid_refinement_ratio": 0.0042720192806730214,
+        "initial_rmse": 5.887378910783137e-08,
+        "boundary_max": 8.742277657347586e-08
+      },
+      "minima": {
+        "relative_l2": 0.0038977193733114807,
+        "final_relative_l2": 0.006872613747680686,
+        "worst_time_relative_l2": 0.007625423286173514,
+        "pde_rmse": 0.022759441286325455,
+        "regional_pde_rmse": 0.0669003278017044,
+        "worst_time_gradient_relative_l2": 0.023440913611933227,
+        "grid_refinement_ratio": 0.0004916940723755613,
+        "initial_rmse": 5.887378910783137e-08,
+        "boundary_max": 8.742277657347586e-08
+      },
+      "snapshots": {
+        "0": {
+          "passed": 0,
+          "trials": 5
+        },
+        "100": {
+          "passed": 0,
+          "trials": 5
+        },
+        "250": {
+          "passed": 0,
+          "trials": 5
+        },
+        "500": {
+          "passed": 0,
+          "trials": 5
+        }
+      },
+      "confirmed_crossings": 0
+    }
+  },
+  "total_snapshots": 40,
+  "failed_snapshots": 40,
+  "training_seconds": 130.8668117999332,
+  "process_seconds": 289.6396437000949,
+  "lbfgs_closures": 10307.0,
+  "adam_residual_points": 640000.0,
+  "lbfgs_residual_points": 10554368.0,
+  "scope": "Fixed matrix only; failed quality retained; no speedup or continuous certificate"
+}

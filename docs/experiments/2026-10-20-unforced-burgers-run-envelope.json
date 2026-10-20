@@ -1,0 +1,23 @@
+{
+  "states": 15,
+  "snapshots": 75,
+  "optimizer_steps": 0,
+  "device": "cpu",
+  "dtype": "torch.float64",
+  "coarse_grid": [
+    401,
+    201
+  ],
+  "fine_grid": [
+    801,
+    401
+  ],
+  "max_discrete_violation": 0.0,
+  "max_e1_grid_change": 0.0005007564987432072,
+  "max_b1_grid_change": 0.0007468685931807671,
+  "max_e1_over_b1": 0.9984094115630532,
+  "final_b1_over_e1_min": 4.388602924338193,
+  "final_b1_over_e1_max": 26.188403802760742,
+  "protocol_sha256": "5e5822cb16b35162aa005d5761c0c1528efd2111632ebbbf8651ee6504a3ae2d",
+  "scope": "FP64 interpretation of fixed FP32 weights; finite-grid diagnostics, no continuous certificate and no replacement of CUDA acceptance."
+}

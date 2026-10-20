@@ -1,0 +1,3 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_unforced_burgers_runner.py::test_unforced_public_lifecycle[burgers_unforced_nu010],passed,passed,passed,11.14817150007002
+tests/integration/test_unforced_burgers_runner.py::test_unforced_public_lifecycle[burgers_unforced_nu001],passed,passed,passed,11.036529600038193

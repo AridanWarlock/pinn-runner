@@ -1,0 +1,11 @@
+{
+  "comparisons": 4,
+  "unique_nodes_per_viscosity": 642001,
+  "passed": 4,
+  "device": "cpu",
+  "dtype": "float64",
+  "optimizer_steps": 0,
+  "reference_sha256": "e70de0f3942f36d2f7b61db24eb922d794a9521a1291106340dacee9d2ebb24c",
+  "protocol_sha256": "b320ac41cbfd30e20f182652cefbb32ef4cbd11c02823932f8eb3c0221d9f40b",
+  "scope": "Full registered-grid order convergence only; same formula, no continuous or interval certificate."
+}

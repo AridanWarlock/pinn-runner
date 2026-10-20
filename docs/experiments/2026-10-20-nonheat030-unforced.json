@@ -1,0 +1,34 @@
+{
+  "revision": "2a75fc1d2d2a9c26446a7274e65d788b073bca35",
+  "test_sha256": "dc88c050d887a03be76fd1a967c5fe7c38d65ebf6eebd3cb6ac525799a91f52e",
+  "source_unchanged": true,
+  "test_raw_sha256": "54f0b8176b92b0086239038a4077c6d680f905db218ff6db5269fd9bef0830b1",
+  "test_raw_sha256_after": "54f0b8176b92b0086239038a4077c6d680f905db218ff6db5269fd9bef0830b1",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "pytest_exit_code": 0,
+  "job_id": "nonheat030",
+  "tests": 2,
+  "evidence_sha256": "f13b2b2df64c00b3775967350be3756fb616742e5b71cf05b916eb414693bcda",
+  "protocol_commit": "846b99982d8ed7547b9d3f5daa5b0538d18d7236",
+  "passed": true
+}

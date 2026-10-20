@@ -1,0 +1,107 @@
+{
+  "kind": "unforced-burgers-validation",
+  "source_revision": "2a75fc1d2d2a9c26446a7274e65d788b073bca35",
+  "full_cpu": {
+    "command": ".venv/bin/python scripts/check.py --full",
+    "passed": 1009,
+    "deselected": 0,
+    "pytest_seconds": 425.13,
+    "ruff": true,
+    "formatted_files": 267,
+    "mypy_files": 138
+  },
+  "supplementary": {
+    "command": ".venv/bin/python -m pytest tests/numerics/test_unforced_burgers_network.py -q",
+    "passed": 8,
+    "note": "Final acceptance wrapper additionally calls the independent CPU reference controls; production code unchanged."
+  },
+  "cpu_audit": "2026-10-20-unforced-burgers-cpu.json",
+  "cuda": {
+    "numerical": {
+      "job_id": "nonheat029",
+      "tests": 8,
+      "comparison_passed": true
+    },
+    "lifecycle": {
+      "job_id": "nonheat030",
+      "tests": 2,
+      "comparison_passed": true
+    },
+    "scope": "Only the new allowlisted suites, not all tests/hardware"
+  },
+  "cli_transport_fix": {
+    "revision": "d57bf9a06e432efc64eb0cf009204a884f5341c9",
+    "command": ".venv/bin/python scripts/check.py",
+    "passed": 944,
+    "deselected_e2e": 66,
+    "pytest_seconds": 20.17,
+    "ruff": true,
+    "formatted_files": 267,
+    "mypy_files": 138,
+    "targeted_passed": 18,
+    "targeted_scope": "Unforced protocol and convergence-process regression tests",
+    "cuda_validated_physics_blobs_unchanged": true,
+    "scope": "Child argument parser and regression test only; full CPU result above belongs to the physics revision."
+  },
+  "quality": {
+    "nonheat032": {
+      "trials": 10,
+      "snapshots": 40,
+      "passed": 0,
+      "comparison_passed": false
+    },
+    "nonheat033": {
+      "trials": 5,
+      "snapshots": 20,
+      "passed": 0,
+      "comparison_passed": false
+    },
+    "nonheat031": {
+      "completed_trajectories": 0,
+      "training_started": false,
+      "technical_failure": true
+    }
+  },
+  "posthoc_cpu_diagnostic": {
+    "states": 15,
+    "optimizer_steps": 0,
+    "device": "cpu",
+    "python": "3.10.20",
+    "torch": "2.1.0",
+    "numpy": "1.26.4",
+    "all_sample_and_initial_state_hashes_matched": true,
+    "all_final_states_unchanged": true,
+    "max_cpu_cuda_rms_absolute_difference": 1.942785869818442e-07,
+    "allowed_absolute_difference": 5e-05,
+    "scope": "Diagnostic only; does not replace CUDA quality gates."
+  },
+  "posthoc_l1_envelope": {
+    "states": 15,
+    "optimizer_steps": 0,
+    "coarse_grid": [
+      401,
+      201
+    ],
+    "fine_grid": [
+      801,
+      401
+    ],
+    "max_discrete_violation": 0.0,
+    "scope": "FP64 interpretation of fixed FP32 weights; finite grids only."
+  },
+  "reference_grid_order_control": {
+    "orders": [
+      512,
+      1024
+    ],
+    "viscosities": [
+      0.1,
+      0.01
+    ],
+    "nodes_per_viscosity": 642001,
+    "comparisons": 4,
+    "passed": 4,
+    "optimizer_steps": 0,
+    "scope": "Same formula, no continuous certificate."
+  }
+}

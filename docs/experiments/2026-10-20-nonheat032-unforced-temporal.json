@@ -1,0 +1,17 @@
+{
+  "job_id": "nonheat032",
+  "files": [
+    {
+      "case": "burgers_unforced_nu001",
+      "sha256": "bcfc61eb2518417db224441df7e84d48f69268b1605ed80862a598dfe02c3963",
+      "revision": "d57bf9a06e432efc64eb0cf009204a884f5341c9"
+    },
+    {
+      "case": "burgers_unforced_nu010",
+      "sha256": "4eabcd7d673bc6fc2e66bceb607d56bc894b01d43da65c8e14bf39eee2dca7c3",
+      "revision": "d57bf9a06e432efc64eb0cf009204a884f5341c9"
+    }
+  ],
+  "rows": 40,
+  "scope": "Read-only diagnostic from completed reports; no fitting or GPU evaluation; all peaks matched compact evidence."
+}
