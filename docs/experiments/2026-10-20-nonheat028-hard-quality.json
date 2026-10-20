@@ -1,0 +1,65 @@
+{
+  "job_id": "nonheat028",
+  "revision": "c8bc42d876b823332537a28ca98ebe40172d8a98",
+  "provenance": {
+    "protocol_commit": "149016f69f5e8504ddd0908c264a9681d1f654f3",
+    "protocol_sha256": "705acdbd35d08dfef1729972c97f74b843718fcc44b1373c4ef41aff5aa7da49"
+  },
+  "evidence_sha256": "0d54f6db03fd2a659489cc8f5dcdfbb8a434958951c1bfd398fcd2b312ac65c3",
+  "environment": {
+    "revision": "c8bc42d876b823332537a28ca98ebe40172d8a98",
+    "working_tree_dirty": false,
+    "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "cpu_threads": 6,
+    "default_dtype": "torch.float32",
+    "cudnn_allow_tf32": false,
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Ti",
+    "packages": {
+      "numpy": "1.26.4",
+      "lightning": "2.1.0"
+    }
+  },
+  "trials": 5,
+  "passed": 5,
+  "comparison_passed": true,
+  "maxima": {
+    "relative_l2": 5.1755398602602295e-05,
+    "final_relative_l2": 6.985096949150698e-05,
+    "worst_time_relative_l2": 6.985096949150698e-05,
+    "pde_rmse": 0.0006186263635754585,
+    "initial_rmse": 6.338602583840758e-08,
+    "boundary_max": 8.742277657347586e-08
+  },
+  "initial_network_state_matches_soft": 5,
+  "snapshots": {
+    "0": {
+      "passed": 0,
+      "trials": 5
+    },
+    "100": {
+      "passed": 5,
+      "trials": 5
+    },
+    "250": {
+      "passed": 5,
+      "trials": 5
+    },
+    "500": {
+      "passed": 5,
+      "trials": 5
+    }
+  },
+  "confirmed_crossings": 5,
+  "training_seconds": 112.34250330005307,
+  "process_seconds": 124.9046912000631,
+  "lbfgs_closures": 11460.0,
+  "adam_residual_points": 320000.0,
+  "lbfgs_residual_points": 11735040.0,
+  "scope": "Prospective follow-up after soft failure; changed function class and objective; not pooled with soft and no speedup claim"
+}

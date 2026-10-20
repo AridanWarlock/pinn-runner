@@ -82,8 +82,8 @@ def main() -> None:
             | dict(
                 initial_parameters_sha256=t["initial_parameters_sha256"],
                 initial_state_sha256=t["initial_state_sha256"],
-                initial_parameters_match_soft=old["initial_state_sha256"]
-                == t["initial_parameters_sha256"],
+                initial_network_state_matches_soft=old["initial_state_sha256"]
+                == t["initial_state_sha256"],
                 training_seconds=t["training_seconds_with_snapshots"],
                 process_seconds=t["process_seconds"],
                 peak_allocated_bytes=t["peak_allocated_bytes"],
@@ -108,7 +108,9 @@ def main() -> None:
         passed=result["passed"],
         comparison_passed=result["comparison_passed"],
         maxima={k: max(r[k] for r in final) for k in goals},
-        initial_parameters_match_soft=sum(r["initial_parameters_match_soft"] for r in final),
+        initial_network_state_matches_soft=sum(
+            r["initial_network_state_matches_soft"] for r in final
+        ),
         snapshots={
             str(step): dict(
                 passed=sum(r["passed"] for r in snapshots if r["lb_steps"] == step), trials=5

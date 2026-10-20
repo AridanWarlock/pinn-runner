@@ -1,0 +1,96 @@
+{
+  "networks": 0,
+  "optimizer_steps": 0,
+  "quadrature_order": 512,
+  "rows": [
+    {
+      "energy_balance_max": 1.048204426146171e-06,
+      "energy_balance_relative_max": 1.1018368143597985e-06,
+      "nu": 0.1,
+      "nx": 201,
+      "nt": 101,
+      "field_spacetime_l2": 0.6306165188342735,
+      "field_final_l2": 0.3117835192425873,
+      "slope_spacetime_l2": 2.1246400173664983,
+      "slope_final_l2": 1.0450415050547153
+    },
+    {
+      "energy_balance_max": 1.0482044087156694e-06,
+      "energy_balance_relative_max": 1.101836796037449e-06,
+      "nu": 0.1,
+      "nx": 801,
+      "nt": 101,
+      "field_spacetime_l2": 0.6306165188342736,
+      "field_final_l2": 0.3117835192425872,
+      "slope_spacetime_l2": 2.1246400173664983,
+      "slope_final_l2": 1.0450415050547148
+    },
+    {
+      "energy_balance_max": 1.0482043635295923e-06,
+      "energy_balance_relative_max": 1.1018367485393847e-06,
+      "nu": 0.1,
+      "nx": 1601,
+      "nt": 101,
+      "field_spacetime_l2": 0.6306165188342735,
+      "field_final_l2": 0.31178351924258724,
+      "slope_spacetime_l2": 2.1246400173664983,
+      "slope_final_l2": 1.0450415050547146
+    },
+    {
+      "energy_balance_max": 8.300321163723368e-08,
+      "energy_balance_relative_max": 8.57157577059165e-08,
+      "nu": 0.1,
+      "nx": 1601,
+      "nt": 201,
+      "field_spacetime_l2": 0.6306078198232519,
+      "field_final_l2": 0.31178351924258724,
+      "slope_spacetime_l2": 2.1246153058196953,
+      "slope_final_l2": 1.0450415050547146
+    },
+    {
+      "energy_balance_max": 3.3435767138323413e-06,
+      "energy_balance_relative_max": 1.0178109744180731e-05,
+      "nu": 0.01,
+      "nx": 201,
+      "nt": 101,
+      "field_spacetime_l2": 0.8481703900532368,
+      "field_final_l2": 0.5800394601671042,
+      "slope_spacetime_l2": 5.7599773629738795,
+      "slope_final_l2": 4.987970289213812
+    },
+    {
+      "energy_balance_max": 3.1101142485834288e-06,
+      "energy_balance_relative_max": 1.017812143762582e-05,
+      "nu": 0.01,
+      "nx": 801,
+      "nt": 101,
+      "field_spacetime_l2": 0.8481703903498461,
+      "field_final_l2": 0.5800394601717115,
+      "slope_spacetime_l2": 5.759974426786802,
+      "slope_final_l2": 4.987970253359774
+    },
+    {
+      "energy_balance_max": 3.110114286108967e-06,
+      "energy_balance_relative_max": 1.017812129391529e-05,
+      "nu": 0.01,
+      "nx": 1601,
+      "nt": 101,
+      "field_spacetime_l2": 0.848170390349846,
+      "field_final_l2": 0.5800394601717117,
+      "slope_spacetime_l2": 5.759974426786802,
+      "slope_final_l2": 4.987970253359776
+    },
+    {
+      "energy_balance_max": 1.96026403997962e-07,
+      "energy_balance_relative_max": 6.446525961253141e-07,
+      "nu": 0.01,
+      "nx": 1601,
+      "nt": 201,
+      "field_spacetime_l2": 0.8481714964280572,
+      "field_final_l2": 0.5800394601717117,
+      "slope_spacetime_l2": 5.760000848393073,
+      "slope_final_l2": 4.987970253359776
+    }
+  ],
+  "scope": "Reference norm integration only, not a convergence certificate for future PINN errors"
+}

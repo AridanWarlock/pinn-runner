@@ -1,0 +1,43 @@
+{
+  "nu": [
+    0.1,
+    0.01
+  ],
+  "domain": [
+    -1,
+    1
+  ],
+  "time": [
+    0,
+    1
+  ],
+  "source": 0,
+  "networks": 0,
+  "optimizer_steps": 0,
+  "adaptive_checks": 16,
+  "slope_finite_difference_max": 2.937730059215937e-10,
+  "invariants": [
+    {
+      "kind": "invariants",
+      "nu": 0.1,
+      "energy_initial": 0.5000000000000001,
+      "energy_final": 0.0486044814356464,
+      "energy_max_increase": 0.0,
+      "mass_max": 2.1345230270808369e-16,
+      "center_slope_final": -1.5355927156412816
+    },
+    {
+      "kind": "invariants",
+      "nu": 0.01,
+      "energy_initial": 0.5000000000000001,
+      "energy_final": 0.16822288767547283,
+      "energy_max_increase": 0.0,
+      "mass_max": 2.6699833750171154e-16,
+      "center_slope_final": -25.86106044709431
+    }
+  ],
+  "adaptive_max_error": 6.966649479522857e-15,
+  "order_256_to_512_max": 2.6645352591003757e-15,
+  "pde_smallest_step_max": 1.3497464568246187e-07,
+  "data_max_error": 2.220446049250313e-16
+}

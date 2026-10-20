@@ -8,14 +8,44 @@
   "ruff": true,
   "format": true,
   "mypy_source_files": 134,
-  "profiled_e2e": [
-    "tests/integration/test_nonheat_convergence.py"
-  ],
   "numerical_cuda": {
     "job_id": "nonheat024",
     "passed": 8,
     "optimizer_steps": 0
   },
   "source_protocol_split": true,
-  "log_sha256": "ca959c6acfbe258f472819aaedac92888bffa4a64618b280772b606337296df6"
+  "log_sha256": "ca959c6acfbe258f472819aaedac92888bffa4a64618b280772b606337296df6",
+  "final": {
+    "source_revision": "c8bc42d876b823332537a28ca98ebe40172d8a98",
+    "full_cpu": {
+      "passed": 988,
+      "seconds": 377.67,
+      "excluded_e2e": 0
+    },
+    "ruff": true,
+    "format": true,
+    "mypy_source_files": 134,
+    "profile_tests": 48,
+    "log_sha256": "f439a1c6af88b681690531092ed5119484a36f6c4038cee93fca3b28fa9edf0b",
+    "cuda_numerical": {
+      "nonheat024": 8,
+      "nonheat027": 4
+    },
+    "cuda_lifecycle": {
+      "nonheat026": 2
+    },
+    "quality": {
+      "nonheat025": {
+        "trials": 10,
+        "passed": 9
+      },
+      "nonheat028": {
+        "trials": 5,
+        "passed": 5
+      }
+    }
+  },
+  "tested_e2e": [
+    "tests/integration/test_nonheat_convergence.py"
+  ]
 }
