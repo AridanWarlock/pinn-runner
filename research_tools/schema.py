@@ -121,9 +121,13 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
         "physical_limits",
         "comparison",
     }
+    from benchmarks.catalog import UNFORCED_EVALUATION, UNFORCED_VISCOSITIES
+
     absolute = "absolute_quality" in manifest
     if absolute:
         required = (required - {"comparison"}) | {"absolute_quality", "problem_sha256"}
+    if "layer_evaluation" in manifest:
+        required.add("layer_evaluation")
     if manifest.get("contract") == 2:
         required |= {"case_faces", "environment_requirements", "network"}
         if "density" in manifest:
@@ -192,6 +196,20 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
             raise ValueError("Global/final/PDE limits required")
         for key, value in values.items():
             number(value, key, positive=True)
+    unforced = bool(set(case_limits) & UNFORCED_VISCOSITIES.keys())
+    if unforced or "layer_evaluation" in manifest:
+        evaluation = object_value(manifest.get("layer_evaluation"), "layer_evaluation")
+        if (
+            not absolute
+            or not set(case_limits) <= UNFORCED_VISCOSITIES.keys()
+            or json.dumps(
+                {k: v for k, v in evaluation.items() if k != "reference_sha256"}, sort_keys=True
+            )
+            != json.dumps(UNFORCED_EVALUATION, sort_keys=True)
+            or not isinstance(evaluation.get("reference_sha256"), str)
+            or not re.fullmatch("[0-9a-f]{64}", evaluation["reference_sha256"])
+        ):
+            raise ValueError("Registered unforced layer evaluation and reference hash required")
     physical = object_value(manifest["physical_limits"], "physical_limits")
     if set(physical) != {"initial_rmse", "boundary_max"}:
         raise ValueError("initial_rmse and boundary_max physical limits required")
@@ -211,6 +229,7 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
         hard_burgers = parameters["constraints"] == "hard_initial_dirichlet" and set(
             case_limits
         ) == {"burgers"}
+        hard_burgers |= parameters["constraints"] == "hard_initial_dirichlet" and unforced
         if arm != expected_arm or (parameters["constraints"] != "soft" and not hard_burgers):
             raise ValueError(
                 "Absolute quality requires soft or exact Burgers Dirichlet with eager execution"

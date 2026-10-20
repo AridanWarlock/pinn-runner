@@ -28,8 +28,9 @@ def test_nonheat_train_exact_load_predict_and_retrain(tmp_path: Path, name: str)
     config["network"]["hidden_layers"] = [8, 8]
     config["domain"]["space"]["x"]["points"] = 4
     config["domain"]["time"]["points"] = 3
+    constraints = "hard_initial_dirichlet" if name.startswith("burgers_unforced") else "soft"
     config["training"].update(
-        constraints="soft",
+        constraints=constraints,
         hard_execution="eager",
         refinement={"steps": 2},
         batch_size=7,
@@ -55,7 +56,7 @@ def test_nonheat_train_exact_load_predict_and_retrain(tmp_path: Path, name: str)
     state = torch.load(checkpoint, map_location=on_cpu)
     assert storage_locations
     assert any(location.startswith("cuda") for location in storage_locations) == (device == "cuda")
-    assert state["hyper_parameters"]["constraint_kind"] == "soft"
+    assert state["hyper_parameters"]["constraint_kind"] == constraints
     assert state["hyper_parameters"]["hard_execution"] == "eager"
     assert state["global_step"] == 3
 
@@ -78,8 +79,12 @@ def test_nonheat_train_exact_load_predict_and_retrain(tmp_path: Path, name: str)
     values = loadmat(tmp_path / "predict/predictions.mat")
     assert values["u"].shape == (5, 6)
     assert np.isfinite(values["u"]).all()
-    np.testing.assert_allclose(values["x"].reshape(-1), np.linspace(0, 1, 5))
-    np.testing.assert_allclose(values["t"].reshape(-1), np.linspace(0, 0.5, 6), atol=1e-7)
+    np.testing.assert_allclose(
+        values["x"].reshape(-1), np.linspace(*case.grid.spatial_bounds(), 5)
+    )
+    np.testing.assert_allclose(
+        values["t"].reshape(-1), np.linspace(*config["domain"]["time"]["interval"], 6), atol=1e-7
+    )
 
     retrained = launch(task, tmp_path / "retrain", "retrain", str(checkpoint))
     assert retrained.returncode == 0, retrained.stdout + retrained.stderr
@@ -89,5 +94,5 @@ def test_nonheat_train_exact_load_predict_and_retrain(tmp_path: Path, name: str)
         for key, value in state["state_dict"].items()
         if key.startswith("net.")
     )
-    assert refined["hyper_parameters"]["constraint_kind"] == "soft"
+    assert refined["hyper_parameters"]["constraint_kind"] == constraints
     assert refined["hyper_parameters"]["hard_execution"] == "eager"

@@ -286,6 +286,17 @@ class AdvectionCase(BenchmarkCase):
         return np.isclose(spatial["x"][:, 0], self.grid.spatial_bounds()[0])
 
 
+class UnforcedBurgersCase(BenchmarkCase):
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        from .burgers import grid_reference, reference
+        from .catalog import UNFORCED_VISCOSITIES
+
+        x = spatial["x"]
+        if x.ndim == time.ndim == 2 and x.shape[1] == time.shape[0] == 1:
+            return grid_reference(tuple(x[:, 0]), tuple(time[0]), UNFORCED_VISCOSITIES[self.name])
+        return reference(x, time, UNFORCED_VISCOSITIES[self.name])
+
+
 class BurgersCase(BenchmarkCase):
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:
         return cast(Array, np.exp(-time) * np.sin(np.pi * spatial["x"]))
@@ -304,6 +315,7 @@ FACTORIES: dict[Family, type[BenchmarkCase]] = {
     "conductivity": ConductivityHeatCase,
     "advection": AdvectionCase,
     "burgers": BurgersCase,
+    "burgers_unforced": UnforcedBurgersCase,
 }
 CASES: dict[str, BenchmarkCase] = {
     spec.name: FACTORIES[spec.family](
@@ -311,7 +323,10 @@ CASES: dict[str, BenchmarkCase] = {
         spec.dimensions,
         grid=CartesianGrid(
             spec.grid_counts or (16, 41),
-            time_interval=(0, 1) if spec.family == "conductivity" else (0, 0.5),
+            time_points=spec.time_counts,
+            space_interval=spec.space_interval,
+            time_interval=spec.time_interval
+            or ((0, 1) if spec.family == "conductivity" else (0, 0.5)),
         ),
         budget=TrainingBudget(layers=spec.layers),
     )

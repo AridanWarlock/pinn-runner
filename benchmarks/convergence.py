@@ -22,7 +22,9 @@ from pinnstorch.runner.settings import Reader, Refinement, TaskSettings
 from pinnstorch.training.refinement import FixedObjective, LBFGSRefinement
 
 from .boundary_metrics import boundary_operator_errors
+from .burgers_quality import LayerEvaluation, evaluation_identity
 from .cases import BenchmarkCase
+from .catalog import UNFORCED_VISCOSITIES
 from .execution import holdout_inputs
 from .fingerprints import objective_fingerprint, tensor_fingerprint
 from .metrics import solution_errors, temporal_errors
@@ -213,6 +215,18 @@ class SnapshotEvaluation:
         }
         self.grid_time = np.asarray(mesh.time_domain, dtype=np.float64).reshape(-1, 1)
         self.holdout = holdout_inputs(factory.settings)
+        if plan.case.name in UNFORCED_VISCOSITIES and (
+            list(factory.settings.domain.space["x"].interval) != [-1, 1]
+            or list(factory.settings.domain.time.interval) != [0, 1]
+        ):
+            raise ValueError("Unforced evaluator requires the registered physical domain")
+        self.layer = (
+            LayerEvaluation(
+                UNFORCED_VISCOSITIES[plan.case.name], (len(self.axes["x"]), len(self.grid_time))
+            )
+            if plan.case.name in UNFORCED_VISCOSITIES
+            else None
+        )
 
     def evaluate(self, checkpoint: Path) -> tuple[dict[str, float], dict[str, Any]]:
         self.model.load_state_dict(load_checkpoint(checkpoint, map_location=self.plan.device))
@@ -260,6 +274,12 @@ class SnapshotEvaluation:
                 )
             )
         temporal = temporal_errors(self.plan.case, self.axes, self.grid_time, values)
+        if self.layer is not None:
+            layer_metrics, layer_temporal = self.layer.evaluate(
+                self.model, self.factory.adapter, self.plan.limits, self.plan.device
+            )
+            metrics.update(layer_metrics)
+            temporal = layer_temporal  # type: ignore[assignment]
         if not all(math.isfinite(v) for v in metrics.values()):
             raise ValueError("Nonfinite snapshot metric")
         return metrics, {
@@ -342,6 +362,15 @@ def convergence_trial(
             problem_source_sha256=actual_source,
         )
     return {
+        **(
+            {
+                "layer_evaluation": evaluation_identity(
+                    evaluator.layer.coarse if evaluator.layer is not None else None
+                )
+            }
+            if plan.case.name in UNFORCED_VISCOSITIES
+            else {}
+        ),
         **physical_identity,
         **({"points_override": arm.points} if plan.density is not None else {}),
         "case": plan.case.name,

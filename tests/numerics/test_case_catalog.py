@@ -21,6 +21,8 @@ def test_all_published_case_configs_and_references_are_preserved() -> None:
     assert set(CASES) == {r["name"] for r in rows} | {
         "heat_conductivity_beta0",
         "heat_conductivity_beta1",
+        "burgers_unforced_nu010",
+        "burgers_unforced_nu001",
     }
     for row in rows:
         case = CASES[row["name"]]

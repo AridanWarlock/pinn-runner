@@ -1,0 +1,12 @@
+{
+  "models": 8,
+  "optimizer_steps": 0,
+  "parameters_per_model": 2241,
+  "all_states_unchanged": true,
+  "finite_difference_checks": 4,
+  "finite_difference_error_max": 1.0153250462607843e-10,
+  "lifting_control_max": 2.86102294921875e-06,
+  "gradient_relative_l2_max": 1.4339539688990044e-07,
+  "helper_sha256": "cd1be65a9c0b4dbf7a0c7329c8d969fea7aa49c68e16fa900c79d678d233cbaf",
+  "reference_sha256": "e70de0f3942f36d2f7b61db24eb922d794a9521a1291106340dacee9d2ebb24c"
+}

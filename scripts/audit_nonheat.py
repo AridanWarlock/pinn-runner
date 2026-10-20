@@ -14,7 +14,8 @@ import numpy as np
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from benchmarks.cases import CASES  # noqa: E402
+from benchmarks.cases import CASES
+from benchmarks.catalog import UNFORCED_VISCOSITIES  # noqa: E402
 from benchmarks.fingerprints import tensor_fingerprint  # noqa: E402
 from pinnstorch.runner.factory import SolverFactory  # noqa: E402
 from pinnstorch.runner.problem import load_problem  # noqa: E402
@@ -29,12 +30,15 @@ def audit(
     device: str = "cpu",
     constraints: str = "soft",
 ) -> dict[str, Any]:
-    if case_name not in ("advection", "burgers") or dtype not in (torch.float32, torch.float64):
+    if case_name not in ("advection", "burgers", *UNFORCED_VISCOSITIES) or dtype not in (
+        torch.float32,
+        torch.float64,
+    ):
         raise ValueError("Expected transport/Burgers and FP32/FP64")
     if device not in ("cpu", "cuda"):
         raise ValueError("Explicit CPU/CUDA device required")
     if constraints != "soft" and not (
-        case_name == "burgers" and constraints == "hard_initial_dirichlet"
+        case_name in ("burgers", *UNFORCED_VISCOSITIES) and constraints == "hard_initial_dirichlet"
     ):
         raise ValueError("Only Burgers permits the registered exact Dirichlet control")
     case = CASES[case_name]
@@ -52,15 +56,30 @@ def audit(
     parameters = tuple(model.parameters())
     original_sha = tensor_fingerprint(model.state_dict())
     values = torch.rand((64, 2), generator=torch.Generator().manual_seed(2718), dtype=dtype)
-    values[:, 1] *= 0.5
+    unforced = case_name in UNFORCED_VISCOSITIES
+    lower, upper = (-1, 1) if unforced else (0, 1)
+    final = 1.0 if unforced else 0.5
+    values[:, 0] = lower + (upper - lower) * values[:, 0]
+    values[:, 1] *= final
     xx, tt = torch.meshgrid(
-        torch.tensor([0, 0.17, 0.5, 0.83, 1], dtype=dtype),
-        torch.tensor([0, 0.13, 0.5], dtype=dtype),
+        torch.tensor(
+            [
+                lower,
+                lower + 0.17 * (upper - lower),
+                (lower + upper) / 2,
+                lower + 0.83 * (upper - lower),
+                upper,
+            ],
+            dtype=dtype,
+        ),
+        torch.tensor([0, 0.26 * final, final], dtype=dtype),
         indexing="ij",
     )
     values = torch.cat([values, torch.stack([xx.reshape(-1), tt.reshape(-1)], dim=1)])
 
     values = values.to(device)
+
+    lifting_errors: list[float] = []
 
     def residuals() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None, torch.Tensor]:
         wrong: torch.Tensor | None
@@ -81,7 +100,42 @@ def audit(
             source = known * (-1 + 0.1 * np.pi**2) + np.pi * np.exp(-2 * tn) * np.sin(
                 np.pi * xn
             ) * np.cos(np.pi * xn)
-            control = ut + u * ux - 0.1 * uxx - torch.tensor(source, dtype=dtype, device=device)
+            if unforced and constraints == "hard_initial_dirichlet":
+                raw = model.net([x], t)["u"]
+                nx, nt = torch.autograd.grad(raw, (x, t), torch.ones_like(raw), create_graph=True)
+                nxx = torch.autograd.grad(nx, x, torch.ones_like(nx), create_graph=True)[0]
+                a = t * (1 - x.square())
+                manual_u = -torch.sin(torch.pi * x) + a * raw
+                manual_ut = (1 - x.square()) * raw + a * nt
+                manual_ux = -torch.pi * torch.cos(torch.pi * x) - 2 * t * x * raw + a * nx
+                manual_uxx = (
+                    torch.pi**2 * torch.sin(torch.pi * x) - 2 * t * raw - 4 * t * x * nx + a * nxx
+                )
+                for observed, expected in (
+                    (u, manual_u),
+                    (ut, manual_ut),
+                    (ux, manual_ux),
+                    (uxx, manual_uxx),
+                ):
+                    torch.testing.assert_close(
+                        observed,
+                        expected,
+                        rtol=2e-4 if dtype == torch.float32 else 1e-10,
+                        atol=8e-6 if dtype == torch.float32 else 1e-11,
+                    )
+                    lifting_errors.append(float((observed - expected).detach().abs().max()))
+                control_u, ux, ut, uxx = manual_u, manual_ux, manual_ut, manual_uxx
+            else:
+                control_u = u
+            viscosity = UNFORCED_VISCOSITIES[case_name] if unforced else 0.1
+            if unforced:
+                source = np.zeros_like(xn)
+            control = (
+                ut
+                + control_u * ux
+                - viscosity * uxx
+                - torch.tensor(source, dtype=dtype, device=device)
+            )
             wrong = actual + (u.detach() - u) * ux
             assert torch.equal(actual, wrong)
         return actual, control, wrong, u
@@ -129,12 +183,14 @@ def audit(
         assert wrong_relative > 1e-4
     initial_mask = values[:, 1] == 0
     initial_reference = torch.tensor(
-        np.sin(np.pi * values[initial_mask, :1].cpu().numpy().astype(np.float64)), dtype=dtype
+        (-1 if unforced else 1)
+        * np.sin(np.pi * values[initial_mask, :1].cpu().numpy().astype(np.float64)),
+        dtype=dtype,
     )
     initial_reference = initial_reference.to(device)
     initial_max = float((u[initial_mask].detach() - initial_reference).abs().max())
     boundary_max = 0.0
-    for location in (0,) if case_name == "advection" else (0, 1):
+    for location in (0,) if case_name == "advection" else (lower, upper):
         mask = values[:, 0] == location
         target = (
             -torch.tensor(
@@ -217,6 +273,7 @@ def audit(
         finite_difference_error=finite_difference_error,
         state_unchanged=True,
         unused_constant_bias=";".join(unused),
+        lifting_control_max=max(lifting_errors, default=0.0),
         initial_definition_max=initial_definition_max,
         boundary_definition_max=boundary_definition_max,
     )

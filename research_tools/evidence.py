@@ -185,6 +185,12 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
         if checksum != manifest["problem_sha256"][raw["case"]]:
             raise ValueError("Problem source differs from absolute-quality protocol")
         compact["problem_source_sha256"] = checksum
+        if "layer_evaluation" in manifest:
+            if json.dumps(raw.get("layer_evaluation"), sort_keys=True) != json.dumps(
+                manifest["layer_evaluation"], sort_keys=True
+            ):
+                raise ValueError("Actual layer evaluator differs from protocol")
+            compact["layer_evaluation"] = raw["layer_evaluation"]
     if "physics" in manifest:
         from benchmarks.conductivity import source_sha256
 

@@ -123,6 +123,21 @@ def analytical_tensor(case: BenchmarkCase, coordinates: Coordinates) -> torch.Te
         field = 1 + x * time + torch.exp(-0.1 * torch.pi**2 * time) * torch.cos(torch.pi * x)
     elif case.name == "advection":
         field = torch.sin((x - time) * torch.pi)
+    elif case.name.startswith("burgers_unforced"):
+        from scipy.special import roots_hermite
+
+        from benchmarks.catalog import UNFORCED_VISCOSITIES
+
+        nu = UNFORCED_VISCOSITIES[case.name]
+        nodes, weights = roots_hermite(512)
+        positive = weights > 0
+        nodes_tensor = torch.tensor(nodes[positive], dtype=x.dtype, device=x.device)
+        log_weights = torch.tensor(np.log(weights[positive]), dtype=x.dtype, device=x.device)
+        shifted = x + torch.sqrt(4 * nu * time) * nodes_tensor
+        probability = torch.softmax(
+            log_weights - torch.cos(torch.pi * shifted) / (2 * torch.pi * nu), dim=1
+        )
+        field = -(probability * torch.sin(torch.pi * shifted)).sum(dim=1, keepdim=True)
     elif case.name == "burgers":
         field = torch.exp(-time) * torch.sin(x * torch.pi)
     else:

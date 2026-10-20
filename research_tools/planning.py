@@ -125,7 +125,7 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
             if not supported - {"mode_relative_l2"} <= limits.keys():
                 raise ValueError("Coefficient study requires temporal and physical flux gates")
         elif "absolute_quality" in manifest:
-            if spec.family not in ("advection", "burgers"):
+            if spec.family not in ("advection", "burgers", "burgers_unforced"):
                 raise ValueError("Absolute quality is registered for transport/Burgers only")
             import hashlib
 
@@ -138,6 +138,16 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
             ):
                 raise ValueError("Problem source differs from registered case")
             supported |= {"worst_time_relative_l2"}
+            if spec.family == "burgers_unforced":
+                from benchmarks.catalog import UNFORCED_METRICS
+
+                supported |= UNFORCED_METRICS
+                reference = Path(__file__).resolve().parents[1] / "benchmarks/burgers.py"
+                if (
+                    hashlib.sha256(reference.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+                    != manifest["layer_evaluation"]["reference_sha256"]
+                ):
+                    raise ValueError("Reference source differs from registered protocol")
             if not supported - {"mode_relative_l2"} <= limits.keys():
                 raise ValueError("Absolute quality requires global/final/worst-time/PDE gates")
         elif spec.family == "conductivity":

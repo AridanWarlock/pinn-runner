@@ -88,8 +88,22 @@ BURGERS_HARD_EXPECTED = [
     for seed in (19, 73)
     for dtype in (0, 1)
 ]
-HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE)
+UNFORCED_SUITE = "tests/numerics/test_unforced_burgers_network.py"
+UNFORCED_EXPECTED = [
+    UNFORCED_SUITE + f"::test_unforced_operator_and_every_weight[{seed}-dtype{dtype}-{case}]"
+    for seed in (11, 29)
+    for dtype in (0, 1)
+    for case in ("burgers_unforced_nu010", "burgers_unforced_nu001")
+]
+UNFORCED_LIFECYCLE_SUITE = "tests/integration/test_unforced_burgers_runner.py"
+UNFORCED_LIFECYCLE_EXPECTED = [
+    UNFORCED_LIFECYCLE_SUITE + f"::test_unforced_public_lifecycle[{case}]"
+    for case in ("burgers_unforced_nu010", "burgers_unforced_nu001")
+]
+HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    UNFORCED_SUITE: UNFORCED_EXPECTED,
+    UNFORCED_LIFECYCLE_SUITE: UNFORCED_LIFECYCLE_EXPECTED,
     SUITE: EXPECTED,
     LIFECYCLE_SUITE: LIFECYCLE_EXPECTED,
     CONDUCTIVITY_SUITE: CONDUCTIVITY_EXPECTED,
@@ -154,16 +168,19 @@ def canonical_test_digest(path: Path) -> str:
 def plan(manifest: Json) -> Json:
     validate(manifest)
     if manifest["suite"] in HELPER_SUITES:
+        unforced = manifest["suite"] == UNFORCED_SUITE
         hard = manifest["suite"] == BURGERS_HARD_SUITE
         return dict(
             contract=1,
             kind="numerical-acceptance-plan",
             revision=manifest["revision"],
             tests=4 if hard else 8,
-            cases=["burgers"] if hard else ["advection", "burgers"],
-            constraints="hard_initial_dirichlet" if hard else "soft",
+            cases=["burgers_unforced_nu010", "burgers_unforced_nu001"]
+            if unforced
+            else (["burgers"] if hard else ["advection", "burgers"]),
+            constraints="hard_initial_dirichlet" if hard or unforced else "soft",
             dtypes=["float32", "float64"],
-            seeds=[19, 73],
+            seeds=[11, 29] if unforced else [19, 73],
             network_models=4 if hard else 8,
             parameters_per_model=2241,
             finite_difference_checks=2 if hard else 4,
@@ -188,8 +205,8 @@ def plan(manifest: Json) -> Json:
             training=False,
             performance_measurement=False,
         )
-    if manifest["suite"] in (LIFECYCLE_SUITE, NONHEAT_LIFECYCLE_SUITE):
-        nonheat = manifest["suite"] == NONHEAT_LIFECYCLE_SUITE
+    if manifest["suite"] in (LIFECYCLE_SUITE, NONHEAT_LIFECYCLE_SUITE, UNFORCED_LIFECYCLE_SUITE):
+        nonheat = manifest["suite"] in (NONHEAT_LIFECYCLE_SUITE, UNFORCED_LIFECYCLE_SUITE)
         return dict(
             contract=1,
             kind="numerical-acceptance-plan",
