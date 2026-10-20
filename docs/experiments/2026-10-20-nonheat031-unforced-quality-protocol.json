@@ -1,0 +1,222 @@
+{
+  "contract": 2,
+  "registration": "prospective",
+  "revision": "2a75fc1d2d2a9c26446a7274e65d788b073bca35",
+  "reports": [
+    "burgers_unforced_nu010/report.json",
+    "burgers_unforced_nu001/report.json"
+  ],
+  "expected_trials": [
+    {
+      "case": "burgers_unforced_nu010",
+      "seed": 11,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers_unforced_nu010",
+      "seed": 29,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers_unforced_nu010",
+      "seed": 83,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers_unforced_nu010",
+      "seed": 271,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers_unforced_nu010",
+      "seed": 997,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers_unforced_nu001",
+      "seed": 11,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers_unforced_nu001",
+      "seed": 29,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers_unforced_nu001",
+      "seed": 83,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers_unforced_nu001",
+      "seed": 271,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "burgers_unforced_nu001",
+      "seed": 997,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    }
+  ],
+  "report_parameters": {
+    "adam_steps": 500,
+    "lbfgs_snapshots": [
+      0,
+      100,
+      250,
+      500
+    ],
+    "constraints": "hard_initial_dirichlet",
+    "points_override": 1024,
+    "lbfgs_tolerance_change": 1e-12,
+    "execution_lifecycle": "isolated_trials"
+  },
+  "case_limits": {
+    "burgers_unforced_nu010": {
+      "relative_l2": 0.002,
+      "final_relative_l2": 0.003,
+      "worst_time_relative_l2": 0.005,
+      "pde_rmse": 0.003,
+      "regional_pde_rmse": 0.003,
+      "worst_time_gradient_relative_l2": 0.02,
+      "grid_refinement_ratio": 0.05
+    },
+    "burgers_unforced_nu001": {
+      "relative_l2": 0.002,
+      "final_relative_l2": 0.003,
+      "worst_time_relative_l2": 0.005,
+      "pde_rmse": 0.003,
+      "regional_pde_rmse": 0.003,
+      "worst_time_gradient_relative_l2": 0.02,
+      "grid_refinement_ratio": 0.05
+    }
+  },
+  "physical_limits": {
+    "initial_rmse": 1e-06,
+    "boundary_max": 1e-06
+  },
+  "case_faces": {
+    "burgers_unforced_nu010": [
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "upper"
+      }
+    ],
+    "burgers_unforced_nu001": [
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "upper"
+      }
+    ]
+  },
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "network": {
+    "hidden_layers": [
+      32,
+      32,
+      32
+    ],
+    "spatial_encoding": "identity"
+  },
+  "absolute_quality": {
+    "backend": "eager",
+    "lifting": "recursive",
+    "backward": "all",
+    "background": "general",
+    "spatial_encoding": "identity"
+  },
+  "problem_sha256": {
+    "burgers_unforced_nu010": "1a5a28215743b63c3383aac15dad60adbf275182fd48dc1b8718e82eb5351dc4",
+    "burgers_unforced_nu001": "c47666e8c8bcc499683caf9ab9789b4b35d6b94c47e7f44efb1fb575f9dae90f"
+  },
+  "layer_evaluation": {
+    "coarse_grid": [
+      801,
+      201
+    ],
+    "fine_grid": [
+      1601,
+      401
+    ],
+    "global_points": 2048,
+    "global_seed": 20261013,
+    "regional_points": 2048,
+    "regional_seed": 20261014,
+    "regional_space": [
+      -0.1,
+      0.1
+    ],
+    "regional_time": [
+      0.15,
+      1.0
+    ],
+    "field_norm": "array_l2",
+    "gradient_norm": "spatial_trapezoid_worst_time",
+    "refinement_norm": "difference_over_registered_limit",
+    "reference_order": 512,
+    "reference_sha256": "e70de0f3942f36d2f7b61db24eb922d794a9521a1291106340dacee9d2ebb24c"
+  }
+}

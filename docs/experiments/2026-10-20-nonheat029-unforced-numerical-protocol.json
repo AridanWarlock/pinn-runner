@@ -1,0 +1,28 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "2a75fc1d2d2a9c26446a7274e65d788b073bca35",
+  "suite": "tests/numerics/test_unforced_burgers_network.py",
+  "tests": [
+    "tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[11-dtype0-burgers_unforced_nu010]",
+    "tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[11-dtype0-burgers_unforced_nu001]",
+    "tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[11-dtype1-burgers_unforced_nu010]",
+    "tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[11-dtype1-burgers_unforced_nu001]",
+    "tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[29-dtype0-burgers_unforced_nu010]",
+    "tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[29-dtype0-burgers_unforced_nu001]",
+    "tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[29-dtype1-burgers_unforced_nu010]",
+    "tests/numerics/test_unforced_burgers_network.py::test_unforced_operator_and_every_weight[29-dtype1-burgers_unforced_nu001]"
+  ],
+  "test_sha256": "d0ba7999dca1a57958947c0cfced4ec29ae80d76444d3e1df7385bf1df8b644b",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "helper_sha256": "cd1be65a9c0b4dbf7a0c7329c8d969fea7aa49c68e16fa900c79d678d233cbaf"
+}
