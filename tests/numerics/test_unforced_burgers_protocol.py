@@ -72,3 +72,38 @@ def test_unforced_plan_requires_complete_measurement():
         with pytest.raises(ValueError):
             plan(bad)
     assert evaluation_identity()["regional_time"] == [0.15, 1.0]
+
+
+def test_every_registered_limit_round_trips_through_the_actual_child_parser(monkeypatch, tmp_path):
+    import sys
+
+    from benchmarks.cases import CASES
+    from benchmarks.convergence import ConvergenceArm, ConvergencePlan
+    from benchmarks.convergence_processes import trial_command
+    from scripts.benchmark_time_to_quality import arguments
+
+    manifest = unforced_manifest()
+    name = "burgers_unforced_nu001"
+    expected = ConvergencePlan(
+        CASES[name],
+        500,
+        (0, 100, 250, 500),
+        manifest["case_limits"][name],
+        "hard_initial_dirichlet",
+        1024,
+        tolerance_change=1e-12,
+    )
+    command = trial_command(Path("benchmark.py"), expected, ConvergenceArm(), 11, tmp_path)
+    monkeypatch.setattr(sys, "argv", command[1:])
+    _, parsed, arms = arguments()
+    assert parsed.limits == expected.limits
+    assert parsed.steps == 500 and parsed.snapshots == (0, 100, 250, 500)
+    assert parsed.points == 1024 and parsed.constraints == "hard_initial_dirichlet"
+    assert len(arms) == 1
+    without_gradient = command[1:]
+    index = without_gradient.index("--worst-time-gradient-relative-l2")
+    del without_gradient[index : index + 2]
+    monkeypatch.setattr(sys, "argv", without_gradient)
+    with pytest.raises(SystemExit) as error:
+        arguments()
+    assert error.value.code == 2
