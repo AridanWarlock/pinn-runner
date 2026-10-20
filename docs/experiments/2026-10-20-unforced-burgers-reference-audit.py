@@ -185,6 +185,19 @@ def main():
         networks=0,
         optimizer_steps=0,
         adaptive_checks=16,
+        gaussian_tail_bounds={
+            str(nu): dict(
+                probability=float(np.exp(1 / (np.pi * nu) - 144) / (12 * np.sqrt(np.pi))),
+                field_error=float(2 * np.exp(1 / (np.pi * nu) - 144) / (12 * np.sqrt(np.pi))),
+                slope_error=float(
+                    (2 * np.pi + 5 / (2 * nu))
+                    * np.exp(1 / (np.pi * nu) - 144)
+                    / (12 * np.sqrt(np.pi))
+                ),
+                scope="Tail truncation in sine/cosine formulas only; not finite-order quadrature or kernel-moment rounding",
+            )
+            for nu in (0.1, 0.01)
+        },
         slope_finite_difference_max=max(
             r["max_error"] for r in rows if r["kind"] == "slope_control"
         ),

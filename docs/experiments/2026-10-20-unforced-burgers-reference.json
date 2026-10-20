@@ -15,6 +15,20 @@
   "networks": 0,
   "optimizer_steps": 0,
   "adaptive_checks": 16,
+  "gaussian_tail_bounds": {
+    "0.1": {
+      "probability": 3.2827718040753255e-63,
+      "field_error": 6.565543608150651e-63,
+      "slope_error": 1.0269555866807264e-61,
+      "scope": "Tail truncation in sine/cosine formulas only; not finite-order quadrature or kernel-moment rounding"
+    },
+    "0.01": {
+      "probability": 9.075303003080255e-51,
+      "field_error": 1.815060600616051e-50,
+      "slope_error": 2.3258475612572203e-48,
+      "scope": "Tail truncation in sine/cosine formulas only; not finite-order quadrature or kernel-moment rounding"
+    }
+  },
   "slope_finite_difference_max": 2.937730059215937e-10,
   "invariants": [
     {
