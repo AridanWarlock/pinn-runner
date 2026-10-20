@@ -39,6 +39,8 @@ def validate_arm(arm: Json, constraints: str, spec: CaseSpec) -> None:
         raise ValueError("product_rule is a Dirichlet executor")
     if not robin and (arm["lifting"] != "recursive" or arm["background"] != "general"):
         raise ValueError("Expanded lifting and background selection require hard_initial_robin")
+    if spec.family in ("advection", "burgers") and constraints != "soft":
+        raise ValueError("Nonheat convergence currently requires soft constraints")
     kinds = {face["kind"] for face in spec.faces()}
     if constraints == "hard_initial_dirichlet" and kinds != {"dirichlet"}:
         raise ValueError("Dirichlet hard constraints require Dirichlet faces")
@@ -110,7 +112,9 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
         raise ValueError("Current convergence executor uses FP32 with TF32 disabled")
     rows: list[Json] = []
     for (name, limits), report in zip(manifest["case_limits"].items(), reports):
-        if name not in CATALOG or not CATALOG[name].convergence:
+        if name not in CATALOG or (
+            not CATALOG[name].convergence and "absolute_quality" not in manifest
+        ):
             raise ValueError(f"No convergence executor registered for {name}")
         spec = CATALOG[name]
         supported = {"relative_l2", "final_relative_l2", "pde_rmse", "mode_relative_l2"}
@@ -118,6 +122,22 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
             supported |= {"worst_time_relative_l2", "physical_flux_max"}
             if not supported - {"mode_relative_l2"} <= limits.keys():
                 raise ValueError("Coefficient study requires temporal and physical flux gates")
+        elif "absolute_quality" in manifest:
+            if spec.family not in ("advection", "burgers"):
+                raise ValueError("Absolute quality is registered for transport/Burgers only")
+            import hashlib
+
+            source = (
+                Path(__file__).resolve().parents[1] / "benchmarks/problems" / name / "functions.py"
+            )
+            if (
+                hashlib.sha256(source.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+                != manifest["problem_sha256"][name]
+            ):
+                raise ValueError("Problem source differs from registered case")
+            supported |= {"worst_time_relative_l2"}
+            if not supported - {"mode_relative_l2"} <= limits.keys():
+                raise ValueError("Absolute quality requires global/final/worst-time/PDE gates")
         elif spec.family == "conductivity":
             raise ValueError("Conductivity cases require explicit physics")
         if set(limits) - supported:
@@ -128,7 +148,12 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
             face_identity(f) for f in spec.faces()
         }:
             raise ValueError("Expected faces differ from the registered problem")
-        for arm in (manifest["comparison"][k] for k in ("baseline", "candidate")):
+        arms = (
+            [manifest["absolute_quality"]]
+            if "absolute_quality" in manifest
+            else [manifest["comparison"][k] for k in ("baseline", "candidate")]
+        )
+        for arm in arms:
             validate_arm(arm, parameters["constraints"], spec)
             if manifest["network"] != {
                 "hidden_layers": list(spec.layers),
@@ -142,8 +167,8 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
                 dimensions=spec.dimensions,
                 seeds=seeds if details else seeds[:5],
                 seeds_truncated=not details and len(seeds) > 5,
-                pairs=len(seeds),
-                trials=2 * len(seeds),
+                pairs=0 if "absolute_quality" in manifest else len(seeds),
+                trials=len(arms) * len(seeds),
                 report=report,
                 limits=limits,
             )
@@ -159,10 +184,14 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
         "kind": "research-plan",
         "revision": manifest["revision"],
         "registration": manifest["registration"],
-        "arms": {name: manifest["comparison"][name] for name in ("baseline", "candidate")},
+        "arms": {"single": manifest["absolute_quality"]}
+        if "absolute_quality" in manifest
+        else {name: manifest["comparison"][name] for name in ("baseline", "candidate")},
         "constraints": parameters["constraints"],
         "catalog_scope": "current_tool_version",
-        "comparison_purpose": "absolute_accuracy" if "physics" in manifest else "paired_cost",
+        "comparison_purpose": "absolute_accuracy"
+        if "physics" in manifest or "absolute_quality" in manifest
+        else "paired_cost",
         "cases": rows,
         "trials": count,
         "adam_steps_total": count * parameters["adam_steps"],

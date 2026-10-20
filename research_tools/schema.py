@@ -121,6 +121,9 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
         "physical_limits",
         "comparison",
     }
+    absolute = "absolute_quality" in manifest
+    if absolute:
+        required = (required - {"comparison"}) | {"absolute_quality", "problem_sha256"}
     if manifest.get("contract") == 2:
         required |= {"case_faces", "environment_requirements", "network"}
         if "density" in manifest:
@@ -194,31 +197,60 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
         raise ValueError("initial_rmse and boundary_max physical limits required")
     for key, value in physical.items():
         number(value, key, positive=True)
-    comparison = object_value(manifest["comparison"], "comparison")
-    comparison_fields = {"baseline", "candidate", "quality_factor"}
-    if "physics" not in manifest:
-        comparison_fields |= {"median_training_ratio_max", "worst_training_ratio_max"}
-    if set(comparison) != comparison_fields:
-        raise ValueError("Explicit paired comparison and timing gates required")
-    fields = arm_fields(manifest)
-    for name in ("baseline", "candidate"):
-        arm = object_value(comparison[name], name)
-        if set(arm) != set(fields) or not all(
-            isinstance(arm[k], str) and arm[k] for k in ARM_FIELDS
+    if absolute:
+        if manifest["contract"] != 2 or "density" in manifest or "physics" in manifest:
+            raise ValueError("Absolute quality requires contract2 without paired studies")
+        arm = object_value(manifest["absolute_quality"], "absolute_quality")
+        expected_arm = dict(
+            backend="eager",
+            lifting="recursive",
+            backward="all",
+            background="general",
+            spatial_encoding="identity",
+        )
+        if arm != expected_arm or parameters["constraints"] != "soft":
+            raise ValueError("Absolute quality currently requires original soft/eager execution")
+        if any(
+            set(t) != {"case", "seed", *ARM_FIELDS} or {k: t[k] for k in ARM_FIELDS} != arm
+            for t in expected
         ):
-            raise ValueError("Comparison arms must specify all arm fields")
-    if comparison["baseline"] == comparison["candidate"]:
-        raise ValueError("Baseline and candidate must differ")
-    if any(
-        {k: t[k] for k in fields} not in (comparison["baseline"], comparison["candidate"])
-        for t in expected
-    ):
-        raise ValueError("Every expected trial must belong to a declared comparison arm")
-    for case, seed in {(t["case"], t["seed"]) for t in expected}:
-        if sum(t["case"] == case and t["seed"] == seed for t in expected) != 2:
-            raise ValueError("Every case/seed must have exactly one baseline and one candidate")
-    for key in comparison_fields - {"baseline", "candidate"}:
-        number(comparison[key], key, positive=True)
+            raise ValueError("Every trial must use the declared single configuration")
+        if len({(t["case"], t["seed"]) for t in expected}) != len(expected):
+            raise ValueError("One trial per case/seed required")
+        sources = object_value(manifest["problem_sha256"], "problem_sha256")
+        if set(sources) != set(case_limits) or any(
+            not isinstance(v, str) or re.fullmatch("[0-9a-f]{64}", v) is None
+            for v in sources.values()
+        ):
+            raise ValueError("Pin every problem source SHA256")
+    else:
+        comparison = object_value(manifest["comparison"], "comparison")
+        comparison_fields = {"baseline", "candidate", "quality_factor"}
+        if "physics" not in manifest:
+            comparison_fields |= {"median_training_ratio_max", "worst_training_ratio_max"}
+        if set(comparison) != comparison_fields:
+            raise ValueError("Explicit paired comparison and timing gates required")
+        fields = arm_fields(manifest)
+        for name in ("baseline", "candidate"):
+            arm = object_value(comparison[name], name)
+            if set(arm) != set(fields) or not all(
+                isinstance(arm[k], str) and arm[k] for k in ARM_FIELDS
+            ):
+                raise ValueError("Comparison arms must specify all arm fields")
+        if comparison["baseline"] == comparison["candidate"]:
+            raise ValueError("Baseline and candidate must differ")
+        if any(
+            {k: t[k] for k in fields} not in (comparison["baseline"], comparison["candidate"])
+            for t in expected
+        ):
+            raise ValueError("Every expected trial must belong to a declared comparison arm")
+        for case, seed in {(t["case"], t["seed"]) for t in expected}:
+            if sum(t["case"] == case and t["seed"] == seed for t in expected) != 2:
+                raise ValueError(
+                    "Every case/seed must have exactly one baseline and one candidate"
+                )
+        for key in comparison_fields - {"baseline", "candidate"}:
+            number(comparison[key], key, positive=True)
     if "physics" in manifest:
         from benchmarks.conductivity import physics
 

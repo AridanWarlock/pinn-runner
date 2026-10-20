@@ -1,0 +1,27 @@
+{
+  "revision": "d12e99a98dc585aae39bdf80850a5da2c4361ac0",
+  "test_sha256": "f4b43607b0cc69ca9609f226b2403e6dfa9bf3ea03006aba01fc8287041a8dc4",
+  "helper_sha256": "03c61c67b9e7b348be30bb2a5638cd5bbafa40b0155fb5d60aa3e888cec068c1",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "source_unchanged": true,
+  "job_id": "nonheat024",
+  "protocol_commit": "1a376c7c23c69dc52fd688e6d74627057592fe2d",
+  "protocol_sha256": "7f59f5db8c81394fb1d9a6e07f8aae55992a88048d463ae113a407cf6ee1c976",
+  "evidence_sha256": "089b946b1c52a69bed6408d7005f2abf58ea6104db395ce47b3749f8c5270b16",
+  "tests": 8,
+  "passed": 8,
+  "optimizer_steps": 0,
+  "training": false,
+  "comparison_passed": true,
+  "scope": "Numerical CUDA operator/weight-gradient assertions only; no trained-field quality or speed claim"
+}

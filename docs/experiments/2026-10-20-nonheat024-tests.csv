@@ -1,0 +1,9 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_nonheat_network.py::test_nonheat_network_operator_and_every_weight[19-dtype0-advection],passed,passed,passed,0.5565924999536946
+tests/numerics/test_nonheat_network.py::test_nonheat_network_operator_and_every_weight[19-dtype0-burgers],passed,passed,passed,0.035107399977277964
+tests/numerics/test_nonheat_network.py::test_nonheat_network_operator_and_every_weight[19-dtype1-advection],passed,passed,passed,0.030586799955926836
+tests/numerics/test_nonheat_network.py::test_nonheat_network_operator_and_every_weight[19-dtype1-burgers],passed,passed,passed,0.026402399933431298
+tests/numerics/test_nonheat_network.py::test_nonheat_network_operator_and_every_weight[73-dtype0-advection],passed,passed,passed,0.013963299978058785
+tests/numerics/test_nonheat_network.py::test_nonheat_network_operator_and_every_weight[73-dtype0-burgers],passed,passed,passed,0.019377299933694303
+tests/numerics/test_nonheat_network.py::test_nonheat_network_operator_and_every_weight[73-dtype1-advection],passed,passed,passed,0.0168044000165537
+tests/numerics/test_nonheat_network.py::test_nonheat_network_operator_and_every_weight[73-dtype1-burgers],passed,passed,passed,0.02498000004561618

@@ -19,8 +19,8 @@ from benchmarks.cases import CASES  # noqa: E402
 from benchmarks.catalog import (  # noqa: E402
     BACKGROUNDS,
     BACKWARDS,
+    CATALOG,
     CONSTRAINTS,
-    CONVERGENCE_CASES,
     ENCODINGS,
     EXECUTIONS,
     LIFTINGS,
@@ -50,7 +50,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     )
     parser.add_argument(
         "--case",
-        choices=CONVERGENCE_CASES,
+        choices=tuple(CATALOG),
         default="heat3d",
     )
     parser.add_argument("--seeds", type=int, nargs="+", default=[1234, 19])

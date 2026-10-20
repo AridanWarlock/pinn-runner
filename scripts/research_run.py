@@ -33,18 +33,21 @@ def main() -> None:
     from scripts.gpu_worker import write_json
 
     parameters = manifest["report_parameters"]
+    definitions = (
+        [manifest["absolute_quality"]]
+        if "absolute_quality" in manifest
+        else [manifest["comparison"][name] for name in ("baseline", "candidate")]
+    )
     arms = [
         ConvergenceArm(
             *(
-                manifest["comparison"][name][key]
+                definition[key]
                 for key in ("backend", "lifting", "backward", "background", "spatial_encoding")
             ),
-            points=manifest["comparison"][name].get("points_override"),
-            coefficient_representation=manifest["comparison"][name].get(
-                "coefficient_representation"
-            ),
+            points=definition.get("points_override"),
+            coefficient_representation=definition.get("coefficient_representation"),
         )
-        for name in ("baseline", "candidate")
+        for definition in definitions
     ]
     cases = list(manifest["case_limits"])
     if len(cases) != len(manifest["reports"]):

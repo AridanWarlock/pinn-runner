@@ -259,10 +259,11 @@ class SnapshotEvaluation:
                     flux_settings, self.factory.adapter, self.model, self.plan.device
                 )
             )
+        temporal = temporal_errors(self.plan.case, self.axes, self.grid_time, values)
         if not all(math.isfinite(v) for v in metrics.values()):
             raise ValueError("Nonfinite snapshot metric")
         return metrics, {
-            "temporal": temporal_errors(self.plan.case, self.axes, self.grid_time, values),
+            "temporal": temporal,
             "boundary_operators": [
                 asdict(row)
                 for row in boundary_operator_errors(
@@ -349,12 +350,15 @@ def convergence_trial(
         "backward": arm.backward,
         "background": arm.background,
         "spatial_encoding": arm.encoding,
+        "problem_source_sha256": hashlib.sha256(
+            source.read_bytes().replace(b"\r\n", b"\n")
+        ).hexdigest(),
         "feature_derivatives": objects.model.net.features.derivative_rule
         if isinstance(objects.model.net, FeatureFCN)
-        else None,
+        else "autograd",
         "control_feature_derivatives": evaluator.model.net.features.derivative_rule
         if isinstance(evaluator.model.net, FeatureFCN)
-        else None,
+        else "autograd",
         "network": config["network"],
         "trainable_parameters": sum(
             p.numel() for p in objects.model.parameters() if p.requires_grad

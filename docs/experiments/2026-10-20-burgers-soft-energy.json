@@ -1,0 +1,10 @@
+{
+  "checks": 9,
+  "dtype": "float64",
+  "quadrature_order": 64,
+  "optimizer_steps": 0,
+  "networks": 0,
+  "max_identity_defect": 8.326672684688674e-17,
+  "max_wrong_homogeneous_defect": 0.08064011239205227,
+  "nonzero_boundary_checks": 9
+}

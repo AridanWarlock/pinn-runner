@@ -1,0 +1,50 @@
+{
+  "rigorous_norm_lower_bounds": {
+    "final_relative_l2": 0.0030590542191826055,
+    "relative_l2": 0.002348798007923958
+  },
+  "a": 0.000999,
+  "b": 0.002999,
+  "delta": 0.01,
+  "time_end": 0.5,
+  "continuous_quadrature": [
+    {
+      "order": 64,
+      "relative_l2": 0.00236897031582636,
+      "final_relative_l2": 0.0030790665838558106,
+      "initial_rmse": 0.0009985659233495323,
+      "boundary_max": 0.0009988500128850315,
+      "pde_rmse": 0.002999,
+      "residual_constant_max_error": 4.336808689942018e-19
+    },
+    {
+      "order": 128,
+      "relative_l2": 0.0023689703800886153,
+      "final_relative_l2": 0.0030790905826585642,
+      "initial_rmse": 0.000998565923349646,
+      "boundary_max": 0.0009988500518657642,
+      "pde_rmse": 0.0029990000000000004,
+      "residual_constant_max_error": 4.336808689942018e-19
+    },
+    {
+      "order": 256,
+      "relative_l2": 0.002368970380148909,
+      "final_relative_l2": 0.003079091236159342,
+      "initial_rmse": 0.0009985659233496462,
+      "boundary_max": 0.000998850061697768,
+      "pde_rmse": 0.0029990000000000012,
+      "residual_constant_max_error": 4.336808689942018e-19
+    }
+  ],
+  "registered_evaluation_grid": {
+    "relative_l2": 0.002362705392743466,
+    "final_relative_l2": 0.003033361110097234,
+    "worst_time_relative_l2": 0.003033361110097233,
+    "initial_rmse": 0.0009983272907294683,
+    "boundary_max": 0.000998850064992002,
+    "pde_rmse": 0.002999
+  },
+  "networks": 0,
+  "optimizer_steps": 0,
+  "source": "Analytical smooth perturbation, no optimizer or reference teacher"
+}

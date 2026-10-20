@@ -69,6 +69,35 @@ def compare(evidence: Json) -> Json:
         identity(t) for t in manifest["expected_trials"]
     }:
         raise ValueError("Evidence does not contain the declared complete matrix")
+    if "absolute_quality" in manifest:
+        absolute_results = []
+        for trial in trials:
+            final = trial["snapshots"][-1]
+            limits = manifest["case_limits"][trial["case"]]
+            failures = [key for key, limit in limits.items() if final["metrics"][key] > limit]
+            if final["metrics"]["initial_rmse"] > manifest["physical_limits"]["initial_rmse"]:
+                failures.append("initial_rmse")
+            if final["boundary_max"] > manifest["physical_limits"]["boundary_max"]:
+                failures.append("boundary_max")
+            absolute_results.append(
+                dict(
+                    case=trial["case"],
+                    seed=trial["seed"],
+                    final_target_passed=not failures,
+                    failed_metrics=failures,
+                    crossing=trial["crossing"],
+                )
+            )
+        return dict(
+            contract=1,
+            kind="absolute-quality-comparison",
+            trials=len(absolute_results),
+            passed=sum(r["final_target_passed"] for r in absolute_results),
+            results=absolute_results,
+            comparison_passed=all(r["final_target_passed"] for r in absolute_results),
+            timing_passed=None,
+            limitations="Absolute finite-sample accuracy only; no speedup, continuous error certificate or guarantee for other PDE/data.",
+        )
     settings = manifest["comparison"]
     results: list[Json] = []
     for case in manifest["case_limits"]:

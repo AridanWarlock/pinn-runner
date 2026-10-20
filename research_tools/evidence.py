@@ -107,6 +107,12 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
         )
         for s in raw.get("snapshots", [])
     ]
+    if "absolute_quality" in manifest:
+        for snap in snapshots:
+            snap["passed"] &= (
+                snap["metrics"]["initial_rmse"] <= manifest["physical_limits"]["initial_rmse"]
+                and snap["boundary_max"] <= manifest["physical_limits"]["boundary_max"]
+            )
     if "density" not in manifest:
         if [s["lb_steps"] for s in snapshots] != manifest["report_parameters"]["lbfgs_snapshots"]:
             raise ValueError("Trial snapshots do not match the complete declared schedule")
@@ -170,6 +176,11 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
             "control_prediction_background",
         )
     }
+    if "absolute_quality" in manifest:
+        checksum = raw.get("problem_source_sha256")
+        if checksum != manifest["problem_sha256"][raw["case"]]:
+            raise ValueError("Problem source differs from absolute-quality protocol")
+        compact["problem_source_sha256"] = checksum
     if "physics" in manifest:
         from benchmarks.conductivity import source_sha256
 
