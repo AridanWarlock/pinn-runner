@@ -2,10 +2,14 @@
 
 ## Численная приёмка (contract 6)
 
-`numerical-acceptance` запускает через ту же очередь только один из четырёх
+`numerical-acceptance` запускает через ту же очередь только один из пяти
 фиксированных наборов:20 сценариев `test_neumann_polynomial_pullback.py`
 либо6 файловых `test_neumann_feature_runner.py`, либо16 численных
-`test_variable_conductivity_network.py`, либо8 `test_nonheat_network.py`.
+`test_variable_conductivity_network.py`, либо8 `test_nonheat_network.py`, либо2 публичных файловых
+`test_nonheat_runner.py` для переноса/Бюргерса. Последние проверяют train,
+точную загрузку,predict5×6 и retrain,3 Adam+2 L-BFGS в обычном fit
+и1 Adam с learning_rate1e-300 без L-BFGS для точной загрузки. Всего6 малых
+fit и8 CLI-процессов; CUDA-хранилища проверяются в сохранённой модели.
 Набор nonheat проверяет перенос/Бюргерс ×FP32/64 ×seed19/73, все2241
 параметр и4 совместные конечные разности без обучения. Отдельный
 `helper_sha256` фиксирует импортируемый `scripts/audit_nonheat.py`;

@@ -1,0 +1,21 @@
+{
+  "source_revision": "23ac7cdafa4d7fec02046aecfd73ad6eec57a20b",
+  "full_cpu": {
+    "passed": 980,
+    "seconds": 375.93,
+    "excluded_e2e": 0
+  },
+  "ruff": true,
+  "format": true,
+  "mypy_source_files": 134,
+  "profiled_e2e": [
+    "tests/integration/test_nonheat_convergence.py"
+  ],
+  "numerical_cuda": {
+    "job_id": "nonheat024",
+    "passed": 8,
+    "optimizer_steps": 0
+  },
+  "source_protocol_split": true,
+  "log_sha256": "ca959c6acfbe258f472819aaedac92888bffa4a64618b280772b606337296df6"
+}

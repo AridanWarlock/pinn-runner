@@ -77,11 +77,17 @@ NONHEAT_EXPECTED = [
     for dtype in (0, 1)
     for case in ("advection", "burgers")
 ]
+NONHEAT_LIFECYCLE_SUITE = "tests/integration/test_nonheat_runner.py"
+NONHEAT_LIFECYCLE_EXPECTED = [
+    NONHEAT_LIFECYCLE_SUITE + f"::test_nonheat_train_exact_load_predict_and_retrain[{case}]"
+    for case in ("advection", "burgers")
+]
 SUITES = {
     SUITE: EXPECTED,
     LIFECYCLE_SUITE: LIFECYCLE_EXPECTED,
     CONDUCTIVITY_SUITE: CONDUCTIVITY_EXPECTED,
     NONHEAT_SUITE: NONHEAT_EXPECTED,
+    NONHEAT_LIFECYCLE_SUITE: NONHEAT_LIFECYCLE_EXPECTED,
 }
 FIELDS = {
     "contract",
@@ -172,24 +178,25 @@ def plan(manifest: Json) -> Json:
             training=False,
             performance_measurement=False,
         )
-    if manifest["suite"] == LIFECYCLE_SUITE:
+    if manifest["suite"] in (LIFECYCLE_SUITE, NONHEAT_LIFECYCLE_SUITE):
+        nonheat = manifest["suite"] == NONHEAT_LIFECYCLE_SUITE
         return dict(
             contract=1,
             kind="numerical-acceptance-plan",
             revision=manifest["revision"],
-            tests=6,
+            tests=2 if nonheat else 6,
             training=True,
             performance_measurement=False,
             adam_steps_per_regular_fit=3,
             lbfgs_outer_steps_per_regular_fit=2,
-            regular_fits=12,
-            identity_probe_fits=6,
+            regular_fits=4 if nonheat else 12,
+            identity_probe_fits=2 if nonheat else 6,
             identity_probe_adam_steps=1,
             identity_probe_learning_rate=1e-300,
             identity_probe_refinement_steps=0,
-            prediction_grid_space_points=4,
-            training_grid_space_points=3,
-            changed_representation_rejected=True,
+            prediction_grid_space_points=5 if nonheat else 4,
+            training_grid_space_points=4 if nonheat else 3,
+            changed_representation_rejected=not nonheat,
         )
     return dict(
         contract=1,
@@ -260,7 +267,7 @@ def compare(evidence: Json) -> Json:
         comparison_passed=code == 0 and passed == len(expected),
         scope=(
             "Existing file lifecycle tests; small training only, no accuracy/speed claim"
-            if manifest["suite"] == LIFECYCLE_SUITE
+            if manifest["suite"] in (LIFECYCLE_SUITE, NONHEAT_LIFECYCLE_SUITE)
             else "Existing numerical tests only; no training or speed claim"
         ),
     )

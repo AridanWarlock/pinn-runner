@@ -237,3 +237,22 @@ def test_nonheat_inventory_requires_pinned_helper_and_unchanged_sources() -> Non
     m["tests"].pop()
     with pytest.raises(ValueError, match="allowlisted"):
         acceptance.validate(m)
+
+
+def test_nonheat_lifecycle_is_two_small_file_scenarios_not_quality_training() -> None:
+    e = evidence()
+    m = e["manifest"]
+    m.update(
+        suite=acceptance.NONHEAT_LIFECYCLE_SUITE,
+        tests=acceptance.NONHEAT_LIFECYCLE_EXPECTED.copy(),
+    )
+    e["collected"] = m["tests"].copy()
+    e["trials"] = e["trials"][:2]
+    for trial, nodeid in zip(e["trials"], m["tests"]):
+        trial["nodeid"] = nodeid
+    planned = plan(m)
+    assert planned["tests"] == 2 and planned["training"] is True
+    assert planned["regular_fits"] == 4 and planned["identity_probe_fits"] == 2
+    assert planned["prediction_grid_space_points"] == 5
+    assert compare(e)["passed"] == 2 and compare(e)["comparison_passed"]
+    assert "small training only" in compare(e)["scope"]

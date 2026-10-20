@@ -1,5 +1,6 @@
 """Transport/Burgers preserve the public soft-mode file lifecycle without heat assumptions."""
 
+import os
 from copy import deepcopy
 from pathlib import Path
 
@@ -21,7 +22,9 @@ def test_nonheat_train_exact_load_predict_and_retrain(tmp_path: Path, name: str)
     task = tmp_path / "input"
     task.mkdir()
     (task / "functions.py").write_bytes(case.source.read_bytes())
-    config = case.config("cpu", 3, 19)
+    device = os.environ.get("PINN_TEST_DEVICE", "cpu")
+    assert device in ("cpu", "cuda")
+    config = case.config(device, 3, 19)
     config["network"]["hidden_layers"] = [8, 8]
     config["domain"]["space"]["x"]["points"] = 4
     config["domain"]["time"]["points"] = 3
@@ -43,7 +46,15 @@ def test_nonheat_train_exact_load_predict_and_retrain(tmp_path: Path, name: str)
     trained = launch(task, tmp_path / "train")
     assert trained.returncode == 0, trained.stdout + trained.stderr
     checkpoint = tmp_path / "train/checkpoints/final.ckpt"
-    state = torch.load(checkpoint, map_location="cpu")
+    storage_locations: list[str] = []
+
+    def on_cpu(storage, location):
+        storage_locations.append(location)
+        return storage
+
+    state = torch.load(checkpoint, map_location=on_cpu)
+    assert storage_locations
+    assert any(location.startswith("cuda") for location in storage_locations) == (device == "cuda")
     assert state["hyper_parameters"]["constraint_kind"] == "soft"
     assert state["hyper_parameters"]["hard_execution"] == "eager"
     assert state["global_step"] == 3
