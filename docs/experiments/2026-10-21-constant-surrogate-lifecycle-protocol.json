@@ -1,0 +1,20 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "786974bd1adc3e4bd64d629fa8723839c2ffcc4b",
+  "suite": "tests/integration/test_constant_surrogate_runner.py",
+  "tests": [
+    "tests/integration/test_constant_surrogate_runner.py::test_shared_constant_public_lifecycle"
+  ],
+  "test_sha256": "5e64a06f3f11630805b719ac7ff049513f829b81640324d3cdfb75d5064a5ff4",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}

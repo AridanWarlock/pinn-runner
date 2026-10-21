@@ -1,0 +1,133 @@
+{
+  "contract": 2,
+  "registration": "prospective",
+  "revision": "786974bd1adc3e4bd64d629fa8723839c2ffcc4b",
+  "reports": [
+    "heat_constant_surrogate/report.json"
+  ],
+  "expected_trials": [
+    {
+      "case": "heat_constant_surrogate",
+      "seed": 11,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "heat_constant_surrogate",
+      "seed": 29,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "heat_constant_surrogate",
+      "seed": 83,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    }
+  ],
+  "report_parameters": {
+    "adam_steps": 500,
+    "lbfgs_snapshots": [
+      0,
+      250,
+      500
+    ],
+    "constraints": "soft",
+    "points_override": 4096,
+    "lbfgs_tolerance_change": 1e-12,
+    "execution_lifecycle": "isolated_trials"
+  },
+  "case_limits": {
+    "heat_constant_surrogate": {
+      "relative_l2": 0.02,
+      "final_relative_l2": 0.03,
+      "worst_time_relative_l2": 0.03,
+      "pde_rmse": 0.02,
+      "coefficient_response_relative_l2": 0.05
+    }
+  },
+  "physical_limits": {
+    "initial_rmse": 1e-06,
+    "boundary_max": 1e-06
+  },
+  "case_faces": {
+    "heat_constant_surrogate": [
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "upper"
+      }
+    ]
+  },
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "network": {
+    "hidden_layers": [
+      32,
+      32,
+      32
+    ],
+    "spatial_encoding": "identity"
+  },
+  "absolute_quality": {
+    "backend": "eager",
+    "lifting": "recursive",
+    "backward": "all",
+    "background": "general",
+    "spatial_encoding": "identity"
+  },
+  "problem_sha256": {
+    "heat_constant_surrogate": "e56bd86e30870d20a8b3907ab5f5f521e0d0feba2aa976baf53b5430bbc81ff3"
+  },
+  "hypothesis_evaluation": {
+    "training_interval": [
+      0.05,
+      0.25
+    ],
+    "training_sampling": "joint_continuous_lhs",
+    "hypotheses": [
+      0.05,
+      0.075,
+      0.1,
+      0.125,
+      0.15,
+      0.175,
+      0.2,
+      0.225,
+      0.25
+    ],
+    "hypothesis_scope": "interpolation_slices_not_unseen_distribution",
+    "grid": [
+      101,
+      51
+    ],
+    "pde_points": 1024,
+    "pde_seed": 20261021,
+    "ignored_k": 0.15,
+    "field_norm": "array_l2_per_hypothesis",
+    "aggregation": "worst_hypothesis",
+    "reference_sha256": "031dd2b0c0891f29693bf66f776156f97062535c198aa9d603c285cc64fa5a63"
+  }
+}
