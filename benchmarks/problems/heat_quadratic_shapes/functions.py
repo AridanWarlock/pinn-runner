@@ -17,7 +17,7 @@ def initial(c: Coordinates) -> TensorFields:
 
 def transform(e: Equation) -> TensorFields:
     x, t = e.coordinates.x, e.coordinates.t
-    return {"u": torch.sin(x.mul(torch.pi)) ** 3 + 8 * t * x * (1 - x) * e.field("raw")}
+    return {"u": torch.sin(x.mul(torch.pi)) ** 3 + t * x * (1 - x) * e.field("raw")}
 
 
 def heat(e: Equation) -> torch.Tensor:

@@ -17,11 +17,18 @@ from pinnstorch.runner.settings import TaskSettings
 @pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
 def test_gain8_preserves_function_space_under_last_affine_mapping(tmp_path: Path, dtype):
     case = CASES["heat_quadratic_shapes"]
+    source = tmp_path / "functions.py"
+    original = case.source.read_text()
+    changed = original.replace(
+        '+ t * x * (1 - x) * e.field("raw")', '+ 8 * t * x * (1 - x) * e.field("raw")'
+    )
+    assert changed != original
+    source.write_text(changed)
     factory = SolverFactory(
         TaskSettings.read(case.config("cpu", 1, 11)),
-        load_problem(case.source),
+        load_problem(source),
         tmp_path,
-        case.source.parent,
+        source.parent,
     )
     model = factory.build(predicting=False).model.to(dtype=dtype).eval()
     saved = {key: value.detach().clone() for key, value in model.state_dict().items()}
