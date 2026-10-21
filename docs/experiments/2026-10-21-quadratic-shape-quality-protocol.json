@@ -1,0 +1,284 @@
+{
+  "contract": 2,
+  "registration": "prospective",
+  "revision": "19e61e3bc4b5d17efd70455efeb06ae02b408279",
+  "reports": [
+    "heat_quadratic_shapes/report.json"
+  ],
+  "expected_trials": [
+    {
+      "case": "heat_quadratic_shapes",
+      "seed": 11,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "heat_quadratic_shapes",
+      "seed": 29,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "heat_quadratic_shapes",
+      "seed": 83,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    }
+  ],
+  "report_parameters": {
+    "adam_steps": 500,
+    "lbfgs_snapshots": [
+      0,
+      250,
+      500
+    ],
+    "constraints": "soft",
+    "points_override": 4096,
+    "lbfgs_tolerance_change": 1e-12,
+    "execution_lifecycle": "isolated_trials"
+  },
+  "case_limits": {
+    "heat_quadratic_shapes": {
+      "relative_l2": 0.02,
+      "final_relative_l2": 0.03,
+      "worst_time_relative_l2": 0.03,
+      "pde_rmse": 0.02,
+      "coefficient_response_relative_l2": 0.05,
+      "dx_relative_l2": 0.05,
+      "flux_relative_l2": 0.05
+    }
+  },
+  "physical_limits": {
+    "initial_rmse": 1e-06,
+    "boundary_max": 1e-06
+  },
+  "case_faces": {
+    "heat_quadratic_shapes": [
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "upper"
+      }
+    ]
+  },
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "network": {
+    "hidden_layers": [
+      32,
+      32,
+      32
+    ],
+    "spatial_encoding": "identity"
+  },
+  "absolute_quality": {
+    "backend": "eager",
+    "lifting": "recursive",
+    "backward": "all",
+    "background": "general",
+    "spatial_encoding": "identity"
+  },
+  "problem_sha256": {
+    "heat_quadratic_shapes": "2ee588c09812fe4ca56314ce8cdfe7e8a54250b92b2aa4b1f01af0a463c97f1e"
+  },
+  "hypothesis_evaluation": {
+    "parameters": [
+      "a",
+      "b"
+    ],
+    "training_rows": [
+      [
+        0.05,
+        1.0
+      ],
+      [
+        0.05,
+        2.0
+      ],
+      [
+        0.15,
+        1.0
+      ],
+      [
+        0.15,
+        2.0
+      ],
+      [
+        0.05416666666666667,
+        1.5
+      ],
+      [
+        0.0625,
+        1.25
+      ],
+      [
+        0.07083333333333333,
+        1.75
+      ],
+      [
+        0.07916666666666668,
+        1.125
+      ],
+      [
+        0.0875,
+        1.625
+      ],
+      [
+        0.09583333333333334,
+        1.375
+      ],
+      [
+        0.10416666666666667,
+        1.875
+      ],
+      [
+        0.1125,
+        1.0625
+      ],
+      [
+        0.12083333333333335,
+        1.5625
+      ],
+      [
+        0.12916666666666668,
+        1.3125
+      ],
+      [
+        0.1375,
+        1.8125
+      ],
+      [
+        0.14583333333333334,
+        1.1875
+      ]
+    ],
+    "hypotheses": [
+      [
+        0.075,
+        1.2
+      ],
+      [
+        0.075,
+        1.4
+      ],
+      [
+        0.075,
+        1.6
+      ],
+      [
+        0.075,
+        1.8
+      ],
+      [
+        0.125,
+        1.2
+      ],
+      [
+        0.125,
+        1.4
+      ],
+      [
+        0.125,
+        1.6
+      ],
+      [
+        0.125,
+        1.8
+      ],
+      [
+        0.05,
+        1.0
+      ],
+      [
+        0.05,
+        2.0
+      ],
+      [
+        0.15,
+        1.0
+      ],
+      [
+        0.15,
+        2.0
+      ]
+    ],
+    "splits": [
+      "unseen",
+      "unseen",
+      "unseen",
+      "unseen",
+      "unseen",
+      "unseen",
+      "unseen",
+      "unseen",
+      "training_corner",
+      "training_corner",
+      "training_corner",
+      "training_corner"
+    ],
+    "training_sampling": "physical_lhs_complete_code_rows",
+    "coefficient_profile": "a*(1+x/b)**2",
+    "initial_field": "sin(pi*x)**3",
+    "grid": [
+      101,
+      101
+    ],
+    "reference_modes": 64,
+    "pde_points": 1024,
+    "pde_seed": 20261021,
+    "ignored_a": 0.1,
+    "ignored_b": 1.5,
+    "response_pairs": [
+      [
+        0,
+        3
+      ],
+      [
+        4,
+        7
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "field_norm": "array_l2_per_hypothesis",
+    "aggregation": "worst_hypothesis",
+    "reference_sha256": "a7f31f12f230786ac1693b057e7b38e2b3eaec1e9596ca13edc9f03dfdcc2f3c",
+    "analytical_sha256": "674071fd2a9ddf808119ccaab45ff020f9eec6037a10718fc8182208e48c1365"
+  }
+}

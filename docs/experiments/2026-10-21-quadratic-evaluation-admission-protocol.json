@@ -1,0 +1,20 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "19e61e3bc4b5d17efd70455efeb06ae02b408279",
+  "suite": "tests/integration/test_quadratic_surrogate_convergence.py",
+  "tests": [
+    "tests/integration/test_quadratic_surrogate_convergence.py::test_quadratic_convergence_collects_each_whole_code"
+  ],
+  "test_sha256": "c3ce6be758eb3e4615a53ffc88330a768df6ee499a7030f80b9b8470e753892b",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
