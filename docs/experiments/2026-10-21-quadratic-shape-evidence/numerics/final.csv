@@ -1,0 +1,5 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[11-dtype0],passed,passed,passed,0.20026949991006404
+tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[11-dtype1],passed,passed,passed,0.06752569996751845
+tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[29-dtype0],passed,passed,passed,0.02916049992199987
+tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[29-dtype1],passed,passed,passed,0.05615570000372827

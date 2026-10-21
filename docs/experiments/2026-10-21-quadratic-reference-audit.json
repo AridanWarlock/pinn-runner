@@ -27,6 +27,8 @@
     "missing_kx_pde_rms": 0.31443731177569345
   },
   "coefficient_maxima": {
+    "raw_series_initial_max_error_64": 2.1984219354481504e-07,
+    "raw_series_initial_max_error_128": 4.982368490890688e-09,
     "coordinate_quadrature_max_difference": 5.218048215738236e-15,
     "gauss_refinement_max_difference": 1.0880185641326534e-14,
     "sum_estimated_quad_errors": 1.3836071877319302e-11

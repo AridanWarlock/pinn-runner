@@ -1,0 +1,106 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "b3a95bfa4ae5c5b07b7a7feca45ae3de8725049f",
+    "suite": "tests/numerics/test_quadratic_shape_network.py",
+    "tests": [
+      "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[11-dtype0]",
+      "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[11-dtype1]",
+      "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[29-dtype0]",
+      "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[29-dtype1]"
+    ],
+    "test_sha256": "f8bc0f12cca08f4747643e0f72569f40d01a07dbbef00d851390f379cf496785",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "b3a95bfa4ae5c5b07b7a7feca45ae3de8725049f",
+  "test_sha256": "f8bc0f12cca08f4747643e0f72569f40d01a07dbbef00d851390f379cf496785",
+  "source_unchanged": true,
+  "test_raw_sha256": "e46caf48f9eb6b0b6387d60cf1f81aa73b26f73a11b98a3ed21df901bd340ada",
+  "test_raw_sha256_after": "e46caf48f9eb6b0b6387d60cf1f81aa73b26f73a11b98a3ed21df901bd340ada",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[11-dtype0]",
+    "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[11-dtype1]",
+    "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[29-dtype0]",
+    "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[29-dtype1]"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[11-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.20026949991006404
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[11-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.06752569996751845
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[29-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.02916049992199987
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_shape_network.py::test_quadratic_shape_operator_and_every_weight[29-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.05615570000372827
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "896cd9d784e45f1b0fe44bf7c431ae5475061ded6287ffbf4d0f4845734fcbba",
+    "pytest-results.json": "7a6f7aafbd9004b8b1b30639f489fd4b85daa916ffd3ffe106f96cef7418b40e"
+  },
+  "provenance": {
+    "protocol_commit": "5bae460365ef3b775bd44a313a63ff370fa6294e",
+    "protocol_sha256": "f172d33d6e4f1012f27f0b4bf87378aa8e75faa29f30fdb39c8eba8f0f74918f"
+  }
+}

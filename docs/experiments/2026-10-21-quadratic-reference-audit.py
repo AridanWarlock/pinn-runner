@@ -37,10 +37,21 @@ for b in np.linspace(1, 2, 5):
         quadratures.append(
             2 / (b * np.log1p(1 / b)) * ((weights * np.sin(np.pi * nodes) ** 3) @ phi)
         )
+    grid_nu = np.arange(1, 129) * np.pi / np.log1p(1 / b)
+    grid_phi = (1 + x / b) ** -0.5 * np.sin(np.log1p(x / b) * grid_nu)
+    raw_initial_64 = grid_phi[:, :64] @ coefficients[:64]
+    raw_initial_128 = grid_phi @ coefficients
+    exact_initial = np.sin(np.pi * x[:, 0]) ** 3
+    initial_error_64 = float(np.max(abs(raw_initial_64 - exact_initial)))
+    initial_error_128 = float(np.max(abs(raw_initial_128 - exact_initial)))
+    assert initial_error_64 <= float(truncation_bound(np.array(0.0))) + 1e-10
+    assert initial_error_128 <= float(truncation_bound(np.array(0.0), 128)) + 1e-10
     coefficient_rows.append(
         {
             "b": float(b),
             "modes": 128,
+            "raw_series_initial_max_error_64": initial_error_64,
+            "raw_series_initial_max_error_128": initial_error_128,
             "coordinate_quadrature_max_difference": float(
                 np.max(abs(coefficients - quadratures[1]))
             ),
@@ -74,7 +85,7 @@ for b in np.linspace(1, 2, 5):
         )
 for suffix, entries in [("cases", rows), ("coefficients", coefficient_rows)]:
     with (OUT / f"2026-10-21-quadratic-reference-{suffix}.csv").open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(entries[0]))
+        writer = csv.DictWriter(stream, fieldnames=list(entries[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(entries)
 shape_response = []

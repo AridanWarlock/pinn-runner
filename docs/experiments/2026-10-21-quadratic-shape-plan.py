@@ -102,7 +102,7 @@ plan = {
 }
 (OUT / "2026-10-21-quadratic-shape-plan.json").write_text(json.dumps(plan, indent=2) + "\n")
 with (OUT / "2026-10-21-quadratic-shape-plan-checks.csv").open("w", newline="") as stream:
-    writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+    writer = csv.DictWriter(stream, fieldnames=list(rows[0]), lineterminator="\n")
     writer.writeheader()
     writer.writerows(rows)
 print(
