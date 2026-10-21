@@ -1,0 +1,20 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "011535f52a5a986b0af7addc8e30cd1412f9cfd9",
+  "suite": "tests/integration/test_quadratic_shape_runner.py",
+  "tests": [
+    "tests/integration/test_quadratic_shape_runner.py::test_quadratic_shape_public_lifecycle"
+  ],
+  "test_sha256": "23ee7be88fed06f90186a5e01c36e98f45114e98824f395bfe4ae20eb1357e58",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
