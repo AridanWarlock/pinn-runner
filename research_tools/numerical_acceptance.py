@@ -139,6 +139,10 @@ QUADRATIC_SHAPE_EXPECTED = [
     for seed in (11, 29)
     for dtype in (0, 1)
 ]
+QUADRATIC_LIFECYCLE_SUITE = "tests/integration/test_quadratic_shape_runner.py"
+QUADRATIC_LIFECYCLE_EXPECTED = [
+    QUADRATIC_LIFECYCLE_SUITE + "::test_quadratic_shape_public_lifecycle"
+]
 FUNCTION_CODE_LIFECYCLE_SUITE = "tests/integration/test_function_code_runner.py"
 FUNCTION_CODE_LIFECYCLE_EXPECTED = [
     FUNCTION_CODE_LIFECYCLE_SUITE + f"::test_function_code_public_lifecycle[{mode}]"
@@ -146,6 +150,7 @@ FUNCTION_CODE_LIFECYCLE_EXPECTED = [
 ]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    QUADRATIC_LIFECYCLE_SUITE: QUADRATIC_LIFECYCLE_EXPECTED,
     QUADRATIC_SHAPE_SUITE: QUADRATIC_SHAPE_EXPECTED,
     FUNCTION_CODE_SUITE: FUNCTION_CODE_EXPECTED,
     FUNCTION_CODE_LIFECYCLE_SUITE: FUNCTION_CODE_LIFECYCLE_EXPECTED,
@@ -218,6 +223,26 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == QUADRATIC_LIFECYCLE_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=1,
+            training=True,
+            performance_measurement=False,
+            regular_fits=1,
+            adam_steps_per_regular_fit=3,
+            lbfgs_outer_steps_per_regular_fit=2,
+            identity_probe_fits=1,
+            identity_probe_adam_steps=1,
+            identity_probe_learning_rate=1e-300,
+            identity_probe_refinement_steps=0,
+            prediction_rows=[[0.075, 1.4], [0.125, 1.6]],
+            outside_hypothesis_rejected=True,
+            changed_decoder_rejected=True,
+            changed_order_rejected=True,
+        )
     if manifest["suite"] in (FUNCTION_CODE_SUITE, QUADRATIC_SHAPE_SUITE):
         return dict(
             contract=1,
@@ -447,6 +472,7 @@ def compare(evidence: Json) -> Json:
                 CONSTANT_LIFECYCLE_SUITE,
                 SPATIAL_LIFECYCLE_SUITE,
                 FUNCTION_CODE_LIFECYCLE_SUITE,
+                QUADRATIC_LIFECYCLE_SUITE,
             )
             else "Existing numerical tests only; no training or speed claim"
         ),
