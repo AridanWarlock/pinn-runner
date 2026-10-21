@@ -1,0 +1,34 @@
+{
+  "kind": "analytic-planning-check",
+  "device": "cpu",
+  "dtype": "float64",
+  "training_runs": 0,
+  "family": "k=a*(1+2*x*(1-x)), T=4*x*(1-x)*exp(-12*a*t), f=0",
+  "points": 31,
+  "x_interval": [
+    0.03,
+    0.97
+  ],
+  "t_interval": [
+    0.01,
+    0.99
+  ],
+  "checks": [
+    {
+      "a": 0.05,
+      "correct_residual_max": 1.6653345369377348e-16,
+      "wrong_operator_rms": 0.13294510840489468
+    },
+    {
+      "a": 0.1,
+      "correct_residual_max": 2.220446049250313e-16,
+      "wrong_operator_rms": 0.23226815136370052
+    },
+    {
+      "a": 0.2,
+      "correct_residual_max": 2.220446049250313e-16,
+      "wrong_operator_rms": 0.40809808641305406
+    }
+  ],
+  "scope": "Analytic formula and negative operator control only; no surrogate quality acceptance"
+}
