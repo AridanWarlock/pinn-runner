@@ -1,0 +1,23 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "e50c52e77b369dc8cf28392a19574ce18a064e5b",
+  "suite": "tests/numerics/test_quadratic_clock_prototype.py",
+  "tests": [
+    "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[11-dtype0]",
+    "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[11-dtype1]",
+    "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[29-dtype0]",
+    "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[29-dtype1]"
+  ],
+  "test_sha256": "2b0b8eee473368e0a8d34f4e1c65873a823791e031e5a709319adf98db8d6362",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
