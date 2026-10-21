@@ -1,0 +1,73 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "786974bd1adc3e4bd64d629fa8723839c2ffcc4b",
+    "suite": "tests/integration/test_constant_surrogate_runner.py",
+    "tests": [
+      "tests/integration/test_constant_surrogate_runner.py::test_shared_constant_public_lifecycle"
+    ],
+    "test_sha256": "5e64a06f3f11630805b719ac7ff049513f829b81640324d3cdfb75d5064a5ff4",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "786974bd1adc3e4bd64d629fa8723839c2ffcc4b",
+  "test_sha256": "5e64a06f3f11630805b719ac7ff049513f829b81640324d3cdfb75d5064a5ff4",
+  "source_unchanged": true,
+  "test_raw_sha256": "e8698d0d7e4055e3d1978d77785ae37135c60666d8673691aaec8107577f8fab",
+  "test_raw_sha256_after": "e8698d0d7e4055e3d1978d77785ae37135c60666d8673691aaec8107577f8fab",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/integration/test_constant_surrogate_runner.py::test_shared_constant_public_lifecycle"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/integration/test_constant_surrogate_runner.py::test_shared_constant_public_lifecycle",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 10.456291600014083
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "7af7a1ada8d860c9c48586411a41602918e49adb0e6a9b06f5f6eea809991394",
+    "pytest-results.json": "7bbb9a293216cb71c54e61525a5481d7d913e707c6cb5d6489853169f8a2adbe"
+  },
+  "provenance": {
+    "protocol_commit": "2c7863a6e65fc8f194347f96ff0a4f61881dff18",
+    "protocol_sha256": "e6c555c7ed65c38da943c5d4305efe9182c42f8ed40e0552613416bee769a621"
+  }
+}

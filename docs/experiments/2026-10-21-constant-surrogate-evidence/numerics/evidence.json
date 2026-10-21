@@ -1,0 +1,106 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "786974bd1adc3e4bd64d629fa8723839c2ffcc4b",
+    "suite": "tests/numerics/test_constant_surrogate_network.py",
+    "tests": [
+      "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[11-dtype0]",
+      "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[11-dtype1]",
+      "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[29-dtype0]",
+      "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[29-dtype1]"
+    ],
+    "test_sha256": "742376c40b73b7857e0d4cd70409bb22a2c37cc2d9067e9da0f527533c1a1e76",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "786974bd1adc3e4bd64d629fa8723839c2ffcc4b",
+  "test_sha256": "742376c40b73b7857e0d4cd70409bb22a2c37cc2d9067e9da0f527533c1a1e76",
+  "source_unchanged": true,
+  "test_raw_sha256": "2b8fd8ce27673416344118bc50128a467c6fa8442be8c988928ac9b86e15cb3e",
+  "test_raw_sha256_after": "2b8fd8ce27673416344118bc50128a467c6fa8442be8c988928ac9b86e15cb3e",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[11-dtype0]",
+    "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[11-dtype1]",
+    "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[29-dtype0]",
+    "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[29-dtype1]"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[11-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.303318899939768
+    },
+    {
+      "nodeid": "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[11-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.07504589995369315
+    },
+    {
+      "nodeid": "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[29-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.043170900200493634
+    },
+    {
+      "nodeid": "tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[29-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.05766090005636215
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "12ca835b295a4d42f8a9c0ab542119f192bc9bc729af810df68e2d5a315d831b",
+    "pytest-results.json": "5744ecb63b88b64fea2ad4612adf40030abfe8675a9427a167460ed7cd076dd1"
+  },
+  "provenance": {
+    "protocol_commit": "2c7863a6e65fc8f194347f96ff0a4f61881dff18",
+    "protocol_sha256": "90dd7fddd1b030cbfe40699d71a48dca83184ac8675c6129a579fdd588c6444b"
+  }
+}

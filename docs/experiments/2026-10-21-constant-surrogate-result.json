@@ -1,0 +1,121 @@
+{
+  "code_revision": "786974bd1adc3e4bd64d629fa8723839c2ffcc4b",
+  "comparison": {
+    "contract": 1,
+    "kind": "absolute-quality-comparison",
+    "trials": 3,
+    "passed": 3,
+    "results": [
+      {
+        "case": "heat_constant_surrogate",
+        "seed": 11,
+        "final_target_passed": true,
+        "failed_metrics": [],
+        "crossing": {
+          "status": "observed",
+          "lower_seconds": 4.656904799980111,
+          "upper_seconds": 10.105568200000562,
+          "confirmed_seconds": 15.759769500000402,
+          "left_censored": false
+        }
+      },
+      {
+        "case": "heat_constant_surrogate",
+        "seed": 29,
+        "final_target_passed": true,
+        "failed_metrics": [],
+        "crossing": {
+          "status": "observed",
+          "lower_seconds": 4.654705900000408,
+          "upper_seconds": 10.204540099948645,
+          "confirmed_seconds": 15.943595299962908,
+          "left_censored": false
+        }
+      },
+      {
+        "case": "heat_constant_surrogate",
+        "seed": 83,
+        "final_target_passed": true,
+        "failed_metrics": [],
+        "crossing": {
+          "status": "observed",
+          "lower_seconds": 4.69114900007844,
+          "upper_seconds": 10.18382949999068,
+          "confirmed_seconds": 15.970828299992718,
+          "left_censored": false
+        }
+      }
+    ],
+    "comparison_passed": true,
+    "timing_passed": null,
+    "limitations": "Absolute finite-sample accuracy only; no speedup, continuous error certificate or guarantee for other PDE/data."
+  },
+  "trials": [
+    {
+      "seed": 11,
+      "relative_l2": 0.0008780311582509405,
+      "final_relative_l2": 0.0026330544637412877,
+      "worst_time_relative_l2": 0.0026330544637412877,
+      "pde_rmse": 0.002032672520726919,
+      "initial_rmse": 6.607957614007708e-08,
+      "coefficient_response_relative_l2": 0.0018401169066570198,
+      "boundary_max": 8.742277657347586e-08,
+      "training_seconds": 15.760841800016351,
+      "setup_seconds": 0.016129099996760488,
+      "evaluation_seconds": 0.1941926000872627,
+      "trial_wall_seconds": 16.035092400037684,
+      "process_seconds": 18.404217200004496,
+      "closures": 1018.0,
+      "warm_prediction_seconds": 0.003115899977274239,
+      "prediction_points": 15453,
+      "prediction_batch_size": 2048,
+      "initial_state_sha256": "27ec337ac46b3bc4de656815bf3cfe666053c38fa7853393ffa517e8340e1fba",
+      "final_passed": true
+    },
+    {
+      "seed": 29,
+      "relative_l2": 0.0004215242537798562,
+      "final_relative_l2": 0.001757695155696554,
+      "worst_time_relative_l2": 0.001757695155696554,
+      "pde_rmse": 0.0018226453103125095,
+      "initial_rmse": 6.607957614007708e-08,
+      "coefficient_response_relative_l2": 0.0006661906199175722,
+      "boundary_max": 8.742277657347586e-08,
+      "training_seconds": 15.94475040002726,
+      "setup_seconds": 0.016257400042377412,
+      "evaluation_seconds": 0.22258820000570267,
+      "trial_wall_seconds": 16.243140700040385,
+      "process_seconds": 18.62863420008216,
+      "closures": 1042.0,
+      "warm_prediction_seconds": 0.00317799998447299,
+      "prediction_points": 15453,
+      "prediction_batch_size": 2048,
+      "initial_state_sha256": "44a1b158e27572b88fb3bf410461df4c7c0505f8355aca091b103da1f7338cd1",
+      "final_passed": true
+    },
+    {
+      "seed": 83,
+      "relative_l2": 0.0007493933144202792,
+      "final_relative_l2": 0.003019845240276671,
+      "worst_time_relative_l2": 0.003019845240276671,
+      "pde_rmse": 0.002919949823990464,
+      "initial_rmse": 6.607957614007708e-08,
+      "coefficient_response_relative_l2": 0.0017087513590970662,
+      "boundary_max": 8.742277657347586e-08,
+      "training_seconds": 15.971908800071105,
+      "setup_seconds": 0.015717500005848706,
+      "evaluation_seconds": 0.195739799994044,
+      "trial_wall_seconds": 16.236572499969043,
+      "process_seconds": 18.597368699964136,
+      "closures": 1034.0,
+      "warm_prediction_seconds": 0.003124199924059212,
+      "prediction_points": 15453,
+      "prediction_batch_size": 2048,
+      "initial_state_sha256": "15c2a92de3fcf3ea5f136ab3d0ca3bdc3e332b687eee84b9de8bdb1c7faa5fbc",
+      "final_passed": true
+    }
+  ],
+  "hypotheses_per_snapshot": 9,
+  "independently_initialized_models": 3,
+  "evaluation_state_unchanged": true
+}

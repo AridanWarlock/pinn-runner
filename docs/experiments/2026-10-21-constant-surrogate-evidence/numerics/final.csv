@@ -1,0 +1,5 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[11-dtype0],passed,passed,passed,0.303318899939768
+tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[11-dtype1],passed,passed,passed,0.07504589995369315
+tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[29-dtype0],passed,passed,passed,0.043170900200493634
+tests/numerics/test_constant_surrogate_network.py::test_shared_constant_operator_and_every_weight[29-dtype1],passed,passed,passed,0.05766090005636215

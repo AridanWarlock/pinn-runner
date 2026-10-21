@@ -1,0 +1,2 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_constant_surrogate_runner.py::test_shared_constant_public_lifecycle,passed,passed,passed,10.456291600014083
