@@ -1,0 +1,73 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "19e61e3bc4b5d17efd70455efeb06ae02b408279",
+    "suite": "tests/integration/test_quadratic_surrogate_convergence.py",
+    "tests": [
+      "tests/integration/test_quadratic_surrogate_convergence.py::test_quadratic_convergence_collects_each_whole_code"
+    ],
+    "test_sha256": "c3ce6be758eb3e4615a53ffc88330a768df6ee499a7030f80b9b8470e753892b",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "19e61e3bc4b5d17efd70455efeb06ae02b408279",
+  "test_sha256": "c3ce6be758eb3e4615a53ffc88330a768df6ee499a7030f80b9b8470e753892b",
+  "source_unchanged": true,
+  "test_raw_sha256": "88f86fbb9fdba34752c1f207b041fe46fe213326bbee86e0649e95990d64561c",
+  "test_raw_sha256_after": "88f86fbb9fdba34752c1f207b041fe46fe213326bbee86e0649e95990d64561c",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/integration/test_quadratic_surrogate_convergence.py::test_quadratic_convergence_collects_each_whole_code"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/integration/test_quadratic_surrogate_convergence.py::test_quadratic_convergence_collects_each_whole_code",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 2.789467999828048
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "3cd70a04e8238a1e82738da56165d8eb56e5a5339f44047ecb0c30d9594f59f8",
+    "pytest-results.json": "b9ab34d404a14abd1eff78e4e24d6aed3bdcdafa93a51eea25750ef9e685fd9b"
+  },
+  "provenance": {
+    "protocol_commit": "b5d1cf3b9a7b636f561e409f779f9784ffcaafa0",
+    "protocol_sha256": "1c82287f9d5aa692095e8f02c2eaafa2973467b04cf081a70aeae6f3b1b2474d"
+  }
+}

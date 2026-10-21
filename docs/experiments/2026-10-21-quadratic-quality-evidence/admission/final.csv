@@ -1,0 +1,2 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_quadratic_surrogate_convergence.py::test_quadratic_convergence_collects_each_whole_code,passed,passed,passed,2.789467999828048
