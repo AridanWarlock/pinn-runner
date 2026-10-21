@@ -1,0 +1,115 @@
+"""Actual saved shared model predicts new a values without updating weights."""
+
+import hashlib
+import os
+from copy import deepcopy
+from pathlib import Path
+
+import numpy as np
+import pytest
+import torch
+import yaml
+from scipy.io import loadmat
+
+from benchmarks.cases import CASES
+from pinnstorch.runner.factory import SolverFactory
+from pinnstorch.runner.problem import load_problem
+from pinnstorch.runner.settings import TaskSettings
+from tests.integration.test_runner_files import launch
+
+pytestmark = pytest.mark.e2e
+
+
+@pytest.mark.parametrize("row_training", [True, False])
+def test_function_code_public_lifecycle(tmp_path: Path, row_training: bool) -> None:
+    device = os.environ.get("PINN_TEST_DEVICE", "cpu")
+    case = CASES["heat_spatial_scale_surrogate"]
+    task = tmp_path / "input"
+    task.mkdir()
+    source = case.source.parents[1] / "heat_function_code/functions.py"
+    original = source.read_bytes()
+    (task / "functions.py").write_bytes(original)
+    config = case.config(device, 3, 11)
+    config["domain"]["parameters"] = {
+        name: {"interval": [-0.7, 0.7], "points": 3} for name in ("a", "b")
+    }
+    if row_training:
+        config["domain"]["parameter_rows"] = [[-0.6, 0.36], [0, 0], [0.6, 0.36]]
+    config["domain"]["space"]["x"]["points"] = 4
+    config["domain"]["time"]["points"] = 3
+    config["training"].update(
+        batch_size=7, collocation={"sampling": "lhs", "points": 7}, refinement={"steps": 2}
+    )
+    path = task / "config.yaml"
+    path.write_text(yaml.safe_dump(config, sort_keys=False))
+    trained = launch(task, tmp_path / "train")
+    assert trained.returncode == 0, trained.stdout + trained.stderr
+    checkpoint = tmp_path / "train/checkpoints/final.ckpt"
+    checksum = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+    locations = []
+
+    def on_cpu(storage, location):
+        locations.append(location)
+        return storage
+
+    saved = torch.load(checkpoint, map_location=on_cpu)
+    assert locations
+    assert any(location.startswith("cuda") for location in locations) == (device == "cuda")
+    assert saved["hyper_parameters"]["input_names"] == ("x", "a", "b", "t")
+    assert saved["global_step"] == 3
+    config["domain"]["space"]["x"]["points"] = 5
+    config["domain"]["time"]["points"] = 6
+    config["prediction"] = {"parameter_rows": [[0.4, 0.16], [-0.4, 0.16]]}
+    path.write_text(yaml.safe_dump(config, sort_keys=False))
+    predicted = launch(task, tmp_path / "predict", "predict", str(checkpoint))
+    assert predicted.returncode == 0, predicted.stdout + predicted.stderr
+    values = loadmat(tmp_path / "predict/predictions.mat")
+    settings = TaskSettings.read(config)
+    np.testing.assert_array_equal(
+        values["a"],
+        settings.domain.grid(parameter_rows=settings.prediction.parameter_rows).spatial[1],
+    )
+    np.testing.assert_array_equal(
+        values["b"],
+        settings.domain.grid(parameter_rows=settings.prediction.parameter_rows).spatial[2],
+    )
+    assert values["u"].shape == (10, 6)
+    factory = SolverFactory(
+        settings, load_problem(task / "functions.py"), tmp_path / "direct", task
+    )
+    objects = factory.build(predicting=True)
+    objects.model.load_state_dict(saved["state_dict"], strict=True)
+    spatial, clock = objects.mesh.collection_points(None, use_lhs=False)
+    with torch.no_grad():
+        direct = objects.model(
+            [torch.tensor(spatial[:, i : i + 1], dtype=torch.float32) for i in range(3)],
+            torch.tensor(clock, dtype=torch.float32),
+        )["u"].numpy()
+    np.testing.assert_allclose(values["u"].reshape(-1, 1), direct, atol=1e-6, rtol=1e-5)
+    probe = deepcopy(config)
+    probe["training"].update(steps=1, epochs=1, refinement={"steps": 0})
+    probe["training"]["optimizer"].update(learning_rate=1e-300, weight_decay=0)
+    path.write_text(yaml.safe_dump(probe, sort_keys=False))
+    restored = launch(task, tmp_path / "restore", "retrain", str(checkpoint))
+    assert restored.returncode == 0, restored.stdout + restored.stderr
+    replay = torch.load(tmp_path / "restore/checkpoints/final.ckpt", map_location="cpu")
+    for key, value in saved["state_dict"].items():
+        torch.testing.assert_close(replay["state_dict"][key], value, rtol=0, atol=0)
+    probe["prediction"]["parameter_rows"] = [[0.8, 0.1]]
+    path.write_text(yaml.safe_dump(probe, sort_keys=False))
+    rejected = launch(task, tmp_path / "outside", "predict", str(checkpoint))
+    assert rejected.returncode == 1
+    assert "outside checkpoint range" in (tmp_path / "outside/error.log").read_text()
+    probe["prediction"]["parameter_rows"] = [[0.4, 0.16]]
+    path.write_text(yaml.safe_dump(probe, sort_keys=False))
+    (task / "functions.py").write_bytes(original.replace(b"/ 8", b"/ 7"))
+    changed = launch(task, tmp_path / "changed", "predict", str(checkpoint))
+    assert changed.returncode == 1
+    assert "coefficient definitions differ" in (tmp_path / "changed/error.log").read_text()
+    (task / "functions.py").write_bytes(original)
+    probe["domain"]["parameters"] = {key: probe["domain"]["parameters"][key] for key in ("b", "a")}
+    path.write_text(yaml.safe_dump(probe, sort_keys=False))
+    wrong_order = launch(task, tmp_path / "wrong-order", "predict", str(checkpoint))
+    assert wrong_order.returncode == 1
+    assert "Checkpoint input names" in (tmp_path / "wrong-order/error.log").read_text()
+    assert hashlib.sha256(checkpoint.read_bytes()).hexdigest() == checksum

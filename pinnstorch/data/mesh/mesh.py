@@ -10,7 +10,7 @@ from pyDOE import lhs
 
 from pinnstorch.contracts import ArrayOutputs, FloatArray
 
-from ..domains.point_cloud import PointCloudData
+from ..domains.point_cloud import PointCloudData, validate_parameter_rows
 
 
 class MeshBase:
@@ -23,6 +23,7 @@ class MeshBase:
     spatial_dim: int
     parameter_names: tuple[str, ...]
     solution: ArrayOutputs
+    _parameter_rows: FloatArray | None = None
 
     def domain_bounds(self) -> tuple[FloatArray, FloatArray]:
         features = self.spatial_domain_mesh.reshape(-1, self.spatial_domain_mesh.shape[-1])
@@ -45,6 +46,13 @@ class MeshBase:
             return spatial, time
         if count is None or count < 1:
             raise ValueError("LHS sampling requires a positive point count")
+        if self._parameter_rows is not None:
+            physical_indices = [*range(self.spatial_dim), len(self.lb) - 1]
+            lower, upper = self.lb[physical_indices], self.ub[physical_indices]
+            physical = lower + (upper - lower) * lhs(len(physical_indices), count)
+            selected = np.random.randint(len(self._parameter_rows), size=count)
+            features = np.column_stack((physical[:, :-1], self._parameter_rows[selected]))
+            return cast(FloatArray, features), cast(FloatArray, physical[:, -1:])
         inputs = cast(FloatArray, self.lb + (self.ub - self.lb) * lhs(len(self.lb), count))
         return inputs[:, :-1], inputs[:, -1:]
 
@@ -78,6 +86,20 @@ class PointCloud(MeshBase):
         self.spatial_dim = data.spatial_dimension or len(self.spatial_domain)
         self.parameter_names = data.parameter_names
         self.input_dim = len(self.spatial_domain)
+        if data.parameter_rows is not None:
+            if self.spatial_dim + len(self.parameter_names) != self.input_dim:
+                raise ValueError(
+                    "Complete codes require named parameter columns after physical axes"
+                )
+            table = validate_parameter_rows(
+                data.parameter_rows.tolist(), len(self.parameter_names)
+            )
+            known = {tuple(row) for row in table}
+            observed = np.column_stack(self.spatial_domain[self.spatial_dim :])
+            if any(tuple(row) not in known for row in observed):
+                raise ValueError("Feature columns contain codes absent from parameter_rows")
+            table.setflags(write=False)
+            self._parameter_rows = table
         self.spatial_domain_mesh = np.empty((spatial_count, time_count, self.input_dim))
         for index, column in enumerate(self.spatial_domain):
             self.spatial_domain_mesh[:, :, index] = column

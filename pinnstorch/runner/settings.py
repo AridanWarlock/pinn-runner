@@ -89,15 +89,36 @@ class Axis:
         return cls((numbers[0], numbers[1]), points)
 
 
+ParameterRows = tuple[tuple[float, ...], ...]
+
+
+def read_parameter_rows(raw: object, path: str) -> ParameterRows | None:
+    if raw is None:
+        return None
+    if (
+        not isinstance(raw, list)
+        or not raw
+        or any(not isinstance(row, list) or not row for row in raw)
+    ):
+        raise ValueError(f"{path} must be a nonempty rectangular numeric table")
+    rows = tuple(
+        tuple(Reader({"value": value}, path).number("value", 0) for value in row) for row in raw
+    )
+    if any(len(row) != len(rows[0]) for row in rows) or len(set(rows)) != len(rows):
+        raise ValueError(f"{path} must have equally sized distinct complete rows")
+    return rows
+
+
 @dataclass(frozen=True)
 class Domain:
     space: Mapping[str, Axis]
     time: Axis
     parameters: Mapping[str, Axis]
+    parameter_rows: ParameterRows | None = None
 
     @classmethod
     def read(cls, reader: Reader) -> Domain:
-        reader.only("space", "time", "parameters")
+        reader.only("space", "time", "parameters", "parameter_rows")
         space = reader.section("space")
         space.only("x", "y", "z")
         if "x" not in space.values or ("z" in space.values and "y" not in space.values):
@@ -112,20 +133,44 @@ class Domain:
             identifier(name)
             if name in ("x", "y", "z", "t"):
                 raise ValueError(f"Parameter '{name}' conflicts with a coordinate")
-        return cls(
+        result = cls(
             axes,
             Axis.read(reader.values.get("time"), "domain.time"),
             {
                 name: Axis.read(value, f"domain.parameters.{name}")
                 for name, value in parameters.values.items()
             },
+            read_parameter_rows(reader.values.get("parameter_rows"), "domain.parameter_rows"),
         )
+        if result.parameter_rows is not None:
+            if not result.parameters or any(
+                len(row) != len(result.parameters) for row in result.parameter_rows
+            ):
+                raise ValueError("domain.parameter_rows width must match domain.parameters")
+            for row in result.parameter_rows:
+                if any(
+                    not axis.interval[0] <= value <= axis.interval[1]
+                    for value, axis in zip(row, result.parameters.values())
+                ):
+                    raise ValueError(
+                        "domain.parameter_rows must lie inside declared parameter intervals"
+                    )
+        return result
 
     @property
     def input_names(self) -> tuple[str, ...]:
         return (*self.space, *self.parameters, "t")
 
-    def grid(self, query: Mapping[str, tuple[float, ...]] | None = None) -> PointCloudData:
+    def grid(
+        self,
+        query: Mapping[str, tuple[float, ...]] | None = None,
+        parameter_rows: ParameterRows | None = None,
+    ) -> PointCloudData:
+        rows = self.parameter_rows if parameter_rows is None else parameter_rows
+        if rows is not None and query:
+            raise ValueError(
+                "Complete parameter_rows cannot be mixed with independent parameter queries"
+            )
         x, y, z = self.space["x"], self.space.get("y"), self.space.get("z")
         parameters: dict[str, ParameterSpec] = {
             name: {"interval": axis.interval, "points": axis.points}
@@ -142,6 +187,7 @@ class Domain:
             z.points if z else None,
             parameters,
             parameter_values=query,
+            parameter_rows=rows,
         )
 
 
@@ -476,10 +522,11 @@ class Boundary:
 class Prediction:
     parameters: Mapping[str, tuple[float, ...]]
     allow_extrapolation: bool
+    parameter_rows: ParameterRows | None = None
 
     @classmethod
     def read(cls, reader: Reader) -> Prediction:
-        reader.only("parameters", "allow_extrapolation")
+        reader.only("parameters", "allow_extrapolation", "parameter_rows")
         parameters = reader.section("parameters")
         values: dict[str, tuple[float, ...]] = {}
         for name, raw in parameters.values.items():
@@ -489,7 +536,14 @@ class Prediction:
             if len(set(numbers)) != len(numbers):
                 raise ValueError(f"prediction.parameters.{name} values must be distinct")
             values[name] = numbers
-        return cls(values, reader.boolean("allow_extrapolation", False))
+        rows = read_parameter_rows(
+            reader.values.get("parameter_rows"), "prediction.parameter_rows"
+        )
+        if values and rows is not None:
+            raise ValueError(
+                "prediction.parameter_rows and prediction.parameters are mutually exclusive"
+            )
+        return cls(values, reader.boolean("allow_extrapolation", False), rows)
 
 
 @dataclass(frozen=True)
@@ -627,6 +681,15 @@ class TaskSettings:
         self.validate_spatial_encoding()
         if set(self.coefficients) & set(self.domain.input_names):
             raise ValueError("Coefficient names must differ from coordinates and parameters")
+        if self.domain.parameter_rows is not None and self.prediction.parameters:
+            raise ValueError("A complete-code domain requires prediction.parameter_rows")
+        if self.prediction.parameter_rows is not None and (
+            not self.domain.parameters
+            or any(
+                len(row) != len(self.domain.parameters) for row in self.prediction.parameter_rows
+            )
+        ):
+            raise ValueError("prediction.parameter_rows width must match domain.parameters")
         unknown = set(self.prediction.parameters) - set(self.domain.parameters)
         if unknown:
             raise ValueError(f"Unknown prediction parameters: {sorted(unknown)}")

@@ -85,7 +85,8 @@ class SolverFactory:
         if seed is not None:
             L.seed_everything(seed, workers=True)
         query = self.settings.prediction.parameters if predicting else None
-        grid = self.settings.domain.grid(query)
+        rows = self.settings.prediction.parameter_rows if predicting else None
+        grid = self.settings.domain.grid(query, parameter_rows=rows)
         mesh = PointCloud(lambda: grid)
         names, datasets = self._training_datasets(mesh) if not predicting else ([], [])
         validation = (

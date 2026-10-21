@@ -126,8 +126,21 @@ SPATIAL_SCALE_EXPECTED = [
 ]
 SPATIAL_LIFECYCLE_SUITE = "tests/integration/test_spatial_surrogate_runner.py"
 SPATIAL_LIFECYCLE_EXPECTED = [SPATIAL_LIFECYCLE_SUITE + "::test_spatial_scale_public_lifecycle"]
+FUNCTION_CODE_SUITE = "tests/numerics/test_function_code_network.py"
+FUNCTION_CODE_EXPECTED = [
+    FUNCTION_CODE_SUITE + f"::test_function_code_operator_and_every_weight[{seed}-dtype{dtype}]"
+    for seed in (11, 29)
+    for dtype in (0, 1)
+]
+FUNCTION_CODE_LIFECYCLE_SUITE = "tests/integration/test_function_code_runner.py"
+FUNCTION_CODE_LIFECYCLE_EXPECTED = [
+    FUNCTION_CODE_LIFECYCLE_SUITE + f"::test_function_code_public_lifecycle[{mode}]"
+    for mode in (True, False)
+]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    FUNCTION_CODE_SUITE: FUNCTION_CODE_EXPECTED,
+    FUNCTION_CODE_LIFECYCLE_SUITE: FUNCTION_CODE_LIFECYCLE_EXPECTED,
     SPATIAL_LIFECYCLE_SUITE: SPATIAL_LIFECYCLE_EXPECTED,
     SPATIAL_SCALE_SUITE: SPATIAL_SCALE_EXPECTED,
     CONSTANT_SUITE: CONSTANT_EXPECTED,
@@ -197,6 +210,43 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == FUNCTION_CODE_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=4,
+            case="heat_function_code",
+            dtypes=["float32", "float64"],
+            seeds=[11, 29],
+            network_models=4,
+            parameters_per_model=2305,
+            finite_difference_checks=4,
+            optimizer_updates=0,
+            training=False,
+            performance_measurement=False,
+            parameter_sampling="complete_rows",
+        )
+    if manifest["suite"] == FUNCTION_CODE_LIFECYCLE_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=2,
+            training=True,
+            performance_measurement=False,
+            regular_fits=2,
+            adam_steps_per_regular_fit=3,
+            lbfgs_outer_steps_per_regular_fit=2,
+            identity_probe_fits=2,
+            identity_probe_adam_steps=1,
+            identity_probe_learning_rate=1e-300,
+            identity_probe_refinement_steps=0,
+            prediction_rows=[[0.4, 0.16], [-0.4, 0.16]],
+            outside_hypothesis_rejected=True,
+            changed_decoder_rejected=True,
+            changed_order_rejected=True,
+        )
     if manifest["suite"] == SPATIAL_SCALE_SUITE:
         return dict(
             contract=1,
@@ -384,6 +434,7 @@ def compare(evidence: Json) -> Json:
                 UNFORCED_LIFECYCLE_SUITE,
                 CONSTANT_LIFECYCLE_SUITE,
                 SPATIAL_LIFECYCLE_SUITE,
+                FUNCTION_CODE_LIFECYCLE_SUITE,
             )
             else "Existing numerical tests only; no training or speed claim"
         ),
