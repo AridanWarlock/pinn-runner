@@ -10,7 +10,7 @@ from typing import Any, cast
 import numpy as np
 from numpy.typing import NDArray
 
-from .catalog import SPECS, Family
+from .catalog import QUADRATIC_TRAINING_ROWS, SPECS, Family
 from .policies import CartesianGrid, FixedQuality, GridPolicy, QualityPolicy, TrainingBudget
 
 Array = NDArray[np.float64]
@@ -337,7 +337,34 @@ class SpatialScaleSurrogateCase(ConstantSurrogateCase):
         return cast(Array, 4 * x * (1 - x) * np.exp(-12 * spatial["a"] * time))
 
 
+class QuadraticShapeCase(ConstantSurrogateCase):
+    def config(
+        self, device: str, steps: int, seed: int, evaluating: bool = False
+    ) -> dict[str, Any]:
+        config = super().config(device, steps, seed, evaluating)
+        config["domain"]["parameters"] = {
+            "a": {"interval": [0.05, 0.15], "points": 3},
+            "b": {"interval": [1, 2], "points": 3},
+        }
+        config["domain"]["parameter_rows"] = [row.copy() for row in QUADRATIC_TRAINING_ROWS]
+        return config
+
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        from .quadratic_reference import reference_fields
+
+        x, a, b, t = np.broadcast_arrays(spatial["x"], spatial["a"], spatial["b"], time)
+        result = np.empty_like(x, dtype=np.float64)
+        codes = np.unique(np.column_stack((a.ravel(), b.ravel())), axis=0)
+        for scale, shape in codes:
+            mask = (a == scale) & (b == shape)
+            result[mask] = reference_fields(
+                x[mask], t[mask], a=float(scale), b=float(shape)
+            ).temperature
+        return result
+
+
 FACTORIES: dict[Family, type[BenchmarkCase]] = {
+    "quadratic_shapes": QuadraticShapeCase,
     "constant_surrogate": ConstantSurrogateCase,
     "spatial_scale_surrogate": SpatialScaleSurrogateCase,
     "heat": HeatCase,

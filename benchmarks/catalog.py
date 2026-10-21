@@ -21,6 +21,7 @@ Family = Literal[
     "conductivity",
     "constant_surrogate",
     "spatial_scale_surrogate",
+    "quadratic_shapes",
 ]
 CONSTRAINTS = ("soft", "hard_initial_dirichlet", "hard_initial_robin")
 EXECUTIONS = ("eager", "product_rule", "robin_batch", "robin_grouped", "neumann_analytic")
@@ -49,6 +50,7 @@ class CaseSpec:
             "burgers_unforced",
             "constant_surrogate",
             "spatial_scale_surrogate",
+            "quadratic_shapes",
         )
 
     @property
@@ -70,6 +72,7 @@ class CaseSpec:
                 "burgers_unforced",
                 "constant_surrogate",
                 "spatial_scale_surrogate",
+                "quadratic_shapes",
             ):
                 kind = "dirichlet"
             elif self.family in ("robin_interval", "robin_box") or (
@@ -103,7 +106,45 @@ SPATIAL_SCALE_EVALUATION = {
     "coefficient_profile": "a*(1+2*x*(1-x))",
     "initial_field": "4*x*(1-x)",
 }
+
+
+def _binary_reverse(n: int) -> float:
+    value, weight = 0.0, 0.5
+    while n:
+        value += (n % 2) * weight
+        n //= 2
+        weight /= 2
+    return value
+
+
+QUADRATIC_TRAINING_ROWS = [
+    *[[a, b] for a in (0.05, 0.15) for b in (1.0, 2.0)],
+    *[[0.05 + 0.1 * (i + 0.5) / 12, 1 + _binary_reverse(i + 1)] for i in range(12)],
+]
+QUADRATIC_UNSEEN_ROWS = [[a, b] for a in (0.075, 0.125) for b in (1.2, 1.4, 1.6, 1.8)]
+QUADRATIC_EVALUATION = dict(
+    parameters=["a", "b"],
+    training_rows=QUADRATIC_TRAINING_ROWS,
+    hypotheses=QUADRATIC_UNSEEN_ROWS + QUADRATIC_TRAINING_ROWS[:4],
+    splits=["unseen"] * 8 + ["training_corner"] * 4,
+    training_sampling="physical_lhs_complete_code_rows",
+    coefficient_profile="a*(1+x/b)**2",
+    initial_field="sin(pi*x)**3",
+    grid=[101, 101],
+    reference_modes=64,
+    pde_points=1024,
+    pde_seed=20261021,
+    ignored_a=0.1,
+    ignored_b=1.5,
+    response_pairs=[[0, 3], [4, 7], [0, 4], [1, 5], [2, 6], [3, 7]],
+    field_norm="array_l2_per_hypothesis",
+    aggregation="worst_hypothesis",
+)
+QUADRATIC_METRICS = {"dx_relative_l2", "flux_relative_l2", "coefficient_response_relative_l2"}
+
+
 SURROGATE_EVALUATIONS = {
+    "heat_quadratic_shapes": QUADRATIC_EVALUATION,
     "heat_constant_surrogate": CONSTANT_EVALUATION,
     "heat_spatial_scale_surrogate": SPATIAL_SCALE_EVALUATION,
 }
@@ -130,6 +171,14 @@ UNFORCED_METRICS = {
 UNFORCED_VISCOSITIES = {"burgers_unforced_nu010": 0.1, "burgers_unforced_nu001": 0.01}
 
 SPECS = (
+    CaseSpec(
+        "heat_quadratic_shapes",
+        "quadratic_shapes",
+        1,
+        (16, 101),
+        time_interval=(0, 1),
+        time_counts=(11, 101),
+    ),
     CaseSpec(
         "heat_spatial_scale_surrogate",
         "spatial_scale_surrogate",

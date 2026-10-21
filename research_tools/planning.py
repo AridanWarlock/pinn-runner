@@ -131,6 +131,7 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
                 "burgers_unforced",
                 "constant_surrogate",
                 "spatial_scale_surrogate",
+                "quadratic_shapes",
             ):
                 raise ValueError("Absolute quality requires a registered analytical case")
             import hashlib
@@ -156,6 +157,20 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
                     != manifest["hypothesis_evaluation"]["reference_sha256"]
                 ):
                     raise ValueError("Surrogate reference differs from protocol")
+            if spec.family == "quadratic_shapes":
+                from benchmarks.catalog import QUADRATIC_METRICS
+
+                supported |= QUADRATIC_METRICS
+                for field, filename in (
+                    ("reference_sha256", "quadratic_surrogate_quality.py"),
+                    ("analytical_sha256", "quadratic_reference.py"),
+                ):
+                    reference = Path(__file__).resolve().parents[1] / "benchmarks" / filename
+                    if (
+                        hashlib.sha256(reference.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+                        != manifest["hypothesis_evaluation"][field]
+                    ):
+                        raise ValueError("Whole-code evaluator or analytical source differs")
             if spec.family == "burgers_unforced":
                 from benchmarks.catalog import UNFORCED_METRICS
 

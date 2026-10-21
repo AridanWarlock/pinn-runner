@@ -121,6 +121,12 @@ def analytical_tensor(case: BenchmarkCase, coordinates: Coordinates) -> torch.Te
         field = 1 + x * time + torch.exp(-0.1 * mu**2 * time) * torch.cos(mu * (x - 0.5))
     elif isinstance(case, NeumannHeatCase):
         field = 1 + x * time + torch.exp(-0.1 * torch.pi**2 * time) * torch.cos(torch.pi * x)
+    elif case.name == "heat_quadratic_shapes":
+        from tests.numerics.test_quadratic_surrogate_quality import AnalyticalField
+
+        field = AnalyticalField()(
+            [x, coordinates.parameters["a"], coordinates.parameters["b"]], time
+        )["u"]
     elif case.name == "heat_spatial_scale_surrogate":
         field = 4 * x * (1 - x) * torch.exp(-12 * coordinates.parameters["a"] * time)
     elif case.name == "heat_constant_surrogate":
@@ -184,6 +190,15 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(
             "a": (
                 0.05 + 0.2 * torch.rand((17, 1), dtype=torch.float64, generator=generator)
             ).requires_grad_()
+        }
+    if name == "heat_quadratic_shapes":
+        parameters = {
+            "a": (
+                0.05 + 0.1 * torch.rand((17, 1), dtype=torch.float64, generator=generator)
+            ).requires_grad_(),
+            "b": (
+                1 + torch.rand((17, 1), dtype=torch.float64, generator=generator)
+            ).requires_grad_(),
         }
     coordinates = Coordinates(dict(zip(("x", "y", "z"), columns[:-1])), columns[-1], parameters)
     time = coordinates.t

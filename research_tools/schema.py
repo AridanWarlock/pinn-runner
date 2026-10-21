@@ -208,13 +208,29 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
             or len(case_limits) != 1
             or next(iter(case_limits)) not in SURROGATE_EVALUATIONS
             or json.dumps(
-                {k: v for k, v in evaluation.items() if k != "reference_sha256"}, sort_keys=True
+                {
+                    k: v
+                    for k, v in evaluation.items()
+                    if k not in ("reference_sha256", "analytical_sha256")
+                },
+                sort_keys=True,
             )
             != json.dumps(SURROGATE_EVALUATIONS[next(iter(case_limits))], sort_keys=True)
             or not isinstance(evaluation.get("reference_sha256"), str)
             or not re.fullmatch("[0-9a-f]{64}", evaluation["reference_sha256"])
         ):
             raise ValueError("Registered per-hypothesis evaluation and reference hash required")
+    if "heat_quadratic_shapes" in case_limits:
+        evaluation = manifest["hypothesis_evaluation"]
+        if not isinstance(evaluation.get("analytical_sha256"), str) or not re.fullmatch(
+            "[0-9a-f]{64}", evaluation["analytical_sha256"]
+        ):
+            raise ValueError("Pin analytical series source")
+    elif (
+        "hypothesis_evaluation" in manifest
+        and "analytical_sha256" in manifest["hypothesis_evaluation"]
+    ):
+        raise ValueError("Unexpected analytical hash for scalar surrogate")
     unforced = bool(set(case_limits) & UNFORCED_VISCOSITIES.keys())
     if unforced or "layer_evaluation" in manifest:
         evaluation = object_value(manifest.get("layer_evaluation"), "layer_evaluation")

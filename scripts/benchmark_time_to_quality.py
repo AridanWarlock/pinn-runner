@@ -85,6 +85,8 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     parser.add_argument("--worst-time-relative-l2", type=float)
     parser.add_argument("--physical-flux-max", type=float)
     parser.add_argument("--coefficient-response-relative-l2", type=float)
+    parser.add_argument("--dx-relative-l2", type=float)
+    parser.add_argument("--flux-relative-l2", type=float)
     for name in sorted(UNFORCED_METRICS):
         parser.add_argument("--" + name.replace("_", "-"), type=float)
     parser.add_argument("--relative-l2", type=float, default=LIMITS["relative_l2"])
@@ -119,6 +121,8 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
         "worst_time_relative_l2",
         "physical_flux_max",
         "coefficient_response_relative_l2",
+        "dx_relative_l2",
+        "flux_relative_l2",
         *sorted(UNFORCED_METRICS),
     ):
         if getattr(args, name) is not None:
@@ -130,6 +134,12 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
         and "coefficient_response_relative_l2" not in limits
     ):
         parser.error("Shared surrogate requires coefficient-response limit")
+    if (
+        args.case == "heat_quadratic_shapes"
+        and not {"dx_relative_l2", "flux_relative_l2", "coefficient_response_relative_l2"}
+        <= limits.keys()
+    ):
+        parser.error("Whole-code surrogate requires gradient/flux/response limits")
     plan = ConvergencePlan(
         CASES[args.case],
         args.steps,

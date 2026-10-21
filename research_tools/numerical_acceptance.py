@@ -148,8 +148,13 @@ FUNCTION_CODE_LIFECYCLE_EXPECTED = [
     FUNCTION_CODE_LIFECYCLE_SUITE + f"::test_function_code_public_lifecycle[{mode}]"
     for mode in (True, False)
 ]
+QUADRATIC_EVALUATION_SUITE = "tests/integration/test_quadratic_surrogate_convergence.py"
+QUADRATIC_EVALUATION_EXPECTED = [
+    QUADRATIC_EVALUATION_SUITE + "::test_quadratic_convergence_collects_each_whole_code"
+]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    QUADRATIC_EVALUATION_SUITE: QUADRATIC_EVALUATION_EXPECTED,
     QUADRATIC_LIFECYCLE_SUITE: QUADRATIC_LIFECYCLE_EXPECTED,
     QUADRATIC_SHAPE_SUITE: QUADRATIC_SHAPE_EXPECTED,
     FUNCTION_CODE_SUITE: FUNCTION_CODE_EXPECTED,
@@ -223,6 +228,21 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == QUADRATIC_EVALUATION_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=1,
+            training=True,
+            performance_measurement=False,
+            regular_fits=1,
+            adam_steps_per_regular_fit=1,
+            lbfgs_outer_steps_per_regular_fit=1,
+            hypotheses_per_snapshot=12,
+            response_pairs_per_snapshot=6,
+            snapshots=2,
+        )
     if manifest["suite"] == QUADRATIC_LIFECYCLE_SUITE:
         return dict(
             contract=1,
@@ -473,6 +493,7 @@ def compare(evidence: Json) -> Json:
                 SPATIAL_LIFECYCLE_SUITE,
                 FUNCTION_CODE_LIFECYCLE_SUITE,
                 QUADRATIC_LIFECYCLE_SUITE,
+                QUADRATIC_EVALUATION_SUITE,
             )
             else "Existing numerical tests only; no training or speed claim"
         ),

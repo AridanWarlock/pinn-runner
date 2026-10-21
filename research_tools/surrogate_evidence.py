@@ -25,6 +25,9 @@ AGGREGATES = {
 
 def validate_snapshots(raw: Json, compact: list[Json], manifest: Json) -> None:
     identity = manifest["hypothesis_evaluation"]
+    if identity.get("parameters") == ["a", "b"]:
+        validate_whole_codes(raw, compact, manifest)
+        return
     parameter = identity.get("parameter", "k")
     fields = (FIELDS - {"k", "ignored_k_relative_l2"}) | {
         parameter,
@@ -56,3 +59,68 @@ def validate_snapshots(raw: Json, compact: list[Json], manifest: Json) -> None:
         snapshot["hypotheses"] = rows
         snapshot["hypothesis_evaluation"] = identity
         snapshot["evaluation_state_unchanged"] = True
+
+
+def validate_whole_codes(raw: Json, compact: list[Json], manifest: Json) -> None:
+    identity = manifest["hypothesis_evaluation"]
+    aggregates = AGGREGATES | {"dx_relative_l2", "flux_relative_l2"}
+    fields = (FIELDS - {"k", "ignored_k_relative_l2"}) | {
+        "a",
+        "b",
+        "split",
+        "worst_time",
+        "dx_relative_l2",
+        "flux_relative_l2",
+        "ignored_a_relative_l2",
+        "ignored_b_relative_l2",
+    }
+    for original, snapshot in zip(raw["snapshots"], compact):
+        if (
+            original.get("hypothesis_evaluation") != identity
+            or original.get("evaluation_state_unchanged") is not True
+        ):
+            raise ValueError("Whole-code evaluation identity or frozen state differs")
+        rows = original.get("hypotheses")
+        if not isinstance(rows, list) or len(rows) != len(identity["hypotheses"]):
+            raise ValueError("Incomplete whole-code hypotheses")
+        for row, code, split in zip(rows, identity["hypotheses"], identity["splits"]):
+            row = object_value(row, "whole-code row")
+            if set(row) != fields or [row["a"], row["b"]] != code or row["split"] != split:
+                raise ValueError("Missing, reordered or changed whole codes or splits")
+            for key, value in row.items():
+                if key != "split":
+                    number(value, key)
+            if row["worst_time"] not in [i / 100 for i in range(101)]:
+                # np.linspace can differ by one ulp: validate grid membership with rounding.
+                if (
+                    abs(row["worst_time"] * 100 - round(row["worst_time"] * 100)) > 1e-10
+                    or not 0 <= row["worst_time"] <= 1
+                ):
+                    raise ValueError("Worst-time location outside registered grid")
+        for key in aggregates:
+            if snapshot["metrics"][key] != max(row[key] for row in rows):
+                raise ValueError("Whole-code aggregate must be worst hypothesis")
+        if snapshot["boundary_max"] != max(row["boundary_max"] for row in rows):
+            raise ValueError("Whole-code boundary aggregate differs")
+        responses = original.get("responses")
+        if not isinstance(responses, list) or len(responses) != len(identity["response_pairs"]):
+            raise ValueError("Incomplete response inventory")
+        for response, pair in zip(responses, identity["response_pairs"]):
+            response = object_value(response, "response")
+            if (
+                set(response) != {"left", "right", "relative_l2"}
+                or [response["left"], response["right"]] != pair
+            ):
+                raise ValueError("Missing, reordered or changed response pair")
+            for key, value in response.items():
+                number(value, key)
+        if snapshot["metrics"]["coefficient_response_relative_l2"] != max(
+            row["relative_l2"] for row in responses
+        ):
+            raise ValueError("Response aggregate differs")
+        snapshot.update(
+            hypotheses=rows,
+            responses=responses,
+            hypothesis_evaluation=identity,
+            evaluation_state_unchanged=True,
+        )
