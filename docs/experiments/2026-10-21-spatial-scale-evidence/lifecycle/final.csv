@@ -1,0 +1,2 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_spatial_surrogate_runner.py::test_spatial_scale_public_lifecycle,passed,passed,passed,10.591445399913937

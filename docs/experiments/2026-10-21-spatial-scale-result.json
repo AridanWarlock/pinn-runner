@@ -1,0 +1,121 @@
+{
+  "code_revision": "b53c19d39e1a0541bc4153169a2f2808a7e878cc",
+  "comparison": {
+    "contract": 1,
+    "kind": "absolute-quality-comparison",
+    "trials": 3,
+    "passed": 3,
+    "results": [
+      {
+        "case": "heat_spatial_scale_surrogate",
+        "seed": 11,
+        "final_target_passed": true,
+        "failed_metrics": [],
+        "crossing": {
+          "status": "observed",
+          "lower_seconds": 5.026189099997282,
+          "upper_seconds": 10.966936399927363,
+          "confirmed_seconds": 18.261009099893272,
+          "left_censored": false
+        }
+      },
+      {
+        "case": "heat_spatial_scale_surrogate",
+        "seed": 29,
+        "final_target_passed": true,
+        "failed_metrics": [],
+        "crossing": {
+          "status": "observed",
+          "lower_seconds": 5.0418846000684425,
+          "upper_seconds": 11.014885900076479,
+          "confirmed_seconds": 17.22754050011281,
+          "left_censored": false
+        }
+      },
+      {
+        "case": "heat_spatial_scale_surrogate",
+        "seed": 83,
+        "final_target_passed": true,
+        "failed_metrics": [],
+        "crossing": {
+          "status": "observed",
+          "lower_seconds": 5.006708800094202,
+          "upper_seconds": 10.870794299989939,
+          "confirmed_seconds": 17.077525700093247,
+          "left_censored": false
+        }
+      }
+    ],
+    "comparison_passed": true,
+    "timing_passed": null,
+    "limitations": "Absolute finite-sample accuracy only; no speedup, continuous error certificate or guarantee for other PDE/data."
+  },
+  "trials": [
+    {
+      "seed": 11,
+      "relative_l2": 0.0008086527348388784,
+      "final_relative_l2": 0.003041996639872046,
+      "worst_time_relative_l2": 0.0034027118448863884,
+      "pde_rmse": 0.0012397993123158813,
+      "initial_rmse": 3.7802658314207416e-08,
+      "coefficient_response_relative_l2": 0.0007127728502296,
+      "boundary_max": 0.0,
+      "training_seconds": 18.26207479997538,
+      "setup_seconds": 0.01572559995111078,
+      "evaluation_seconds": 0.20177530008368194,
+      "trial_wall_seconds": 18.54027280001901,
+      "process_seconds": 20.893263699952513,
+      "closures": 1173.0,
+      "warm_prediction_seconds": 0.0031479999888688326,
+      "prediction_points": 15453,
+      "prediction_batch_size": 2048,
+      "initial_state_sha256": "27ec337ac46b3bc4de656815bf3cfe666053c38fa7853393ffa517e8340e1fba",
+      "final_passed": true
+    },
+    {
+      "seed": 29,
+      "relative_l2": 0.0006346203218813091,
+      "final_relative_l2": 0.004287421785252011,
+      "worst_time_relative_l2": 0.004287421785252011,
+      "pde_rmse": 0.0012574541615322232,
+      "initial_rmse": 3.7802658314207416e-08,
+      "coefficient_response_relative_l2": 0.0012956431689817337,
+      "boundary_max": 0.0,
+      "training_seconds": 17.228610500111245,
+      "setup_seconds": 0.015771100064739585,
+      "evaluation_seconds": 0.20477469998877496,
+      "trial_wall_seconds": 17.510422999970615,
+      "process_seconds": 19.89660720003303,
+      "closures": 1058.0,
+      "warm_prediction_seconds": 0.003163799992762506,
+      "prediction_points": 15453,
+      "prediction_batch_size": 2048,
+      "initial_state_sha256": "44a1b158e27572b88fb3bf410461df4c7c0505f8355aca091b103da1f7338cd1",
+      "final_passed": true
+    },
+    {
+      "seed": 83,
+      "relative_l2": 0.0007011736597926047,
+      "final_relative_l2": 0.001932622774556475,
+      "worst_time_relative_l2": 0.001932622774556475,
+      "pde_rmse": 0.0017404936952516437,
+      "initial_rmse": 3.7802658314207416e-08,
+      "coefficient_response_relative_l2": 0.0009089799231981472,
+      "boundary_max": 0.0,
+      "training_seconds": 17.078545100055635,
+      "setup_seconds": 0.01580999989528209,
+      "evaluation_seconds": 0.2026474999729544,
+      "trial_wall_seconds": 17.359366499935277,
+      "process_seconds": 19.740795299992897,
+      "closures": 1052.0,
+      "warm_prediction_seconds": 0.0031440999591723084,
+      "prediction_points": 15453,
+      "prediction_batch_size": 2048,
+      "initial_state_sha256": "15c2a92de3fcf3ea5f136ab3d0ca3bdc3e332b687eee84b9de8bdb1c7faa5fbc",
+      "final_passed": true
+    }
+  ],
+  "hypotheses_per_snapshot": 9,
+  "independently_initialized_models": 3,
+  "evaluation_state_unchanged": true
+}
