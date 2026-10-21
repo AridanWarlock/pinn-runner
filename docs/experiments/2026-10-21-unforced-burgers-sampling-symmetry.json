@@ -1,0 +1,23 @@
+{
+  "states": 10,
+  "optimizer_steps": 0,
+  "device": "cpu",
+  "dtype": "float64",
+  "identities_passed": 10,
+  "all_states_unchanged": true,
+  "groups": {
+    "nonheat033": {
+      "reflected_objective_ratio_minimum": 1.078609914095354,
+      "reflected_objective_ratio_median": 1.128626200059898,
+      "reflected_objective_ratio_maximum": 1.2111860460970134,
+      "reflected_higher": 5
+    },
+    "nonheat034": {
+      "reflected_objective_ratio_minimum": 1.1732640648078732,
+      "reflected_objective_ratio_median": 1.2568982439894991,
+      "reflected_objective_ratio_maximum": 1.7470011759632957,
+      "reflected_higher": 5
+    }
+  },
+  "scope": "Post-hoc finite-point diagnostic; no training or causal attribution; residual odd part is not generally the residual of the odd field."
+}

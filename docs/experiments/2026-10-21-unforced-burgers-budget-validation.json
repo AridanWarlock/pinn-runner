@@ -63,5 +63,11 @@
     "independent_exact_verifier_passed": true
   },
   "scope": "Current fast checks and CPU diagnostics only; previous numerical CUDA acceptance is not repeated or counted as a new result.",
-  "analysis_scripts_checked": 10
+  "analysis_scripts_checked": 11,
+  "sampling_symmetry_diagnostic": {
+    "states": 10,
+    "identities_passed": 10,
+    "optimizer_steps": 0,
+    "matched_stationarity_objectives": true
+  }
 }
