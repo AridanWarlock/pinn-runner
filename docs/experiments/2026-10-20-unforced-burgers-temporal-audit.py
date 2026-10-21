@@ -15,7 +15,9 @@ from research_tools.evidence import read_bundle  # noqa: E402
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--job-id", choices=("nonheat032", "nonheat033"), required=True)
+    parser.add_argument(
+        "--job-id", choices=("nonheat032", "nonheat033", "nonheat034"), required=True
+    )
     args = parser.parse_args()
     evidence = read_bundle(ROOT / f"numerical-reports/{args.job_id}-compact")
     names = sorted({t["case"] for t in evidence["trials"]})
@@ -81,7 +83,8 @@ foreach ($name in @(__CASES__)) {
         assert abs(row["field_peak_error"] - metrics["worst_time_relative_l2"]) < 1e-12
         assert abs(row["gradient_peak_error"] - metrics["worst_time_gradient_relative_l2"]) < 1e-12
         assert 0 <= row["field_peak_time"] <= 1 and 0 <= row["gradient_peak_time"] <= 1
-    prefix = Path(__file__).with_name(f"2026-10-20-{args.job_id}-unforced-temporal")
+    date = "2026-10-21" if args.job_id == "nonheat034" else "2026-10-20"
+    prefix = Path(__file__).with_name(f"{date}-{args.job_id}-unforced-temporal")
     assert not prefix.with_suffix(".csv").exists() and not prefix.with_suffix(".json").exists()
     with prefix.with_suffix(".csv").open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=list(data["rows"][0]), lineterminator="\n")

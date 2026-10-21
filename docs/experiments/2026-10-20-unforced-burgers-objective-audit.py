@@ -25,11 +25,13 @@ from pinnstorch.training.refinement import FixedObjective  # noqa: E402
 from research_tools.evidence import read_bundle  # noqa: E402
 
 
-def download(job, folder, trials):
+def download(job, folder, trials, final_step):
     commands = []
     for trial in trials:
         name = f"eager-recursive-all-{trial['seed']}"
-        relative = f".gpu-jobs\\{job}\\r\\{trial['case']}\\processes\\{name}\\{name}\\lb-500.pt"
+        relative = (
+            f".gpu-jobs\\{job}\\r\\{trial['case']}\\processes\\{name}\\{name}\\lb-{final_step}.pt"
+        )
         commands.append(f"$paths += '{relative}'")
     command = r"""Set-Location -LiteralPath 'C:\Projects\pinn-runner' -ErrorAction Stop
 if ((Get-Location).Path -ne 'C:\Projects\pinn-runner') { exit 1 }
@@ -71,14 +73,18 @@ ConvertTo-Json -InputObject $rows -Depth 3 -Compress
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--job-id", choices=("nonheat032", "nonheat033"), required=True)
+    parser.add_argument(
+        "--job-id", choices=("nonheat032", "nonheat033", "nonheat034"), required=True
+    )
     args = parser.parse_args()
     torch.set_num_threads(1)
     evidence = read_bundle(ROOT / f"numerical-reports/{args.job_id}-compact")
     m = evidence["manifest"]
     folder = ROOT / f"numerical-reports/{args.job_id}-objective-audit"
     folder.mkdir(exist_ok=False)
-    origin = download(args.job_id, folder, evidence["trials"])
+    origin = download(
+        args.job_id, folder, evidence["trials"], m["report_parameters"]["lbfgs_snapshots"][-1]
+    )
     rows = []
     for index, trial in enumerate(evidence["trials"]):
         case = CASES[trial["case"]]
@@ -89,7 +95,7 @@ def main():
         plan = ConvergencePlan(
             case,
             500,
-            (0, 100, 250, 500),
+            tuple(m["report_parameters"]["lbfgs_snapshots"]),
             m["case_limits"][case.name],
             "hard_initial_dirichlet",
             m["report_parameters"]["points_override"],
@@ -160,7 +166,8 @@ def main():
             )
         assert tensor_fingerprint(objects.model.state_dict()) == before
         rows.append(row)
-    target = Path(__file__).with_name(f"2026-10-20-{args.job_id}-unforced-objective.csv")
+    date = "2026-10-21" if args.job_id == "nonheat034" else "2026-10-20"
+    target = Path(__file__).with_name(f"{date}-{args.job_id}-unforced-objective.csv")
     assert not target.exists()
     with target.open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]), lineterminator="\n")

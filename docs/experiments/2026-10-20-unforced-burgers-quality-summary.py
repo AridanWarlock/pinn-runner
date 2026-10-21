@@ -21,13 +21,17 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle", type=Path, required=True)
     parser.add_argument("--output-prefix", type=Path, required=True)
-    parser.add_argument("--job-id", choices=("nonheat032", "nonheat033"), default="nonheat032")
+    parser.add_argument(
+        "--job-id", choices=("nonheat032", "nonheat033", "nonheat034"), default="nonheat032"
+    )
     args = parser.parse_args()
     cases = (
         ("burgers_unforced_nu010", "burgers_unforced_nu001")
         if args.job_id == "nonheat032"
         else ("burgers_unforced_nu001",)
     )
+    stages = [0, 250, 500, 1000, 2000] if args.job_id == "nonheat034" else [0, 100, 250, 500]
+    date = "2026-10-21" if args.job_id == "nonheat034" else "2026-10-20"
     count = 5 * len(cases)
     e = read_bundle(args.bundle)
     m = e["manifest"]
@@ -40,7 +44,7 @@ def main() -> None:
         1024 if args.job_id == "nonheat032" else 4096
     )
     protocol_commit = e["provenance"]["protocol_commit"]
-    protocol_path = f"docs/experiments/2026-10-20-{args.job_id}-unforced-quality-protocol.json"
+    protocol_path = f"docs/experiments/{date}-{args.job_id}-unforced-quality-protocol.json"
     blob = subprocess.check_output(["git", "show", f"{protocol_commit}:{protocol_path}"], cwd=ROOT)
     assert json.loads(blob) == m
     assert hashlib.sha256(blob).hexdigest() == e["provenance"]["protocol_sha256"]
@@ -71,7 +75,7 @@ def main() -> None:
             assert trial["constraints"] == "hard_initial_dirichlet"
             assert trial["layer_evaluation"] == m["layer_evaluation"]
             assert trial["network"] == m["network"]
-            assert [s["lb_steps"] for s in trial["snapshots"]] == [0, 100, 250, 500]
+            assert [s["lb_steps"] for s in trial["snapshots"]] == stages
             assert trial["problem_source_sha256"] == m["problem_sha256"][case]
             for snap in trial["snapshots"]:
                 metrics = snap["metrics"] | dict(boundary_max=snap["boundary_max"])
@@ -126,7 +130,7 @@ def main() -> None:
                     ),
                     trials=5,
                 )
-                for step in (0, 100, 250, 500)
+                for step in stages
             },
             confirmed_crossings=sum(t["crossing"]["status"] == "observed" for t in trials),
         )
