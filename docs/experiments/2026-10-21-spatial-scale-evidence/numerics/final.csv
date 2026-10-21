@@ -1,0 +1,7 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[11-dtype0],passed,passed,passed,0.2735236998414621
+tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[11-dtype1],passed,passed,passed,0.07519769994542003
+tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[29-dtype0],passed,passed,passed,0.046680300147272646
+tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[29-dtype1],passed,passed,passed,0.06326780014205724
+tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_analytical_field_detects_missing_coefficient_gradient[dtype0],passed,passed,passed,0.012418500147759914
+tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_analytical_field_detects_missing_coefficient_gradient[dtype1],passed,passed,passed,0.0037946001393720508

@@ -1,0 +1,128 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "bc2b8eefeaf76e4c1213feab6d7cfbc971d0735b",
+    "suite": "tests/numerics/test_spatial_scale_surrogate_network.py",
+    "tests": [
+      "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[11-dtype0]",
+      "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[11-dtype1]",
+      "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[29-dtype0]",
+      "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[29-dtype1]",
+      "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_analytical_field_detects_missing_coefficient_gradient[dtype0]",
+      "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_analytical_field_detects_missing_coefficient_gradient[dtype1]"
+    ],
+    "test_sha256": "6c5a020e5fbc695edf09a9f7c9ad8c630f29801b5355429ec662fc1f94008294",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "bc2b8eefeaf76e4c1213feab6d7cfbc971d0735b",
+  "test_sha256": "6c5a020e5fbc695edf09a9f7c9ad8c630f29801b5355429ec662fc1f94008294",
+  "source_unchanged": true,
+  "test_raw_sha256": "0d9387c8e84dd5e6db809098a82b210bd7a657609c05922dbdf1d8ae0201c0c0",
+  "test_raw_sha256_after": "0d9387c8e84dd5e6db809098a82b210bd7a657609c05922dbdf1d8ae0201c0c0",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[11-dtype0]",
+    "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[11-dtype1]",
+    "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[29-dtype0]",
+    "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[29-dtype1]",
+    "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_analytical_field_detects_missing_coefficient_gradient[dtype0]",
+    "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_analytical_field_detects_missing_coefficient_gradient[dtype1]"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[11-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.2735236998414621
+    },
+    {
+      "nodeid": "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[11-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.07519769994542003
+    },
+    {
+      "nodeid": "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[29-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.046680300147272646
+    },
+    {
+      "nodeid": "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_operator_and_every_weight[29-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.06326780014205724
+    },
+    {
+      "nodeid": "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_analytical_field_detects_missing_coefficient_gradient[dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.012418500147759914
+    },
+    {
+      "nodeid": "tests/numerics/test_spatial_scale_surrogate_network.py::test_spatial_scale_analytical_field_detects_missing_coefficient_gradient[dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.0037946001393720508
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "015b131408645cf6b3b8c8e2d222fb8819987fff5e05c6a6b280c87f853c4f54",
+    "pytest-results.json": "07a8130598d6c1025703634d116c74c3e02b21be8354ef156a6459438683429c"
+  },
+  "provenance": {
+    "protocol_commit": "88fb50f82bbda96fe5300ba063597f602a58e1bb",
+    "protocol_sha256": "6ca78a74052be11862fcf08944c84e2c52df1ba7498d48a63f1741484619ea48"
+  }
+}
