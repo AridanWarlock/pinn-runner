@@ -1,0 +1,2 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_quadratic_shape_runner.py::test_quadratic_shape_public_lifecycle,passed,passed,passed,15.026349700056016

@@ -1,0 +1,106 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "e50c52e77b369dc8cf28392a19574ce18a064e5b",
+    "suite": "tests/numerics/test_quadratic_clock_prototype.py",
+    "tests": [
+      "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[11-dtype0]",
+      "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[11-dtype1]",
+      "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[29-dtype0]",
+      "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[29-dtype1]"
+    ],
+    "test_sha256": "2b0b8eee473368e0a8d34f4e1c65873a823791e031e5a709319adf98db8d6362",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "e50c52e77b369dc8cf28392a19574ce18a064e5b",
+  "test_sha256": "2b0b8eee473368e0a8d34f4e1c65873a823791e031e5a709319adf98db8d6362",
+  "source_unchanged": true,
+  "test_raw_sha256": "e963d325fba58cd50a6ca6b3e1bd5de02bd18d9b1baf943ae74ad34b2e58af2b",
+  "test_raw_sha256_after": "e963d325fba58cd50a6ca6b3e1bd5de02bd18d9b1baf943ae74ad34b2e58af2b",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[11-dtype0]",
+    "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[11-dtype1]",
+    "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[29-dtype0]",
+    "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[29-dtype1]"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[11-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.18575400009285659
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[11-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.062204400077462196
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[29-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.02318580006249249
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_clock_prototype.py::test_clock_chain_rule_and_all_weights[29-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.05395259999204427
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "07236f3453521b027524531fa649159e9be91a540e79bb1d81b6eb4fabb9731a",
+    "pytest-results.json": "591d955e559e5e19933649c2eda3061479ba3cca2ebfe13d0432a9caa8256ca4"
+  },
+  "provenance": {
+    "protocol_commit": "d0635364e70a23e8e2a0023c0194f385777cb592",
+    "protocol_sha256": "37cafddb615fb3dfa0502f340d7ba9af9da6dd915476e8281972fbcd9aab7107"
+  }
+}

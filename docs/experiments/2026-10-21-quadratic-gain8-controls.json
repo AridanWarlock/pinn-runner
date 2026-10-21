@@ -1,0 +1,66 @@
+{
+  "kind": "separate_representation_studies",
+  "protocol_differences": [
+    "problem_sha256",
+    "revision"
+  ],
+  "physical_initial_fields_equal": false,
+  "physical_initial_note": "Same raw weights; gain changes the physical initial correction",
+  "timing_comparable": false,
+  "results": [
+    {
+      "seed": 11,
+      "equal_controls": {
+        "initial_state_sha256": true,
+        "initial_parameters_sha256": true,
+        "fixed_objective_sha256": true
+      },
+      "final_metric_ratios": {
+        "relative_l2": 0.9445863543041206,
+        "final_relative_l2": 2.383635603516168,
+        "worst_time_relative_l2": 2.383635603516168,
+        "dx_relative_l2": 0.6942613773516808,
+        "flux_relative_l2": 0.6765577803867139,
+        "pde_rmse": 0.6473864013665038,
+        "initial_rmse": 1.0,
+        "coefficient_response_relative_l2": 1.0794538169334424
+      }
+    },
+    {
+      "seed": 29,
+      "equal_controls": {
+        "initial_state_sha256": true,
+        "initial_parameters_sha256": true,
+        "fixed_objective_sha256": true
+      },
+      "final_metric_ratios": {
+        "relative_l2": 0.4607268056170508,
+        "final_relative_l2": 1.1205788880555967,
+        "worst_time_relative_l2": 1.3879348440921422,
+        "dx_relative_l2": 0.6980244458332904,
+        "flux_relative_l2": 0.6866598714317923,
+        "pde_rmse": 0.7212115121227568,
+        "initial_rmse": 1.0,
+        "coefficient_response_relative_l2": 0.5682313514511684
+      }
+    },
+    {
+      "seed": 83,
+      "equal_controls": {
+        "initial_state_sha256": true,
+        "initial_parameters_sha256": true,
+        "fixed_objective_sha256": true
+      },
+      "final_metric_ratios": {
+        "relative_l2": 1.8373424804032996,
+        "final_relative_l2": 1.0491515659859179,
+        "worst_time_relative_l2": 1.0491515659859179,
+        "dx_relative_l2": 1.2999733565607934,
+        "flux_relative_l2": 0.8335827651325384,
+        "pde_rmse": 0.5617358409819998,
+        "initial_rmse": 1.0,
+        "coefficient_response_relative_l2": 2.067622853896575
+      }
+    }
+  ]
+}

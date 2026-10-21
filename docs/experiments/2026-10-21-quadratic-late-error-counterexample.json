@@ -1,0 +1,16 @@
+{
+  "kind": "analytical_counterexample_not_trained_network",
+  "residual_l2_exact": 0.018,
+  "residual_l2_quadrature": 0.01800000000000004,
+  "coefficient_response_error": 0.0,
+  "maxima": {
+    "relative_l2": 0.013652621011732756,
+    "final_relative_l2": 0.3178341928728826,
+    "worst_time_relative_l2": 0.3178341928728826,
+    "dx_relative_l2": 0.013552478576209564,
+    "flux_relative_l2": 0.012158963171512866,
+    "pde_rmse": 0.018548889220024865,
+    "initial_rmse": 0.0,
+    "boundary_max": 2.7814570890894093e-18
+  }
+}

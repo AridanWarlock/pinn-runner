@@ -1,0 +1,73 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "011535f52a5a986b0af7addc8e30cd1412f9cfd9",
+    "suite": "tests/integration/test_quadratic_shape_runner.py",
+    "tests": [
+      "tests/integration/test_quadratic_shape_runner.py::test_quadratic_shape_public_lifecycle"
+    ],
+    "test_sha256": "23ee7be88fed06f90186a5e01c36e98f45114e98824f395bfe4ae20eb1357e58",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "011535f52a5a986b0af7addc8e30cd1412f9cfd9",
+  "test_sha256": "23ee7be88fed06f90186a5e01c36e98f45114e98824f395bfe4ae20eb1357e58",
+  "source_unchanged": true,
+  "test_raw_sha256": "f58c5eeda0b048b4990ce62cb23d77bf52f888d24793fb7b478caf5e35e52908",
+  "test_raw_sha256_after": "f58c5eeda0b048b4990ce62cb23d77bf52f888d24793fb7b478caf5e35e52908",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/integration/test_quadratic_shape_runner.py::test_quadratic_shape_public_lifecycle"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/integration/test_quadratic_shape_runner.py::test_quadratic_shape_public_lifecycle",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 15.026349700056016
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "083d6b066767c2b94c64097103b9883b74c5257ef86f10f993df4e7db031a6c7",
+    "pytest-results.json": "a932858946e6e1647a27a9917f7601a54fba83c89e7d3e2e1513ed8a7f56d25d"
+  },
+  "provenance": {
+    "protocol_commit": "a9cd8063b627fdf7076ffe832d29157b65224499",
+    "protocol_sha256": "b148871c1cd2391e11f2db7c634b446c1a6c7624a766f5edd8b5f39f342af627"
+  }
+}

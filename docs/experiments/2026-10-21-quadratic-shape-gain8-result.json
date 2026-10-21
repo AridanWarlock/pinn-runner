@@ -1,0 +1,196 @@
+{
+  "kind": "fixed_step_quality_shared_pc",
+  "revision": "011535f52a5a986b0af7addc8e30cd1412f9cfd9",
+  "trials": 3,
+  "passed": 0,
+  "timing_comparable": false,
+  "timing_reason": "Пользователь параллельно использует Windows ПК; время только диагностическое",
+  "limits": {
+    "relative_l2": 0.02,
+    "final_relative_l2": 0.03,
+    "worst_time_relative_l2": 0.03,
+    "pde_rmse": 0.02,
+    "coefficient_response_relative_l2": 0.05,
+    "dx_relative_l2": 0.05,
+    "flux_relative_l2": 0.05,
+    "initial_rmse": 1e-06,
+    "boundary_max": 1e-06
+  },
+  "results": [
+    {
+      "seed": 11,
+      "passed": false,
+      "failed_metrics": [
+        "final_relative_l2",
+        "worst_time_relative_l2",
+        "pde_rmse",
+        "coefficient_response_relative_l2"
+      ],
+      "final_metrics": {
+        "relative_l2": 0.019461380071394564,
+        "final_relative_l2": 0.16025961530933405,
+        "worst_time_relative_l2": 0.16025961530933405,
+        "dx_relative_l2": 0.03158160516392025,
+        "flux_relative_l2": 0.03476814179758398,
+        "pde_rmse": 0.16880632936954498,
+        "initial_rmse": 7.782710366327393e-08,
+        "coefficient_response_relative_l2": 0.0848092224594594,
+        "boundary_max": 6.6814973767022915e-22
+      },
+      "worst_hypotheses": {
+        "relative_l2": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.019461380071394564,
+          "worst_time": 1.0
+        },
+        "worst_time_relative_l2": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.16025961530933405,
+          "worst_time": 1.0
+        },
+        "dx_relative_l2": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.03158160516392025,
+          "worst_time": 1.0
+        },
+        "flux_relative_l2": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.03476814179758398,
+          "worst_time": 1.0
+        },
+        "pde_rmse": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.16880632936954498,
+          "worst_time": 1.0
+        }
+      }
+    },
+    {
+      "seed": 29,
+      "passed": false,
+      "failed_metrics": [
+        "final_relative_l2",
+        "worst_time_relative_l2",
+        "pde_rmse",
+        "coefficient_response_relative_l2"
+      ],
+      "final_metrics": {
+        "relative_l2": 0.017598027243564452,
+        "final_relative_l2": 0.11646013125377559,
+        "worst_time_relative_l2": 0.14424604625126566,
+        "dx_relative_l2": 0.03979842826762514,
+        "flux_relative_l2": 0.03744578870286998,
+        "pde_rmse": 0.1615780144929886,
+        "initial_rmse": 7.782710366327393e-08,
+        "coefficient_response_relative_l2": 0.06387492129568913,
+        "boundary_max": 6.6814973767022915e-22
+      },
+      "worst_hypotheses": {
+        "relative_l2": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.017598027243564452,
+          "worst_time": 0.93
+        },
+        "worst_time_relative_l2": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.14424604625126566,
+          "worst_time": 0.93
+        },
+        "dx_relative_l2": {
+          "a": 0.05,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.03979842826762514,
+          "worst_time": 1.0
+        },
+        "flux_relative_l2": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.03744578870286998,
+          "worst_time": 0.93
+        },
+        "pde_rmse": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.1615780144929886,
+          "worst_time": 0.93
+        }
+      }
+    },
+    {
+      "seed": 83,
+      "passed": false,
+      "failed_metrics": [
+        "relative_l2",
+        "final_relative_l2",
+        "worst_time_relative_l2",
+        "pde_rmse",
+        "coefficient_response_relative_l2"
+      ],
+      "final_metrics": {
+        "relative_l2": 0.038642001654306306,
+        "final_relative_l2": 0.08433988852729073,
+        "worst_time_relative_l2": 0.08433988852729073,
+        "dx_relative_l2": 0.04920869919635231,
+        "flux_relative_l2": 0.04436767392237154,
+        "pde_rmse": 0.17102724313735962,
+        "initial_rmse": 7.782710366327393e-08,
+        "coefficient_response_relative_l2": 0.15699317138328034,
+        "boundary_max": 6.6814973767022915e-22
+      },
+      "worst_hypotheses": {
+        "relative_l2": {
+          "a": 0.05,
+          "b": 2.0,
+          "split": "training_corner",
+          "value": 0.038642001654306306,
+          "worst_time": 1.0
+        },
+        "worst_time_relative_l2": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.08433988852729073,
+          "worst_time": 1.0
+        },
+        "dx_relative_l2": {
+          "a": 0.05,
+          "b": 2.0,
+          "split": "training_corner",
+          "value": 0.04920869919635231,
+          "worst_time": 1.0
+        },
+        "flux_relative_l2": {
+          "a": 0.05,
+          "b": 2.0,
+          "split": "training_corner",
+          "value": 0.04436767392237154,
+          "worst_time": 1.0
+        },
+        "pde_rmse": {
+          "a": 0.15,
+          "b": 1.0,
+          "split": "training_corner",
+          "value": 0.17102724313735962,
+          "worst_time": 1.0
+        }
+      }
+    }
+  ]
+}
