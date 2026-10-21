@@ -130,6 +130,7 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
                 "burgers",
                 "burgers_unforced",
                 "constant_surrogate",
+                "spatial_scale_surrogate",
             ):
                 raise ValueError("Absolute quality requires a registered analytical case")
             import hashlib
@@ -143,9 +144,13 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
             ):
                 raise ValueError("Problem source differs from registered case")
             supported |= {"worst_time_relative_l2"}
-            if spec.family == "constant_surrogate":
+            if spec.family in ("constant_surrogate", "spatial_scale_surrogate"):
                 supported |= {"coefficient_response_relative_l2"}
-                reference = Path(__file__).resolve().parents[1] / "benchmarks/surrogate_quality.py"
+                reference = Path(__file__).resolve().parents[1] / (
+                    "benchmarks/spatial_surrogate_quality.py"
+                    if spec.family == "spatial_scale_surrogate"
+                    else "benchmarks/surrogate_quality.py"
+                )
                 if (
                     hashlib.sha256(reference.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
                     != manifest["hypothesis_evaluation"]["reference_sha256"]

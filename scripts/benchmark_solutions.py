@@ -135,7 +135,11 @@ def arguments() -> tuple[argparse.Namespace, int]:
     parser.add_argument(
         "--cases",
         nargs="+",
-        choices=tuple(name for name in CASES if name != "heat_constant_surrogate"),
+        choices=tuple(
+            name
+            for name in CASES
+            if name not in ("heat_constant_surrogate", "heat_spatial_scale_surrogate")
+        ),
         default=["heat2d", "advection", "burgers"],
     )
     parser.add_argument("--seeds", nargs="+", type=int, default=[1234, 4321])

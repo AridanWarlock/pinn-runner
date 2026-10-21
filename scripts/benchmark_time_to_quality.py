@@ -125,7 +125,10 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
             limits[name] = getattr(args, name)
     if args.case in UNFORCED_VISCOSITIES and not UNFORCED_METRICS <= limits.keys():
         parser.error("Unforced Burgers requires gradient, regional and grid-refinement limits")
-    if args.case == "heat_constant_surrogate" and "coefficient_response_relative_l2" not in limits:
+    if (
+        args.case in ("heat_constant_surrogate", "heat_spatial_scale_surrogate")
+        and "coefficient_response_relative_l2" not in limits
+    ):
         parser.error("Shared surrogate requires coefficient-response limit")
     plan = ConvergencePlan(
         CASES[args.case],

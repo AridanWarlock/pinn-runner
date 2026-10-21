@@ -200,14 +200,15 @@ class SnapshotTraining:
 class SnapshotEvaluation:
     def __init__(self, plan: ConvergencePlan, factory: SolverFactory) -> None:
         self.plan, self.factory = plan, factory
-        if plan.case.name == "heat_constant_surrogate":
+        if plan.case.name in ("heat_constant_surrogate", "heat_spatial_scale_surrogate"):
             domain = factory.settings.domain
+            parameter = "a" if plan.case.name == "heat_spatial_scale_surrogate" else "k"
             if (
                 tuple(domain.space) != ("x",)
                 or tuple(domain.space["x"].interval) != (0, 1)
                 or tuple(domain.time.interval) != (0, 1)
-                or tuple(domain.parameters) != ("k",)
-                or tuple(domain.parameters["k"].interval) != (0.05, 0.25)
+                or tuple(domain.parameters) != (parameter,)
+                or tuple(domain.parameters[parameter].interval) != (0.05, 0.25)
             ):
                 raise ValueError("Surrogate evaluation requires registered x/t/k intervals")
         self.objects = factory.build(predicting=True)
@@ -240,6 +241,10 @@ class SnapshotEvaluation:
 
     def evaluate(self, checkpoint: Path) -> tuple[dict[str, float], dict[str, Any]]:
         self.model.load_state_dict(load_checkpoint(checkpoint, map_location=self.plan.device))
+        if self.plan.case.name == "heat_spatial_scale_surrogate":
+            from .spatial_surrogate_quality import evaluate as evaluate_spatial
+
+            return evaluate_spatial(self.model, self.factory.adapter, self.plan.device)
         if self.plan.case.name == "heat_constant_surrogate":
             from .surrogate_quality import evaluate
 

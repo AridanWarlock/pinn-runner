@@ -25,6 +25,11 @@ AGGREGATES = {
 
 def validate_snapshots(raw: Json, compact: list[Json], manifest: Json) -> None:
     identity = manifest["hypothesis_evaluation"]
+    parameter = identity.get("parameter", "k")
+    fields = (FIELDS - {"k", "ignored_k_relative_l2"}) | {
+        parameter,
+        f"ignored_{parameter}_relative_l2",
+    }
     for original, snapshot in zip(raw["snapshots"], compact):
         if (
             original.get("hypothesis_evaluation") != identity
@@ -34,11 +39,12 @@ def validate_snapshots(raw: Json, compact: list[Json], manifest: Json) -> None:
         rows = original.get("hypotheses")
         if (
             not isinstance(rows, list)
-            or [object_value(r, "hypothesis").get("k") for r in rows] != identity["hypotheses"]
+            or [object_value(r, "hypothesis").get(parameter) for r in rows]
+            != identity["hypotheses"]
         ):
             raise ValueError("Missing, reordered or duplicate hypotheses")
         for row in rows:
-            if set(row) != FIELDS:
+            if set(row) != fields:
                 raise ValueError("Incomplete per-hypothesis metrics")
             for key, value in row.items():
                 number(value, key)

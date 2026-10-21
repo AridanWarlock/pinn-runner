@@ -198,18 +198,19 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
             raise ValueError("Global/final/PDE limits required")
         for key, value in values.items():
             number(value, key, positive=True)
-    surrogate = "heat_constant_surrogate" in case_limits
-    if surrogate or "hypothesis_evaluation" in manifest:
-        from benchmarks.catalog import CONSTANT_EVALUATION
+    from benchmarks.catalog import SURROGATE_EVALUATIONS
 
+    surrogate = bool(set(case_limits) & SURROGATE_EVALUATIONS.keys())
+    if surrogate or "hypothesis_evaluation" in manifest:
         evaluation = object_value(manifest.get("hypothesis_evaluation"), "hypothesis_evaluation")
         if (
             not absolute
-            or set(case_limits) != {"heat_constant_surrogate"}
+            or len(case_limits) != 1
+            or next(iter(case_limits)) not in SURROGATE_EVALUATIONS
             or json.dumps(
                 {k: v for k, v in evaluation.items() if k != "reference_sha256"}, sort_keys=True
             )
-            != json.dumps(CONSTANT_EVALUATION, sort_keys=True)
+            != json.dumps(SURROGATE_EVALUATIONS[next(iter(case_limits))], sort_keys=True)
             or not isinstance(evaluation.get("reference_sha256"), str)
             or not re.fullmatch("[0-9a-f]{64}", evaluation["reference_sha256"])
         ):

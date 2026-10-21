@@ -322,8 +322,24 @@ class ConstantSurrogateCase(BenchmarkCase):
         return np.isclose(spatial["x"][:, 0], 0) | np.isclose(spatial["x"][:, 0], 1)
 
 
+class SpatialScaleSurrogateCase(ConstantSurrogateCase):
+    """One known spatial shape, conditioned on its whole-function amplitude."""
+
+    def config(
+        self, device: str, steps: int, seed: int, evaluating: bool = False
+    ) -> dict[str, Any]:
+        config = super().config(device, steps, seed, evaluating)
+        config["domain"]["parameters"] = {"a": {"interval": [0.05, 0.25], "points": 3}}
+        return config
+
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        x = spatial["x"]
+        return cast(Array, 4 * x * (1 - x) * np.exp(-12 * spatial["a"] * time))
+
+
 FACTORIES: dict[Family, type[BenchmarkCase]] = {
     "constant_surrogate": ConstantSurrogateCase,
+    "spatial_scale_surrogate": SpatialScaleSurrogateCase,
     "heat": HeatCase,
     "dirichlet": DirichletHeatCase,
     "neumann_interval": NeumannHeatCase,

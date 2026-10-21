@@ -124,8 +124,11 @@ SPATIAL_SCALE_EXPECTED = [
         for dtype in (0, 1)
     ],
 ]
+SPATIAL_LIFECYCLE_SUITE = "tests/integration/test_spatial_surrogate_runner.py"
+SPATIAL_LIFECYCLE_EXPECTED = [SPATIAL_LIFECYCLE_SUITE + "::test_spatial_scale_public_lifecycle"]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    SPATIAL_LIFECYCLE_SUITE: SPATIAL_LIFECYCLE_EXPECTED,
     SPATIAL_SCALE_SUITE: SPATIAL_SCALE_EXPECTED,
     CONSTANT_SUITE: CONSTANT_EXPECTED,
     CONSTANT_LIFECYCLE_SUITE: CONSTANT_LIFECYCLE_EXPECTED,
@@ -229,7 +232,7 @@ def plan(manifest: Json) -> Json:
             training=False,
             performance_measurement=False,
         )
-    if manifest["suite"] == CONSTANT_LIFECYCLE_SUITE:
+    if manifest["suite"] in (CONSTANT_LIFECYCLE_SUITE, SPATIAL_LIFECYCLE_SUITE):
         return dict(
             contract=1,
             kind="numerical-acceptance-plan",
@@ -380,6 +383,7 @@ def compare(evidence: Json) -> Json:
                 NONHEAT_LIFECYCLE_SUITE,
                 UNFORCED_LIFECYCLE_SUITE,
                 CONSTANT_LIFECYCLE_SUITE,
+                SPATIAL_LIFECYCLE_SUITE,
             )
             else "Existing numerical tests only; no training or speed claim"
         ),

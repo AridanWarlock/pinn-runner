@@ -121,6 +121,8 @@ def analytical_tensor(case: BenchmarkCase, coordinates: Coordinates) -> torch.Te
         field = 1 + x * time + torch.exp(-0.1 * mu**2 * time) * torch.cos(mu * (x - 0.5))
     elif isinstance(case, NeumannHeatCase):
         field = 1 + x * time + torch.exp(-0.1 * torch.pi**2 * time) * torch.cos(torch.pi * x)
+    elif case.name == "heat_spatial_scale_surrogate":
+        field = 4 * x * (1 - x) * torch.exp(-12 * coordinates.parameters["a"] * time)
     elif case.name == "heat_constant_surrogate":
         field = torch.sin(torch.pi * x) * torch.exp(
             -(torch.pi**2) * coordinates.parameters["k"] * time
@@ -177,6 +179,12 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(
         if name == "heat_constant_surrogate"
         else {}
     )
+    if name == "heat_spatial_scale_surrogate":
+        parameters = {
+            "a": (
+                0.05 + 0.2 * torch.rand((17, 1), dtype=torch.float64, generator=generator)
+            ).requires_grad_()
+        }
     coordinates = Coordinates(dict(zip(("x", "y", "z"), columns[:-1])), columns[-1], parameters)
     time = coordinates.t
     field = analytical_tensor(case, coordinates)

@@ -20,6 +20,7 @@ Family = Literal[
     "burgers_unforced",
     "conductivity",
     "constant_surrogate",
+    "spatial_scale_surrogate",
 ]
 CONSTRAINTS = ("soft", "hard_initial_dirichlet", "hard_initial_robin")
 EXECUTIONS = ("eager", "product_rule", "robin_batch", "robin_grouped", "neumann_analytic")
@@ -47,6 +48,7 @@ class CaseSpec:
             "burgers",
             "burgers_unforced",
             "constant_surrogate",
+            "spatial_scale_surrogate",
         )
 
     @property
@@ -67,6 +69,7 @@ class CaseSpec:
                 "advection",
                 "burgers_unforced",
                 "constant_surrogate",
+                "spatial_scale_surrogate",
             ):
                 kind = "dirichlet"
             elif self.family in ("robin_interval", "robin_box") or (
@@ -93,6 +96,18 @@ CONSTANT_EVALUATION = dict(
     aggregation="worst_hypothesis",
 )
 
+SPATIAL_SCALE_EVALUATION = {
+    **{key: value for key, value in CONSTANT_EVALUATION.items() if key != "ignored_k"},
+    "parameter": "a",
+    "ignored_a": 0.15,
+    "coefficient_profile": "a*(1+2*x*(1-x))",
+    "initial_field": "4*x*(1-x)",
+}
+SURROGATE_EVALUATIONS = {
+    "heat_constant_surrogate": CONSTANT_EVALUATION,
+    "heat_spatial_scale_surrogate": SPATIAL_SCALE_EVALUATION,
+}
+
 UNFORCED_EVALUATION = dict(
     coarse_grid=[801, 201],
     fine_grid=[1601, 401],
@@ -115,6 +130,14 @@ UNFORCED_METRICS = {
 UNFORCED_VISCOSITIES = {"burgers_unforced_nu010": 0.1, "burgers_unforced_nu001": 0.01}
 
 SPECS = (
+    CaseSpec(
+        "heat_spatial_scale_surrogate",
+        "spatial_scale_surrogate",
+        1,
+        (16, 101),
+        time_interval=(0, 1),
+        time_counts=(11, 51),
+    ),
     CaseSpec(
         "heat_constant_surrogate",
         "constant_surrogate",
