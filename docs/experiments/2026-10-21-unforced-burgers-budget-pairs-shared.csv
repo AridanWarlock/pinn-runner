@@ -1,0 +1,16 @@
+seed,lb_steps,maximum_difference_over_goal,all_nine_metrics_equal
+11,0,0.0,True
+11,250,0.0,True
+11,500,0.0,True
+29,0,0.0,True
+29,250,0.0,True
+29,500,0.0,True
+83,0,0.0,True
+83,250,0.0,True
+83,500,0.0,True
+271,0,0.0,True
+271,250,0.0,True
+271,500,0.0,True
+997,0,0.0,True
+997,250,0.0,True
+997,500,0.0,True

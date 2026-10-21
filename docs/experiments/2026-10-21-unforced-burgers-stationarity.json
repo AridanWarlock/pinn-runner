@@ -1,0 +1,10 @@
+{
+  "states": 10,
+  "optimizer_steps": 0,
+  "parameters": 2241,
+  "finite_difference_controls": 20,
+  "passed_controls": 20,
+  "all_states_unchanged": true,
+  "protocol_sha256": "c12133938c4a112ed694eb611f419b2fb2d213697e16256f775064e6d5173035",
+  "scope": "CPU FP32/FP64 diagnostics; no exact CUDA stopping reconstruction or capacity proof."
+}

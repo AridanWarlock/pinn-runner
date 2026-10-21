@@ -1,0 +1,31 @@
+{
+  "c": 1,
+  "p": 12,
+  "epsilon": 0.4,
+  "viscosity": 0.01,
+  "optimizer_steps": 0,
+  "exploratory_candidates": 25,
+  "selected_after_exploration": true,
+  "quadrature_orders": [
+    64,
+    128
+  ],
+  "quadrature_absolute_rms_difference": 8.881784197001252e-16,
+  "counterexample_confirmed": true,
+  "maximum_identity_defect": 1.1622647289044608e-16,
+  "autograd_maximum_absolute_error": 2.220446049250313e-16,
+  "autograd_passed": true,
+  "finite_difference_controls": [
+    {
+      "h": 0.001,
+      "maximum_absolute_error": 9.102202325195208e-11,
+      "passed": true
+    },
+    {
+      "h": 0.0005,
+      "maximum_absolute_error": 1.953259776144023e-11,
+      "passed": true
+    }
+  ],
+  "scope": "Constructive same-IC/BC smooth example; no PINN training, not a counterexample to all registered quality goals or an interval certificate."
+}

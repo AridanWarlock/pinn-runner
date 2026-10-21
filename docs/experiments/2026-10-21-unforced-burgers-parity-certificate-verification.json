@@ -1,0 +1,12 @@
+{
+  "independent_polynomial_operator": true,
+  "exact_laurent_coefficients_matched": 28,
+  "fourth_coefficient_matched": true,
+  "machin_bounds_recomputed": true,
+  "outward_bounds_verified": true,
+  "negative_difference_verified": true,
+  "uses_sympy": false,
+  "uses_quadrature": false,
+  "optimizer_steps": 0,
+  "scope": "Independent exact verification of the explicit counterexample only."
+}

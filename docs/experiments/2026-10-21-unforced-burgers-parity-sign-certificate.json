@@ -1,0 +1,24 @@
+{
+  "method": "Exact polynomial integration and rational outward bounds; Machin identity with alternating arctangent series",
+  "arctangent_terms": 100,
+  "machin_denominators": [
+    5,
+    239
+  ],
+  "q_bounds": {
+    "lower_numerator": -122299964955,
+    "upper_numerator": -122299964954,
+    "denominator": 1000000000000
+  },
+  "raw_minus_projected_squared_residual_bounds": {
+    "lower_numerator": -11520700484,
+    "upper_numerator": -11520700483,
+    "denominator": 1000000000000
+  },
+  "fourth_coefficient_numerator": 39614081257132168796771975168,
+  "fourth_coefficient_denominator": 126020062354881686956589727375,
+  "laurent_terms": 28,
+  "projection_worsens_proved": true,
+  "optimizer_steps": 0,
+  "scope": "Exact sign for this explicit analytic example only; not a certificate for trained PINNs, quadrature routines or registered quality."
+}

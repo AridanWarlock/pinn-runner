@@ -1,0 +1,13 @@
+{
+  "models": 4,
+  "optimizer_steps": 0,
+  "device": "cpu",
+  "physical_passed": 4,
+  "gradient_passed": 4,
+  "bias_controls_passed": 4,
+  "negative_controls_passed": 4,
+  "finite_differences_passed": 4,
+  "all_states_unchanged": true,
+  "protocol_sha256": "2ce6a66ae21da4ca95666a53eb12b7b80229aef6382b0ef69a69e96402e96da5",
+  "scope": "CPU mathematical prototype only; no public representation, CUDA validation or quality training."
+}

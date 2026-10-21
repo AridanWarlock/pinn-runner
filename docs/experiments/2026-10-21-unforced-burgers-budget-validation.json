@@ -1,0 +1,67 @@
+{
+  "kind": "unforced-burgers-budget-validation",
+  "source_revision": "d57bf9a06e432efc64eb0cf009204a884f5341c9",
+  "protocol_commit": "9a1d2283152742c2d7b59c7226f8460f80933cea",
+  "quality": {
+    "trials": 5,
+    "snapshots": 25,
+    "passed": 0,
+    "comparison_passed": false
+  },
+  "new_fast_check": {
+    "command": ".venv/bin/python scripts/check.py",
+    "passed": 944,
+    "deselected_e2e": 66,
+    "pytest_seconds": 21.08,
+    "ruff": true,
+    "formatted_files": 267,
+    "mypy_files": 138
+  },
+  "full_check_repeated": false,
+  "previous_physics_validation": "2026-10-20-unforced-burgers-run-validation.json",
+  "analysis_helpers_ruff": true,
+  "backward_summary_replay": {
+    "files": 6,
+    "byte_identical": true
+  },
+  "actual_child_cli_round_trip": true,
+  "cpu_diagnostic": {
+    "device": "cpu",
+    "python": "3.10.20",
+    "torch": "2.1.0",
+    "numpy": "1.26.4",
+    "optimizer_steps": 0,
+    "max_cpu_cuda_rms_absolute_difference": 1.2327728541716015e-07
+  },
+  "stationarity_controls": {
+    "states": 10,
+    "parameters": 2241,
+    "finite_differences": 20,
+    "passed": 20
+  },
+  "parity_controls": {
+    "states": 10,
+    "orthogonality_passed": 10,
+    "projected_pde_controls": 20,
+    "passed": 20
+  },
+  "odd_lifting_prototype": {
+    "models": 4,
+    "gradient_controls_passed": 4,
+    "finite_differences_passed": 4,
+    "negative_controls_passed": 4,
+    "cuda_validated": false,
+    "public_mode_implemented": false
+  },
+  "counterexample": {
+    "exploratory_candidates": 25,
+    "quadrature_orders": [
+      64,
+      128
+    ],
+    "exact_rational_sign_certificate": true,
+    "independent_exact_verifier_passed": true
+  },
+  "scope": "Current fast checks and CPU diagnostics only; previous numerical CUDA acceptance is not repeated or counted as a new result.",
+  "analysis_scripts_checked": 10
+}

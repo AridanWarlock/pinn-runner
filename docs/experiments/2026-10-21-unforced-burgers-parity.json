@@ -1,0 +1,15 @@
+{
+  "states": 10,
+  "optimizer_steps": 0,
+  "device": "cpu",
+  "dtype": "float64",
+  "grid": [
+    1601,
+    401
+  ],
+  "orthogonality_passed": 10,
+  "projection_controls_passed": 20,
+  "states_unchanged": true,
+  "protocol_sha256": "d286caba3f7f30324a7b8cbeb7d7308ce51fad361ff05300079708cfb431665c",
+  "scope": "Post-hoc symmetry diagnostics; projected predictions are a different method and do not replace registered quality outcomes."
+}
