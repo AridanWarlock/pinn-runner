@@ -1,0 +1,5 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[11-dtype0],passed,passed,passed,0.25045950000640005
+tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[11-dtype1],passed,passed,passed,0.08508280001115054
+tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[29-dtype0],passed,passed,passed,0.05602980009280145
+tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[29-dtype1],passed,passed,passed,0.07273070013616234

@@ -1,0 +1,3 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_function_code_runner.py::test_function_code_public_lifecycle[True],passed,passed,passed,14.932471499894746
+tests/integration/test_function_code_runner.py::test_function_code_public_lifecycle[False],passed,passed,passed,14.847622000030242

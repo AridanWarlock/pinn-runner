@@ -1,0 +1,84 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "f71bc18377942dfe84e066c1b8620945c56d140b",
+    "suite": "tests/integration/test_function_code_runner.py",
+    "tests": [
+      "tests/integration/test_function_code_runner.py::test_function_code_public_lifecycle[True]",
+      "tests/integration/test_function_code_runner.py::test_function_code_public_lifecycle[False]"
+    ],
+    "test_sha256": "4c5f4e5258e3eed19c580f7032f5e4bdfc82aff5d47e943b20ff79ebf8b61997",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "f71bc18377942dfe84e066c1b8620945c56d140b",
+  "test_sha256": "4c5f4e5258e3eed19c580f7032f5e4bdfc82aff5d47e943b20ff79ebf8b61997",
+  "source_unchanged": true,
+  "test_raw_sha256": "f7354af133074095e0626b41a551adde1489ab7f1ea20c94117cfbc8bbbfb0d2",
+  "test_raw_sha256_after": "f7354af133074095e0626b41a551adde1489ab7f1ea20c94117cfbc8bbbfb0d2",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/integration/test_function_code_runner.py::test_function_code_public_lifecycle[True]",
+    "tests/integration/test_function_code_runner.py::test_function_code_public_lifecycle[False]"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/integration/test_function_code_runner.py::test_function_code_public_lifecycle[True]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 14.932471499894746
+    },
+    {
+      "nodeid": "tests/integration/test_function_code_runner.py::test_function_code_public_lifecycle[False]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 14.847622000030242
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "e6b59427ec03b4d84da80475d106a9784a58f5dddb93964674d85bd395a5ccb8",
+    "pytest-results.json": "09c967ea303f46600fd70af0f7e564dfc5a364c37cc829ab4e6dc5ce38352ba7"
+  },
+  "provenance": {
+    "protocol_commit": "2a09822cbe191cf31ddc02705cdb594974c36f32",
+    "protocol_sha256": "3fc6c3160e762d3e2fcd106b6115bc3bf58c38adb76275f7a168c1c43f8cd1be"
+  }
+}

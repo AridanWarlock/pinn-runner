@@ -1,0 +1,106 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "f71bc18377942dfe84e066c1b8620945c56d140b",
+    "suite": "tests/numerics/test_function_code_network.py",
+    "tests": [
+      "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[11-dtype0]",
+      "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[11-dtype1]",
+      "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[29-dtype0]",
+      "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[29-dtype1]"
+    ],
+    "test_sha256": "b33f9fb1be47178d36d7298b5b7bb1443c78d26345c74c370263224bf01f098c",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "f71bc18377942dfe84e066c1b8620945c56d140b",
+  "test_sha256": "b33f9fb1be47178d36d7298b5b7bb1443c78d26345c74c370263224bf01f098c",
+  "source_unchanged": true,
+  "test_raw_sha256": "750485d53f942744feae226b149e34703cd7aea94eba3cc80e6e4a5edf9b3da8",
+  "test_raw_sha256_after": "750485d53f942744feae226b149e34703cd7aea94eba3cc80e6e4a5edf9b3da8",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[11-dtype0]",
+    "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[11-dtype1]",
+    "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[29-dtype0]",
+    "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[29-dtype1]"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[11-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.25045950000640005
+    },
+    {
+      "nodeid": "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[11-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.08508280001115054
+    },
+    {
+      "nodeid": "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[29-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.05602980009280145
+    },
+    {
+      "nodeid": "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[29-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.07273070013616234
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "a5f77df9770878f2ea99b8f2146f1adf7d547b175904e740a58b27398f490696",
+    "pytest-results.json": "64f30842746e2484082159761551643f68ed875998b4d5d9c53948e36c888ae4"
+  },
+  "provenance": {
+    "protocol_commit": "2a09822cbe191cf31ddc02705cdb594974c36f32",
+    "protocol_sha256": "bfd892355ff9fb946342017d12bacbe00622ec2456eb8d759debf7788ca4edff"
+  }
+}
