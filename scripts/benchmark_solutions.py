@@ -133,7 +133,10 @@ def arguments() -> tuple[argparse.Namespace, int]:
         "--profile", choices=("smoke", "standard", "reference"), default="standard"
     )
     parser.add_argument(
-        "--cases", nargs="+", choices=tuple(CASES), default=["heat2d", "advection", "burgers"]
+        "--cases",
+        nargs="+",
+        choices=tuple(name for name in CASES if name != "heat_constant_surrogate"),
+        default=["heat2d", "advection", "burgers"],
     )
     parser.add_argument("--seeds", nargs="+", type=int, default=[1234, 4321])
     parser.add_argument("--steps", type=int, help="Override the fixed profile budget")

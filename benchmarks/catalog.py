@@ -19,6 +19,7 @@ Family = Literal[
     "burgers",
     "burgers_unforced",
     "conductivity",
+    "constant_surrogate",
 ]
 CONSTRAINTS = ("soft", "hard_initial_dirichlet", "hard_initial_robin")
 EXECUTIONS = ("eager", "product_rule", "robin_batch", "robin_grouped", "neumann_analytic")
@@ -41,7 +42,12 @@ class CaseSpec:
 
     @property
     def convergence(self) -> bool:
-        return self.family not in ("advection", "burgers", "burgers_unforced")
+        return self.family not in (
+            "advection",
+            "burgers",
+            "burgers_unforced",
+            "constant_surrogate",
+        )
 
     @property
     def modal_metric(self) -> bool:
@@ -54,7 +60,14 @@ class CaseSpec:
     def faces(self) -> list[dict[str, str]]:
         result = []
         for axis in ("x", "y", "z")[: self.dimensions]:
-            if self.family in ("heat", "dirichlet", "burgers", "advection", "burgers_unforced"):
+            if self.family in (
+                "heat",
+                "dirichlet",
+                "burgers",
+                "advection",
+                "burgers_unforced",
+                "constant_surrogate",
+            ):
                 kind = "dirichlet"
             elif self.family in ("robin_interval", "robin_box") or (
                 self.family == "mixed" and axis == "y"
@@ -66,6 +79,19 @@ class CaseSpec:
                 result.append(dict(field="u", kind=kind, axis=axis, side=side))
         return result
 
+
+CONSTANT_EVALUATION = dict(
+    training_interval=[0.05, 0.25],
+    training_sampling="joint_continuous_lhs",
+    hypotheses=[0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.225, 0.25],
+    hypothesis_scope="interpolation_slices_not_unseen_distribution",
+    grid=[101, 51],
+    pde_points=1024,
+    pde_seed=20261021,
+    ignored_k=0.15,
+    field_norm="array_l2_per_hypothesis",
+    aggregation="worst_hypothesis",
+)
 
 UNFORCED_EVALUATION = dict(
     coarse_grid=[801, 201],
@@ -89,6 +115,14 @@ UNFORCED_METRICS = {
 UNFORCED_VISCOSITIES = {"burgers_unforced_nu010": 0.1, "burgers_unforced_nu001": 0.01}
 
 SPECS = (
+    CaseSpec(
+        "heat_constant_surrogate",
+        "constant_surrogate",
+        1,
+        (16, 101),
+        time_interval=(0, 1),
+        time_counts=(11, 51),
+    ),
     CaseSpec("heat2d", "heat", 2),
     CaseSpec("heat3d", "heat", 3, (8, 17)),
     CaseSpec("heat_dirichlet2d", "dirichlet", 2),

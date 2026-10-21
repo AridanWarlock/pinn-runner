@@ -125,8 +125,13 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
             if not supported - {"mode_relative_l2"} <= limits.keys():
                 raise ValueError("Coefficient study requires temporal and physical flux gates")
         elif "absolute_quality" in manifest:
-            if spec.family not in ("advection", "burgers", "burgers_unforced"):
-                raise ValueError("Absolute quality is registered for transport/Burgers only")
+            if spec.family not in (
+                "advection",
+                "burgers",
+                "burgers_unforced",
+                "constant_surrogate",
+            ):
+                raise ValueError("Absolute quality requires a registered analytical case")
             import hashlib
 
             source = (
@@ -138,6 +143,14 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
             ):
                 raise ValueError("Problem source differs from registered case")
             supported |= {"worst_time_relative_l2"}
+            if spec.family == "constant_surrogate":
+                supported |= {"coefficient_response_relative_l2"}
+                reference = Path(__file__).resolve().parents[1] / "benchmarks/surrogate_quality.py"
+                if (
+                    hashlib.sha256(reference.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+                    != manifest["hypothesis_evaluation"]["reference_sha256"]
+                ):
+                    raise ValueError("Surrogate reference differs from protocol")
             if spec.family == "burgers_unforced":
                 from benchmarks.catalog import UNFORCED_METRICS
 

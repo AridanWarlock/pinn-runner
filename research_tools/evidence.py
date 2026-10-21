@@ -107,6 +107,10 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
         )
         for s in raw.get("snapshots", [])
     ]
+    if "hypothesis_evaluation" in manifest:
+        from .surrogate_evidence import validate_snapshots
+
+        validate_snapshots(raw, snapshots, manifest)
     if "absolute_quality" in manifest:
         for snap in snapshots:
             snap["passed"] &= (

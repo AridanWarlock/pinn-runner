@@ -121,6 +121,10 @@ def analytical_tensor(case: BenchmarkCase, coordinates: Coordinates) -> torch.Te
         field = 1 + x * time + torch.exp(-0.1 * mu**2 * time) * torch.cos(mu * (x - 0.5))
     elif isinstance(case, NeumannHeatCase):
         field = 1 + x * time + torch.exp(-0.1 * torch.pi**2 * time) * torch.cos(torch.pi * x)
+    elif case.name == "heat_constant_surrogate":
+        field = torch.sin(torch.pi * x) * torch.exp(
+            -(torch.pi**2) * coordinates.parameters["k"] * time
+        )
     elif case.name == "advection":
         field = torch.sin((x - time) * torch.pi)
     elif case.name.startswith("burgers_unforced"):
@@ -164,7 +168,16 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(
         torch.rand((17, 1), dtype=torch.float64, generator=generator).requires_grad_()
         for _ in range(case.dimensions + 1)
     ]
-    coordinates = Coordinates(dict(zip(("x", "y", "z"), columns[:-1])), columns[-1])
+    parameters = (
+        {
+            "k": (
+                0.05 + 0.2 * torch.rand((17, 1), dtype=torch.float64, generator=generator)
+            ).requires_grad_()
+        }
+        if name == "heat_constant_surrogate"
+        else {}
+    )
+    coordinates = Coordinates(dict(zip(("x", "y", "z"), columns[:-1])), columns[-1], parameters)
     time = coordinates.t
     field = analytical_tensor(case, coordinates)
     source = case.prepare_source(tmp_path, representation)
@@ -172,15 +185,20 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(
     settings = TaskSettings.read(case.config("cpu", 3, 1234))
     factory = SolverFactory(settings, problem, tmp_path, source.parent)
     factory.adapter.coefficients.double()
-    equation = Equation({"u": field}, factory.adapter.context(columns[:-1], columns[-1]))
+    equation = Equation(
+        {"u": field}, factory.adapter.context([*columns[:-1], *parameters.values()], columns[-1])
+    )
     for function in problem.equations.values():
         torch.testing.assert_close(function(equation), torch.zeros_like(field), atol=2e-12, rtol=0)
-    numpy_spatial = {axis: value.detach().numpy() for axis, value in coordinates.spatial.items()}
+    numpy_spatial = {
+        axis: value.detach().numpy()
+        for axis, value in {**coordinates.spatial, **parameters}.items()
+    }
     np.testing.assert_allclose(
         field.detach().numpy(), case.reference(numpy_spatial, time.detach().numpy()), atol=1e-12
     )
     initial_time = torch.zeros_like(time)
-    initial = problem.initial(Coordinates(coordinates.spatial, initial_time))["u"]
+    initial = problem.initial(Coordinates(coordinates.spatial, initial_time, parameters))["u"]
     np.testing.assert_allclose(
         initial.detach().numpy(), case.reference(numpy_spatial, initial_time.numpy()), atol=1e-12
     )
@@ -190,7 +208,7 @@ def test_analytical_field_satisfies_equation_initial_and_boundaries(
             location = settings.domain.space[boundary.axis].interval[0 if side == "lower" else 1]
             spatial = dict(coordinates.spatial)
             spatial[boundary.axis] = torch.full_like(time, location, requires_grad=True)
-            face_coordinates = Coordinates(spatial, time)
+            face_coordinates = Coordinates(spatial, time, parameters)
             face_value = analytical_tensor(case, face_coordinates)
             if boundary.kind == "dirichlet":
                 observed = face_value
@@ -218,6 +236,12 @@ def test_error_metrics_detect_wrong_solution(name: str) -> None:
     settings = TaskSettings.read(case.config("cpu", 3, 1234, evaluating=True))
     grid = settings.domain.grid()
     spatial = {axis: grid.spatial[i] for i, axis in enumerate(settings.domain.space)}
+    spatial.update(
+        {
+            axis: grid.spatial[len(settings.domain.space) + i]
+            for i, axis in enumerate(settings.domain.parameters)
+        }
+    )
     # PointCloudData contains Cartesian spatial rows, independent of time.
     expected = case.reference(spatial, grid.time.T)
     exact = solution_errors(case, spatial, grid.time, expected)

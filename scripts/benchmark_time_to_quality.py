@@ -84,6 +84,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     parser.add_argument("--coefficient-representation", choices=("formula", "table"))
     parser.add_argument("--worst-time-relative-l2", type=float)
     parser.add_argument("--physical-flux-max", type=float)
+    parser.add_argument("--coefficient-response-relative-l2", type=float)
     for name in sorted(UNFORCED_METRICS):
         parser.add_argument("--" + name.replace("_", "-"), type=float)
     parser.add_argument("--relative-l2", type=float, default=LIMITS["relative_l2"])
@@ -114,11 +115,18 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     }
     if args.mode_relative_l2 is not None:
         limits["mode_relative_l2"] = args.mode_relative_l2
-    for name in ("worst_time_relative_l2", "physical_flux_max", *sorted(UNFORCED_METRICS)):
+    for name in (
+        "worst_time_relative_l2",
+        "physical_flux_max",
+        "coefficient_response_relative_l2",
+        *sorted(UNFORCED_METRICS),
+    ):
         if getattr(args, name) is not None:
             limits[name] = getattr(args, name)
     if args.case in UNFORCED_VISCOSITIES and not UNFORCED_METRICS <= limits.keys():
         parser.error("Unforced Burgers requires gradient, regional and grid-refinement limits")
+    if args.case == "heat_constant_surrogate" and "coefficient_response_relative_l2" not in limits:
+        parser.error("Shared surrogate requires coefficient-response limit")
     plan = ConvergencePlan(
         CASES[args.case],
         args.steps,

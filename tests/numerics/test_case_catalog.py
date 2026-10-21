@@ -19,6 +19,7 @@ def test_all_published_case_configs_and_references_are_preserved() -> None:
     with path.open() as stream:
         rows = list(csv.DictReader(stream))
     assert set(CASES) == {r["name"] for r in rows} | {
+        "heat_constant_surrogate",
         "heat_conductivity_beta0",
         "heat_conductivity_beta1",
         "burgers_unforced_nu010",
@@ -43,7 +44,9 @@ def test_all_published_case_configs_and_references_are_preserved() -> None:
 
 def test_light_catalog_faces_and_shapes_match_problem_implementations() -> None:
     assert set(CASES) == set(CATALOG)
-    assert set(CONVERGENCE_CASES) == {name for name in CASES if name.startswith("heat")}
+    assert set(CONVERGENCE_CASES) == {
+        name for name in CASES if name.startswith("heat") and name != "heat_constant_surrogate"
+    }
     for name, case in CASES.items():
         spec = CATALOG[name]
         config = case.config("cpu", 2, 19)

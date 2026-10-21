@@ -100,8 +100,20 @@ UNFORCED_LIFECYCLE_EXPECTED = [
     UNFORCED_LIFECYCLE_SUITE + f"::test_unforced_public_lifecycle[{case}]"
     for case in ("burgers_unforced_nu010", "burgers_unforced_nu001")
 ]
+CONSTANT_SUITE = "tests/numerics/test_constant_surrogate_network.py"
+CONSTANT_EXPECTED = [
+    CONSTANT_SUITE + f"::test_shared_constant_operator_and_every_weight[{seed}-dtype{dtype}]"
+    for seed in (11, 29)
+    for dtype in (0, 1)
+]
+CONSTANT_LIFECYCLE_SUITE = "tests/integration/test_constant_surrogate_runner.py"
+CONSTANT_LIFECYCLE_EXPECTED = [
+    CONSTANT_LIFECYCLE_SUITE + "::test_shared_constant_public_lifecycle"
+]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    CONSTANT_SUITE: CONSTANT_EXPECTED,
+    CONSTANT_LIFECYCLE_SUITE: CONSTANT_LIFECYCLE_EXPECTED,
     UNFORCED_SUITE: UNFORCED_EXPECTED,
     UNFORCED_LIFECYCLE_SUITE: UNFORCED_LIFECYCLE_EXPECTED,
     SUITE: EXPECTED,
@@ -167,6 +179,41 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == CONSTANT_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=4,
+            cases=["heat_constant_surrogate"],
+            constraints="soft_with_problem_transform",
+            dtypes=["float32", "float64"],
+            seeds=[11, 29],
+            network_models=4,
+            parameters_per_model=2273,
+            finite_difference_checks=4,
+            optimizer_updates=0,
+            training=False,
+            performance_measurement=False,
+        )
+    if manifest["suite"] == CONSTANT_LIFECYCLE_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=1,
+            training=True,
+            performance_measurement=False,
+            regular_fits=1,
+            adam_steps_per_regular_fit=3,
+            lbfgs_outer_steps_per_regular_fit=2,
+            identity_probe_fits=1,
+            identity_probe_adam_steps=1,
+            identity_probe_learning_rate=1e-300,
+            identity_probe_refinement_steps=0,
+            prediction_hypotheses=[0.1, 0.2],
+            outside_hypothesis_rejected=True,
+        )
     if manifest["suite"] in HELPER_SUITES:
         unforced = manifest["suite"] == UNFORCED_SUITE
         hard = manifest["suite"] == BURGERS_HARD_SUITE
@@ -294,7 +341,13 @@ def compare(evidence: Json) -> Json:
         comparison_passed=code == 0 and passed == len(expected),
         scope=(
             "Existing file lifecycle tests; small training only, no accuracy/speed claim"
-            if manifest["suite"] in (LIFECYCLE_SUITE, NONHEAT_LIFECYCLE_SUITE)
+            if manifest["suite"]
+            in (
+                LIFECYCLE_SUITE,
+                NONHEAT_LIFECYCLE_SUITE,
+                UNFORCED_LIFECYCLE_SUITE,
+                CONSTANT_LIFECYCLE_SUITE,
+            )
             else "Existing numerical tests only; no training or speed claim"
         ),
     )

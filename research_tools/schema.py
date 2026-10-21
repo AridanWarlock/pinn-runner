@@ -128,6 +128,8 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
         required = (required - {"comparison"}) | {"absolute_quality", "problem_sha256"}
     if "layer_evaluation" in manifest:
         required.add("layer_evaluation")
+    if "hypothesis_evaluation" in manifest:
+        required.add("hypothesis_evaluation")
     if manifest.get("contract") == 2:
         required |= {"case_faces", "environment_requirements", "network"}
         if "density" in manifest:
@@ -196,6 +198,22 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
             raise ValueError("Global/final/PDE limits required")
         for key, value in values.items():
             number(value, key, positive=True)
+    surrogate = "heat_constant_surrogate" in case_limits
+    if surrogate or "hypothesis_evaluation" in manifest:
+        from benchmarks.catalog import CONSTANT_EVALUATION
+
+        evaluation = object_value(manifest.get("hypothesis_evaluation"), "hypothesis_evaluation")
+        if (
+            not absolute
+            or set(case_limits) != {"heat_constant_surrogate"}
+            or json.dumps(
+                {k: v for k, v in evaluation.items() if k != "reference_sha256"}, sort_keys=True
+            )
+            != json.dumps(CONSTANT_EVALUATION, sort_keys=True)
+            or not isinstance(evaluation.get("reference_sha256"), str)
+            or not re.fullmatch("[0-9a-f]{64}", evaluation["reference_sha256"])
+        ):
+            raise ValueError("Registered per-hypothesis evaluation and reference hash required")
     unforced = bool(set(case_limits) & UNFORCED_VISCOSITIES.keys())
     if unforced or "layer_evaluation" in manifest:
         evaluation = object_value(manifest.get("layer_evaluation"), "layer_evaluation")

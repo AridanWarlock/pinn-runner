@@ -200,6 +200,16 @@ class SnapshotTraining:
 class SnapshotEvaluation:
     def __init__(self, plan: ConvergencePlan, factory: SolverFactory) -> None:
         self.plan, self.factory = plan, factory
+        if plan.case.name == "heat_constant_surrogate":
+            domain = factory.settings.domain
+            if (
+                tuple(domain.space) != ("x",)
+                or tuple(domain.space["x"].interval) != (0, 1)
+                or tuple(domain.time.interval) != (0, 1)
+                or tuple(domain.parameters) != ("k",)
+                or tuple(domain.parameters["k"].interval) != (0.05, 0.25)
+            ):
+                raise ValueError("Surrogate evaluation requires registered x/t/k intervals")
         self.objects = factory.build(predicting=True)
         self.model = self.objects.model.to(plan.device).eval()
         mesh = self.objects.mesh
@@ -230,6 +240,10 @@ class SnapshotEvaluation:
 
     def evaluate(self, checkpoint: Path) -> tuple[dict[str, float], dict[str, Any]]:
         self.model.load_state_dict(load_checkpoint(checkpoint, map_location=self.plan.device))
+        if self.plan.case.name == "heat_constant_surrogate":
+            from .surrogate_quality import evaluate
+
+            return evaluate(self.model, self.factory.adapter, self.plan.device)
         chunks = []
         for index, start in enumerate(range(0, len(self.clock), 2048)):
             outputs = self.model.predict_step(

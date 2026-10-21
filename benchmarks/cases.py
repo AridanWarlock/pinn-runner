@@ -302,7 +302,28 @@ class BurgersCase(BenchmarkCase):
         return cast(Array, np.exp(-time) * np.sin(np.pi * spatial["x"]))
 
 
+class ConstantSurrogateCase(BenchmarkCase):
+    """One shared field for a continuous interval of scalar diffusivities."""
+
+    def config(
+        self, device: str, steps: int, seed: int, evaluating: bool = False
+    ) -> dict[str, Any]:
+        config = super().config(device, steps, seed, evaluating)
+        config["domain"]["parameters"] = {"k": {"interval": [0.05, 0.25], "points": 3}}
+        config["training"]["constraints"] = "soft"
+        return config
+
+    def reference(self, spatial: dict[str, Array], time: Array) -> Array:
+        return cast(
+            Array, np.sin(np.pi * spatial["x"]) * np.exp(-(np.pi**2) * spatial["k"] * time)
+        )
+
+    def boundary_mask(self, spatial: dict[str, Array]) -> NDArray[np.bool_]:
+        return np.isclose(spatial["x"][:, 0], 0) | np.isclose(spatial["x"][:, 0], 1)
+
+
 FACTORIES: dict[Family, type[BenchmarkCase]] = {
+    "constant_surrogate": ConstantSurrogateCase,
     "heat": HeatCase,
     "dirichlet": DirichletHeatCase,
     "neumann_interval": NeumannHeatCase,
