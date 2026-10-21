@@ -1,0 +1,13 @@
+{
+  "device": "cpu",
+  "dtype": "float64",
+  "optimizer_updates": 0,
+  "source_sha256": "161c1907b99e543b41eb7cc53ca2efeebce621468279d7f6ef3e7e9c138ea743",
+  "controls": 16,
+  "heat_content_error": 1.1102230246251565e-16,
+  "balance_error": 4.440892098500626e-16,
+  "pde_max": 4.440892098500626e-16,
+  "wrong_formula_error": 4.85722573273506e-16,
+  "smallest_detected_missing_gradient": 0.09957413673572789,
+  "all_passed": true
+}

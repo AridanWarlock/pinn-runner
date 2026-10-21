@@ -110,8 +110,23 @@ CONSTANT_LIFECYCLE_SUITE = "tests/integration/test_constant_surrogate_runner.py"
 CONSTANT_LIFECYCLE_EXPECTED = [
     CONSTANT_LIFECYCLE_SUITE + "::test_shared_constant_public_lifecycle"
 ]
+SPATIAL_SCALE_SUITE = "tests/numerics/test_spatial_scale_surrogate_network.py"
+SPATIAL_SCALE_EXPECTED = [
+    *[
+        SPATIAL_SCALE_SUITE
+        + f"::test_spatial_scale_operator_and_every_weight[{seed}-dtype{dtype}]"
+        for seed in (11, 29)
+        for dtype in (0, 1)
+    ],
+    *[
+        SPATIAL_SCALE_SUITE
+        + f"::test_spatial_scale_analytical_field_detects_missing_coefficient_gradient[dtype{dtype}]"
+        for dtype in (0, 1)
+    ],
+]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    SPATIAL_SCALE_SUITE: SPATIAL_SCALE_EXPECTED,
     CONSTANT_SUITE: CONSTANT_EXPECTED,
     CONSTANT_LIFECYCLE_SUITE: CONSTANT_LIFECYCLE_EXPECTED,
     UNFORCED_SUITE: UNFORCED_EXPECTED,
@@ -179,6 +194,24 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == SPATIAL_SCALE_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=6,
+            cases=["heat_spatial_scale_surrogate"],
+            constraints="soft_with_problem_transform",
+            dtypes=["float32", "float64"],
+            seeds=[11, 29],
+            network_models=4,
+            parameters_per_model=2273,
+            finite_difference_checks=4,
+            analytical_field_checks=2,
+            optimizer_updates=0,
+            training=False,
+            performance_measurement=False,
+        )
     if manifest["suite"] == CONSTANT_SUITE:
         return dict(
             contract=1,
