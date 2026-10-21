@@ -132,6 +132,13 @@ FUNCTION_CODE_EXPECTED = [
     for seed in (11, 29)
     for dtype in (0, 1)
 ]
+QUADRATIC_SHAPE_SUITE = "tests/numerics/test_quadratic_shape_network.py"
+QUADRATIC_SHAPE_EXPECTED = [
+    QUADRATIC_SHAPE_SUITE
+    + f"::test_quadratic_shape_operator_and_every_weight[{seed}-dtype{dtype}]"
+    for seed in (11, 29)
+    for dtype in (0, 1)
+]
 FUNCTION_CODE_LIFECYCLE_SUITE = "tests/integration/test_function_code_runner.py"
 FUNCTION_CODE_LIFECYCLE_EXPECTED = [
     FUNCTION_CODE_LIFECYCLE_SUITE + f"::test_function_code_public_lifecycle[{mode}]"
@@ -139,6 +146,7 @@ FUNCTION_CODE_LIFECYCLE_EXPECTED = [
 ]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    QUADRATIC_SHAPE_SUITE: QUADRATIC_SHAPE_EXPECTED,
     FUNCTION_CODE_SUITE: FUNCTION_CODE_EXPECTED,
     FUNCTION_CODE_LIFECYCLE_SUITE: FUNCTION_CODE_LIFECYCLE_EXPECTED,
     SPATIAL_LIFECYCLE_SUITE: SPATIAL_LIFECYCLE_EXPECTED,
@@ -210,13 +218,17 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
-    if manifest["suite"] == FUNCTION_CODE_SUITE:
+    if manifest["suite"] in (FUNCTION_CODE_SUITE, QUADRATIC_SHAPE_SUITE):
         return dict(
             contract=1,
             kind="numerical-acceptance-plan",
             revision=manifest["revision"],
             tests=4,
-            case="heat_function_code",
+            case=(
+                "heat_function_code"
+                if manifest["suite"] == FUNCTION_CODE_SUITE
+                else "heat_quadratic_shapes"
+            ),
             dtypes=["float32", "float64"],
             seeds=[11, 29],
             network_models=4,

@@ -1,0 +1,233 @@
+{
+  "kind": "prospective_plan_not_executable_queue_protocol",
+  "training_rows": [
+    [
+      0.05,
+      1.0
+    ],
+    [
+      0.05,
+      2.0
+    ],
+    [
+      0.15,
+      1.0
+    ],
+    [
+      0.15,
+      2.0
+    ],
+    [
+      0.05416666666666667,
+      1.5
+    ],
+    [
+      0.0625,
+      1.25
+    ],
+    [
+      0.07083333333333333,
+      1.75
+    ],
+    [
+      0.07916666666666668,
+      1.125
+    ],
+    [
+      0.0875,
+      1.625
+    ],
+    [
+      0.09583333333333334,
+      1.375
+    ],
+    [
+      0.10416666666666667,
+      1.875
+    ],
+    [
+      0.1125,
+      1.0625
+    ],
+    [
+      0.12083333333333335,
+      1.5625
+    ],
+    [
+      0.12916666666666668,
+      1.3125
+    ],
+    [
+      0.1375,
+      1.8125
+    ],
+    [
+      0.14583333333333334,
+      1.1875
+    ]
+  ],
+  "unseen_rows": [
+    [
+      0.075,
+      1.2
+    ],
+    [
+      0.075,
+      1.4
+    ],
+    [
+      0.075,
+      1.6
+    ],
+    [
+      0.075,
+      1.8
+    ],
+    [
+      0.125,
+      1.2
+    ],
+    [
+      0.125,
+      1.4
+    ],
+    [
+      0.125,
+      1.6
+    ],
+    [
+      0.125,
+      1.8
+    ]
+  ],
+  "training_controls": [
+    [
+      0.05,
+      1.0
+    ],
+    [
+      0.05,
+      2.0
+    ],
+    [
+      0.15,
+      1.0
+    ],
+    [
+      0.15,
+      2.0
+    ]
+  ],
+  "seeds": [
+    11,
+    29,
+    83
+  ],
+  "adam_steps": 500,
+  "lbfgs_external_steps": 500,
+  "physical_lhs_points": 4096,
+  "evaluation_grid": [
+    101,
+    101
+  ],
+  "reference_modes": 64,
+  "pde_points_per_hypothesis": 1024,
+  "pde_seed": 20261021,
+  "targets": {
+    "relative_l2": 0.02,
+    "final_relative_l2": 0.03,
+    "worst_time_relative_l2": 0.03,
+    "dx_relative_l2": 0.05,
+    "flux_relative_l2": 0.05,
+    "pde_rmse": 0.02,
+    "initial_rmse": 1e-06,
+    "boundary_max": 1e-06,
+    "response_relative_l2": 0.05
+  },
+  "responses": [
+    {
+      "kind": "shape",
+      "left": [
+        0.075,
+        1.2
+      ],
+      "right": [
+        0.075,
+        1.8
+      ],
+      "reference_response_norm": 3.408472269935291,
+      "relative_to_right_field": 0.10305882647567763,
+      "ignored_component_response_error": 1.0
+    },
+    {
+      "kind": "shape",
+      "left": [
+        0.125,
+        1.2
+      ],
+      "right": [
+        0.125,
+        1.8
+      ],
+      "reference_response_norm": 3.2816116700395743,
+      "relative_to_right_field": 0.12275096844094399,
+      "ignored_component_response_error": 1.0
+    },
+    {
+      "kind": "scale",
+      "left": [
+        0.075,
+        1.2
+      ],
+      "right": [
+        0.125,
+        1.2
+      ],
+      "reference_response_norm": 8.316776780441074,
+      "relative_to_right_field": 0.34112683230381813,
+      "ignored_component_response_error": 1.0
+    },
+    {
+      "kind": "scale",
+      "left": [
+        0.075,
+        1.4
+      ],
+      "right": [
+        0.125,
+        1.4
+      ],
+      "reference_response_norm": 8.372879796849519,
+      "relative_to_right_field": 0.33042380760276685,
+      "ignored_component_response_error": 1.0
+    },
+    {
+      "kind": "scale",
+      "left": [
+        0.075,
+        1.6
+      ],
+      "right": [
+        0.125,
+        1.6
+      ],
+      "reference_response_norm": 8.392259944723344,
+      "relative_to_right_field": 0.32145396693083284,
+      "ignored_component_response_error": 1.0
+    },
+    {
+      "kind": "scale",
+      "left": [
+        0.075,
+        1.8
+      ],
+      "right": [
+        0.125,
+        1.8
+      ],
+      "reference_response_norm": 8.391837228122876,
+      "relative_to_right_field": 0.3139025120356266,
+      "ignored_component_response_error": 1.0
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "kind": "cpu_analytical_reference_audit_not_training",
+  "hypotheses": 25,
+  "grid": [
+    101,
+    101
+  ],
+  "modes": [
+    64,
+    128
+  ],
+  "positive_time_min": 0.01,
+  "proven_field_tail_bound_at_time_min": 3.186883696502909e-17,
+  "proven_derivative_tail_bounds_at_time_min": {
+    "dx": 2.3720599999382453e-14,
+    "dxx": 2.3556759743780357e-11,
+    "dt": 3.5264001717300114e-12
+  },
+  "quadrature_errors_are_estimates_not_certificates": true,
+  "maxima": {
+    "field_cutoff64_128_max_difference": 0.0,
+    "dx_cutoff64_128_max_difference": 0.0,
+    "dxx_cutoff64_128_max_difference": 0.0,
+    "dt_cutoff64_128_max_difference": 0.0,
+    "pde_max": 4.351240597912096e-15,
+    "heat_balance_max_error": 3.4416913763379853e-15,
+    "missing_kx_pde_rms": 0.31443731177569345
+  },
+  "coefficient_maxima": {
+    "coordinate_quadrature_max_difference": 5.218048215738236e-15,
+    "gauss_refinement_max_difference": 1.0880185641326534e-14,
+    "sum_estimated_quad_errors": 1.3836071877319302e-11
+  },
+  "shape_response": [
+    {
+      "a": 0.05,
+      "b1_vs_b2_relative_field_distance": 0.1476028857507052
+    },
+    {
+      "a": 0.1,
+      "b1_vs_b2_relative_field_distance": 0.198138910239312
+    },
+    {
+      "a": 0.15,
+      "b1_vs_b2_relative_field_distance": 0.21673790905452095
+    }
+  ]
+}

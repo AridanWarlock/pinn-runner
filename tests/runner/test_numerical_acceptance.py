@@ -270,3 +270,22 @@ def test_exact_burgers_control_has_distinct_inventory_and_two_finite_differences
     assert p["finite_difference_checks"] == 2 and p["optimizer_updates"] == 0
     assert p["constraints"] == "hard_initial_dirichlet"
     assert p["cases"] == ["burgers"]
+
+
+def test_quadratic_shape_inventory_has_no_optimizer_and_rejects_incomplete_evidence() -> None:
+    e = evidence()
+    m = e["manifest"]
+    m["suite"] = acceptance.QUADRATIC_SHAPE_SUITE
+    m["tests"] = acceptance.QUADRATIC_SHAPE_EXPECTED.copy()
+    e["collected"] = m["tests"].copy()
+    e["trials"] = e["trials"][:4]
+    for trial, nodeid in zip(e["trials"], m["tests"]):
+        trial["nodeid"] = nodeid
+    planned = plan(m)
+    assert planned["case"] == "heat_quadratic_shapes"
+    assert planned["tests"] == 4 and planned["parameters_per_model"] == 2305
+    assert planned["optimizer_updates"] == 0 and planned["training"] is False
+    assert compare(e)["passed"] == 4 and compare(e)["comparison_passed"]
+    e["trials"].pop()
+    with pytest.raises(ValueError, match="Incomplete"):
+        compare(e)
