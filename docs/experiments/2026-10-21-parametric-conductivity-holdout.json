@@ -1,0 +1,11 @@
+{
+  "protocol_sha256": "b92bc34f114eae8f7779491b3a4f7dc245c55cc21b083e90d05e234abf763903",
+  "optimizer_steps": 0,
+  "original_pairs": 13,
+  "additional_pairs": 64,
+  "parameter_csv_sha256": "f7bd1b82af3a5389c8757a9b10d977b7e81c95738e3615e7059c5226080370bb",
+  "maximum_field_grid_difference": 2.6461302994884583e-06,
+  "maximum_gradient_grid_difference": 0.00017735596368950723,
+  "all_passed": true,
+  "parameter_csv_hash_mode": "lf-normalized"
+}

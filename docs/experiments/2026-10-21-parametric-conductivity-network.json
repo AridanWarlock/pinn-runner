@@ -1,0 +1,9 @@
+{
+  "source_sha256": "60705c4b23a827ee6e5af044587268fc6cae593c650845d82e06cdb9d1a40d36",
+  "torch": "2.1.0",
+  "points_sha256": "b3164b275490c79708bd2b03d97a7153e1153f75e8b242ac2ad90d6948bf98bb",
+  "models": 4,
+  "optimizer_steps": 0,
+  "finite_difference_checks": 4,
+  "all_passed": true
+}

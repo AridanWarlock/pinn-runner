@@ -1,0 +1,122 @@
+{
+  "protocol_sha256": "d1e3fb298338958fb7a097ac5a36e91b7661afa150150c2d717c01cc18e2bf97",
+  "optimizer_steps": 0,
+  "codes": 15,
+  "eigensolver_fallbacks": [
+    {
+      "n": 1024,
+      "a": 0,
+      "b": 0,
+      "extra": 0.0,
+      "custom": true,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 2.2055917244230955e-15,
+      "orthogonality_max": 1.2878587085651816e-14
+    },
+    {
+      "n": 512,
+      "a": 0,
+      "b": 0,
+      "extra": 0.0,
+      "custom": true,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 1.3790760401704614e-15,
+      "orthogonality_max": 1.0103029524088925e-14
+    },
+    {
+      "n": 1024,
+      "a": 0,
+      "b": 0,
+      "extra": 0.0,
+      "custom": true,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 2.439124573766872e-15,
+      "orthogonality_max": 1.199040866595169e-14
+    },
+    {
+      "n": 512,
+      "a": 0,
+      "b": 0,
+      "extra": 0.0,
+      "custom": true,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 1.3377473184076162e-15,
+      "orthogonality_max": 6.217248937900877e-15
+    },
+    {
+      "n": 1024,
+      "a": 0,
+      "b": 0,
+      "extra": 0.0,
+      "custom": true,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 2.7717324701896273e-15,
+      "orthogonality_max": 1.7319479184152442e-14
+    },
+    {
+      "n": 512,
+      "a": 0,
+      "b": 0,
+      "extra": 0.0,
+      "custom": true,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 1.3934867900079335e-15,
+      "orthogonality_max": 9.547918011776346e-15
+    },
+    {
+      "n": 1024,
+      "a": 0,
+      "b": 0,
+      "extra": 0.0,
+      "custom": true,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 1.6592711453761116e-15,
+      "orthogonality_max": 1.709743457922741e-14
+    },
+    {
+      "n": 512,
+      "a": 0,
+      "b": 0,
+      "extra": 0.0,
+      "custom": true,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 1.831064089512038e-15,
+      "orthogonality_max": 9.325873406851315e-15
+    },
+    {
+      "n": 1024,
+      "a": 0,
+      "b": 0,
+      "extra": 0.0,
+      "custom": true,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 2.1537339758194364e-15,
+      "orthogonality_max": 1.4654943925052066e-14
+    },
+    {
+      "n": 512,
+      "a": 0,
+      "b": 0,
+      "extra": 0.0,
+      "custom": true,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 1.4382174749135158e-15,
+      "orthogonality_max": 9.992007221626409e-15
+    }
+  ],
+  "nine_sensor_alias": {
+    "code_max_log_difference_from_constant": 6.718923826325122e-31,
+    "continuous_material_solution_gap": 0.11749166080046436
+  },
+  "all_passed": true
+}

@@ -1,0 +1,19 @@
+{
+  "optimizer_steps": 0,
+  "small_material_rows": 4,
+  "aligned_material_relation_max_error": 0.0,
+  "independent_lhs_material_relation_max_error": 1.2759370555638672,
+  "lhs_rows_outside_original_relation": 256,
+  "lhs_rows": 256,
+  "large_function_codes": 128,
+  "code_features": 129,
+  "aligned_spatial_mesh_shape": [
+    896,
+    5,
+    130
+  ],
+  "aligned_spatial_mesh_bytes": 4659200,
+  "public_domain_grid_modified": false,
+  "training_sampler_modified": false,
+  "all_passed": true
+}

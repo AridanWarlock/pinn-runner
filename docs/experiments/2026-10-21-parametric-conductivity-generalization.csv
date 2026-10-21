@@ -1,0 +1,4 @@
+epsilon,registered_pairs,maximum_error_amplitude_on_registered_pairs,parameter_space_average_pde_rms,independent_quadrature_difference,unobserved_pair_final_relative_l2,unobserved_reference_grid_difference,initial_boundary_error,passed
+0.05,13,0.0,0.0011542184585513716,1.0827571478300158e-12,0.09652012145058256,1.101844927076101e-06,0.0,True
+0.025,13,0.0,0.0005769972527618265,5.40921040598219e-13,0.09652012145058256,1.101844927076101e-06,0.0,True
+0.0125,13,0.0,0.0002884846346352995,2.7040305758396777e-13,0.09652012145058256,1.101844927076101e-06,0.0,True

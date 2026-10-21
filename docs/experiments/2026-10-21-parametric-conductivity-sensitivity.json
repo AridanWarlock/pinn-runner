@@ -1,0 +1,9 @@
+{
+  "protocol_sha256": "ed55797613c5871662bbe8968f9b83efe9c565e55e8ec8345abf4add71d096c5",
+  "optimizer_steps": 0,
+  "rows": 8,
+  "norm_a": 0.09088508675981445,
+  "norm_b": 0.12571699351646484,
+  "norm_independent_difference": 3.469446951953614e-18,
+  "all_passed": true
+}

@@ -1,0 +1,72 @@
+{
+  "protocol_sha256": "00ea49108dc35932056e252dc2224c240ab0d7c1a1d8f114ebc726ec58a3e75e",
+  "source_sha256": "60705c4b23a827ee6e5af044587268fc6cae593c650845d82e06cdb9d1a40d36",
+  "device": "cpu",
+  "quality_training": false,
+  "initial_adam_steps": 3,
+  "retrain_adam_steps": 1,
+  "lbfgs_steps": 0,
+  "calls": [
+    {
+      "name": "train",
+      "mode": "train",
+      "exit_code": 0
+    },
+    {
+      "name": "predict",
+      "mode": "predict",
+      "exit_code": 0
+    },
+    {
+      "name": "retrain",
+      "mode": "retrain",
+      "exit_code": 0
+    },
+    {
+      "name": "reject-outside",
+      "mode": "predict",
+      "exit_code": 1
+    },
+    {
+      "name": "reject-coefficient",
+      "mode": "predict",
+      "exit_code": 1
+    }
+  ],
+  "prediction_shape": [
+    36,
+    7
+  ],
+  "prediction_direct_max_difference": 0.0,
+  "prediction_matches": true,
+  "parameters_preserved": true,
+  "retrain_tensors_unchanged": true,
+  "checkpoint_file_unchanged": true,
+  "reject_outside_passed": true,
+  "reject_changed_coefficient_passed": true,
+  "input_names": [
+    "x",
+    "a",
+    "b",
+    "t"
+  ],
+  "normalization_bounds": [
+    [
+      0.0,
+      1.0
+    ],
+    [
+      -0.7,
+      0.7
+    ],
+    [
+      -0.7,
+      0.7
+    ],
+    [
+      0.0,
+      1.0
+    ]
+  ],
+  "all_passed": true
+}

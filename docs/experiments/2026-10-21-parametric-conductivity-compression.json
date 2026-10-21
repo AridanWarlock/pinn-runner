@@ -1,0 +1,98 @@
+{
+  "protocol_sha256": "50dc3075251428316eef9daed8a10795337f872750bc90a24813ad03bc1cb699",
+  "optimizer_steps": 0,
+  "eigensolver_fallbacks": [
+    {
+      "n": 1024,
+      "a": 0,
+      "b": 0,
+      "extra": 0.3,
+      "custom": false,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 1.418772035339179e-15,
+      "orthogonality_max": 1.1546319456101628e-14
+    },
+    {
+      "n": 512,
+      "a": 0,
+      "b": 0,
+      "extra": 0.3,
+      "custom": false,
+      "error": "stemr (eigh_tridiagonal) did not converge (LAPACK info=22)",
+      "fallback": "stev",
+      "eigen_residual_relative": 9.150154878335531e-16,
+      "orthogonality_max": 7.327471962526033e-15
+    }
+  ],
+  "local_value_collision": {
+    "x": 0.25,
+    "t": 0.25,
+    "c_both": 0.125,
+    "solution_gap": 0.23066453385917213,
+    "grid_difference": 3.645480524117062e-07
+  },
+  "two_sensor_reconstruction": {
+    "parameter_max_error": 2.7755575615628914e-16,
+    "coefficient_max_error": 1.1102230246251565e-16
+  },
+  "outside_family_sensor_alias": {
+    "extra_mode": 0.3,
+    "sensor_max_difference": 0.0,
+    "solution_max_difference": 0.05762901591898345,
+    "grid_difference": 1.0139931369002042e-06
+  },
+  "sensitivity": {
+    "relative_step_changes": [
+      4.760702899402796e-08,
+      1.1439722902629898e-07
+    ],
+    "gram": [
+      [
+        0.008259560035552406,
+        1.1300431123259748e-11
+      ],
+      [
+        1.1300431123259748e-11,
+        0.015804081849231086
+      ]
+    ],
+    "singular_values": [
+      0.09088212164970845,
+      0.12571428657567557
+    ],
+    "normalized_cross_inner_product": 9.890811391538029e-10
+  },
+  "effective_coefficient_collision": {
+    "resistances": [
+      9.010424146454474,
+      9.010424146454474
+    ],
+    "maximum_field_gap": 0.21406098473078616,
+    "reflection_max_error": 3.348432642269472e-13
+  },
+  "compression_energy_controls": [
+    {
+      "label": "omit_b_minus",
+      "log_coefficient_error": 0.7,
+      "maximum_field_error_relative_to_initial": 0.15391425739030637,
+      "continuous_bound": 0.5051425597105663,
+      "measurement_within_bound": true
+    },
+    {
+      "label": "omit_b_plus",
+      "log_coefficient_error": 0.7,
+      "maximum_field_error_relative_to_initial": 0.12594892171275773,
+      "continuous_bound": 0.5051425597105663,
+      "measurement_within_bound": true
+    },
+    {
+      "label": "unseen_extra_mode",
+      "log_coefficient_error": 0.3,
+      "maximum_field_error_relative_to_initial": 0.0542683947384774,
+      "continuous_bound": 0.2129284248963968,
+      "measurement_within_bound": true
+    }
+  ],
+  "all_passed": true
+}

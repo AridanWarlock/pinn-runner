@@ -1,0 +1,18 @@
+{
+  "optimizer_steps": 0,
+  "measured_dimensions": [
+    0,
+    2,
+    4,
+    6
+  ],
+  "projected_dimensions": [
+    8,
+    12,
+    16,
+    32,
+    129
+  ],
+  "scope": "spatial_domain_mesh only; excludes coordinate meshes and other allocations",
+  "measured_formulas_match": true
+}

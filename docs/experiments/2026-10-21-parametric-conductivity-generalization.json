@@ -1,0 +1,10 @@
+{
+  "protocol_sha256": "10fc97a327c2a1333d06d1bf9c7a2ba12c6d5aba4fd5d169d3f1ca5a74d4c946",
+  "optimizer_steps": 0,
+  "central_pair": [
+    0.123,
+    0.137
+  ],
+  "applies_to": "smooth constructed fields; not a trained finite network",
+  "all_passed": true
+}

@@ -1,0 +1,25 @@
+{
+  "protocol_sha256": "2d5137acf766a5992351acacf0986bc34858eab9131eb9997074badd2640ed7f",
+  "numpy": "1.26.4",
+  "scipy": "1.11.4",
+  "training_steps": 0,
+  "eigensolver_fallbacks": [],
+  "parameter_pairs": 13,
+  "baseline_analytic_max_error": 2.8852703198856133e-07,
+  "nonlocality": {
+    "x": 0.25,
+    "constant_c": 0.125,
+    "remote_c_at_query": 0.125,
+    "common_neighbourhood": [
+      0,
+      0.5
+    ],
+    "constant_solution": 0.25,
+    "remote_solution": 0.3155334860646544,
+    "solution_gap": 0.06553348606465442,
+    "unavoidable_worst_case_absolute_error": 0.03276674303232721,
+    "quadrature_error_estimate": 3.3599018511696674e-13,
+    "passed": true
+  },
+  "all_passed": true
+}
