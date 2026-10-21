@@ -1,0 +1,23 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "f71bc18377942dfe84e066c1b8620945c56d140b",
+  "suite": "tests/numerics/test_function_code_network.py",
+  "tests": [
+    "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[11-dtype0]",
+    "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[11-dtype1]",
+    "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[29-dtype0]",
+    "tests/numerics/test_function_code_network.py::test_function_code_operator_and_every_weight[29-dtype1]"
+  ],
+  "test_sha256": "b33f9fb1be47178d36d7298b5b7bb1443c78d26345c74c370263224bf01f098c",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
