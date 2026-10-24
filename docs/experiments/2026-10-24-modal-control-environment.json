@@ -1,0 +1,9 @@
+{
+  "platform": "macOS-15.7.2-arm64-arm-64bit",
+  "python": "3.10.20 (main, Mar  3 2026, 00:49:35) [Clang 17.0.0 (clang-1700.6.4.2)]",
+  "numpy": "1.26.4",
+  "torch": "2.1.0",
+  "scipy": "1.11.4",
+  "device": "cpu",
+  "preregistered_source": "b03b0fcd866fd176a52f7dec62d011c5e60d5042"
+}

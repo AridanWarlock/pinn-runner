@@ -1,0 +1,38 @@
+{
+  "kind": "initial_only_bounds_and_oracle_floor_not_neural_training",
+  "new_shapes": 128,
+  "shape_grid": "1+(j+0.5)/128",
+  "correction_modes": 32,
+  "weights_sha256": "507757e64eba3f948f1b9f85cc443663dfdfd68fc84493feaace832f453ef8b0",
+  "quadrature_nodes": [
+    512,
+    1024
+  ],
+  "maxima": {
+    "initial_l2": 3.5852328673727857e-08,
+    "initial_energy_error": 4.60299498094586e-06,
+    "uniform_time_field_bound": 6.995248360299746e-08,
+    "uniform_time_dx_flux_bound": 1.016247905735981e-05,
+    "hard_initial_modal_pde_floor": 0.0013930234696103844,
+    "quadrature_norm_disagreement": 3.183217578417441e-16
+  },
+  "minimum_first_projection": 0.5125240281274529,
+  "finite_sum_norm_checks": [
+    {
+      "time": 0,
+      "l2_squared_error": 2.5587171270657905e-17,
+      "energy_squared_error": 7.815970093361102e-14
+    },
+    {
+      "time": 0.2,
+      "l2_squared_error": 1.5352472168984194e-21,
+      "energy_squared_error": 1.249373597200093e-20
+    },
+    {
+      "time": 1,
+      "l2_squared_error": 1.0339757656912846e-23,
+      "energy_squared_error": 3.3087224502121107e-23
+    }
+  ],
+  "continuous_norms_certified": false
+}

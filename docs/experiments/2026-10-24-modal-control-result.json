@@ -1,0 +1,210 @@
+{
+  "kind": "initial_data_only_non_neural_modal_control",
+  "modes": 64,
+  "degree": 13,
+  "training_rows": [
+    [
+      0.15,
+      1.0
+    ],
+    [
+      0.15,
+      1.0625
+    ],
+    [
+      0.15,
+      1.125
+    ],
+    [
+      0.15,
+      1.1875
+    ],
+    [
+      0.15,
+      1.25
+    ],
+    [
+      0.15,
+      1.3125
+    ],
+    [
+      0.15,
+      1.375
+    ],
+    [
+      0.15,
+      1.5
+    ],
+    [
+      0.15,
+      1.5625
+    ],
+    [
+      0.15,
+      1.625
+    ],
+    [
+      0.15,
+      1.75
+    ],
+    [
+      0.15,
+      1.8125
+    ],
+    [
+      0.15,
+      1.875
+    ],
+    [
+      0.15,
+      2.0
+    ]
+  ],
+  "initial_quadrature_nodes": 256,
+  "independent_quadrature_nodes": 512,
+  "chebyshev_condition": 596.9099233200659,
+  "weight_quadrature_disagreement": 2.2249563302878528e-14,
+  "pde_max_fp64": 9.992007221626409e-16,
+  "wrong_decay_pde_max_fp64": 0.010732421321242303,
+  "gradient_audits": [
+    {
+      "dtype": "torch.float32",
+      "parameters": 896,
+      "max_gradient_disagreement": 3.641524363848974e-08,
+      "finite_differences": []
+    },
+    {
+      "dtype": "torch.float64",
+      "parameters": 896,
+      "max_gradient_disagreement": 3.122502256758253e-17,
+      "finite_differences": [
+        {
+          "h": 1e-05,
+          "actual": -3.459396502846759e-05,
+          "expected": -3.4593965042258696e-05
+        },
+        {
+          "h": 5e-06,
+          "actual": -3.459396499729678e-05,
+          "expected": -3.4593965042258696e-05
+        }
+      ]
+    }
+  ],
+  "limits": {
+    "relative_l2": 0.02,
+    "final_relative_l2": 0.03,
+    "worst_time_relative_l2": 0.03,
+    "pde_rmse": 0.02,
+    "coefficient_response_relative_l2": 0.05,
+    "dx_relative_l2": 0.05,
+    "flux_relative_l2": 0.05,
+    "initial_rmse": 1e-06,
+    "boundary_max": 1e-06
+  },
+  "results": {
+    "modal_control": {
+      "metrics": {
+        "relative_l2": 2.4834149282372797e-07,
+        "final_relative_l2": 4.659199762842192e-07,
+        "worst_time_relative_l2": 6.720918232071878e-07,
+        "dx_relative_l2": 1.024910951464511e-06,
+        "flux_relative_l2": 1.6589274137616217e-06,
+        "pde_rmse": 1.7703831645121682e-07,
+        "initial_rmse": 1.294365142301258e-07,
+        "coefficient_response_relative_l2": 2.0897500489233417e-06,
+        "boundary_max": 6.4134766830648e-08
+      },
+      "failed": [],
+      "state_unchanged": true,
+      "responses": [
+        {
+          "left": 0,
+          "right": 3,
+          "relative_l2": 2.0897500489233417e-06
+        },
+        {
+          "left": 4,
+          "right": 7,
+          "relative_l2": 1.7805078041056403e-06
+        },
+        {
+          "left": 0,
+          "right": 4,
+          "relative_l2": 3.7636682341542206e-07
+        },
+        {
+          "left": 1,
+          "right": 5,
+          "relative_l2": 4.873819246919534e-07
+        },
+        {
+          "left": 2,
+          "right": 6,
+          "relative_l2": 4.0294217669311577e-07
+        },
+        {
+          "left": 3,
+          "right": 7,
+          "relative_l2": 3.841678178555908e-07
+        }
+      ]
+    },
+    "ignored_shape": {
+      "metrics": {
+        "relative_l2": 0.1615645875147217,
+        "final_relative_l2": 0.81855262302024,
+        "worst_time_relative_l2": 0.81855262302024,
+        "dx_relative_l2": 0.1650256179189303,
+        "flux_relative_l2": 0.18742642223509226,
+        "pde_rmse": 0.2832689583301544,
+        "initial_rmse": 9.569330507486232e-08,
+        "coefficient_response_relative_l2": 1.0,
+        "boundary_max": 6.22055154053669e-08
+      },
+      "failed": [
+        "relative_l2",
+        "final_relative_l2",
+        "worst_time_relative_l2",
+        "pde_rmse",
+        "coefficient_response_relative_l2",
+        "dx_relative_l2",
+        "flux_relative_l2"
+      ],
+      "state_unchanged": true,
+      "responses": [
+        {
+          "left": 0,
+          "right": 3,
+          "relative_l2": 1.0
+        },
+        {
+          "left": 4,
+          "right": 7,
+          "relative_l2": 1.0
+        },
+        {
+          "left": 0,
+          "right": 4,
+          "relative_l2": 0.057066359127430126
+        },
+        {
+          "left": 1,
+          "right": 5,
+          "relative_l2": 0.01615834223923444
+        },
+        {
+          "left": 2,
+          "right": 6,
+          "relative_l2": 0.014071694894994135
+        },
+        {
+          "left": 3,
+          "right": 7,
+          "relative_l2": 0.037443022774883025
+        }
+      ]
+    }
+  },
+  "timing_comparable": false
+}

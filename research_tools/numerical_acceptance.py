@@ -162,6 +162,13 @@ CLOCK_PROTOTYPE_EXPECTED = [
     for seed in (11, 29)
     for dtype in (0, 1)
 ]
+MODAL_PROTOTYPE_SUITE = "tests/numerics/test_quadratic_modal_prototype.py"
+MODAL_PROTOTYPE_EXPECTED = [
+    MODAL_PROTOTYPE_SUITE
+    + f"::test_modal_physical_residual_all_weights_and_boundaries[{seed}-dtype{dtype}]"
+    for seed in (11, 29)
+    for dtype in (0, 1)
+]
 SCALED_TIME_SUITE = "tests/numerics/test_scaled_time_network.py"
 SCALED_TIME_EXPECTED = [
     SCALED_TIME_SUITE
@@ -175,6 +182,7 @@ SCALED_TIME_LIFECYCLE_EXPECTED = [
 ]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    MODAL_PROTOTYPE_SUITE: MODAL_PROTOTYPE_EXPECTED,
     SCALED_TIME_SUITE: SCALED_TIME_EXPECTED,
     SCALED_TIME_LIFECYCLE_SUITE: SCALED_TIME_LIFECYCLE_EXPECTED,
     CLOCK_PROTOTYPE_SUITE: CLOCK_PROTOTYPE_EXPECTED,
@@ -253,6 +261,24 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == MODAL_PROTOTYPE_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=4,
+            case="quadratic_modal_prototype",
+            dtypes=["float32", "float64"],
+            seeds=[11, 29],
+            network_models=4,
+            parameters_per_model=3199,
+            finite_difference_checks=4,
+            correction_modes=32,
+            optimizer_updates=0,
+            training=False,
+            performance_measurement=False,
+            public_checkpoint_contract=False,
+        )
     if manifest["suite"] == SCALED_TIME_SUITE:
         return dict(
             contract=1,

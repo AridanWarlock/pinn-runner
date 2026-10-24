@@ -330,3 +330,14 @@ def test_clock_quality_evaluation_admission_is_one_step_only():
     )
     assert p["hypotheses_per_snapshot"] == 12 and p["response_pairs_per_snapshot"] == 6
     assert p["snapshots"] == 2 and p["performance_measurement"] is False
+
+
+def test_modal_prototype_admission_has_no_training_or_public_contract():
+    m = protocol()
+    m.update(
+        suite=acceptance.MODAL_PROTOTYPE_SUITE, tests=acceptance.MODAL_PROTOTYPE_EXPECTED.copy()
+    )
+    p = plan(m)
+    assert p["parameters_per_model"] == 3199 and p["correction_modes"] == 32
+    assert p["tests"] == 4 and p["optimizer_updates"] == 0
+    assert p["training"] is False and p["public_checkpoint_contract"] is False
