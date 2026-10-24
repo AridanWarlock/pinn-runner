@@ -1,0 +1,5 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_quadratic_modal_prototype.py::test_modal_physical_residual_all_weights_and_boundaries[11-dtype0],passed,passed,passed,0.25255919992923737
+tests/numerics/test_quadratic_modal_prototype.py::test_modal_physical_residual_all_weights_and_boundaries[11-dtype1],passed,passed,passed,0.07084490009583533
+tests/numerics/test_quadratic_modal_prototype.py::test_modal_physical_residual_all_weights_and_boundaries[29-dtype0],passed,passed,passed,0.03073549992404878
+tests/numerics/test_quadratic_modal_prototype.py::test_modal_physical_residual_all_weights_and_boundaries[29-dtype1],passed,passed,passed,0.0605698999715969
