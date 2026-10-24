@@ -1,0 +1,20 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "7ab3005cc373763fa82784958019f3f3ebf616e6",
+  "suite": "tests/integration/test_scaled_time_runner.py",
+  "tests": [
+    "tests/integration/test_scaled_time_runner.py::test_scaled_time_public_lifecycle"
+  ],
+  "test_sha256": "b885e1e9e1c26967526fec041ec1aa9b224405fa1e486c8df1459e8521affeee",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "7ab3005cc373763fa82784958019f3f3ebf616e6",
+  "suite": "tests/numerics/test_scaled_time_network.py",
+  "tests": [
+    "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[11-dtype0]",
+    "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[11-dtype1]",
+    "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[29-dtype0]",
+    "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[29-dtype1]"
+  ],
+  "test_sha256": "fe42cbbbe4c0d58818f18cd5ef4063be52848dcb51fcfe63d55087b1953156bf",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
