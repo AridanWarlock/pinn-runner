@@ -1,0 +1,23 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "494c3390a8f8de5be8b8cc24b2f93e3a1666dbf0",
+  "suite": "tests/numerics/test_quadratic_modal_prototype.py",
+  "tests": [
+    "tests/numerics/test_quadratic_modal_prototype.py::test_modal_physical_residual_all_weights_and_boundaries[11-dtype0]",
+    "tests/numerics/test_quadratic_modal_prototype.py::test_modal_physical_residual_all_weights_and_boundaries[11-dtype1]",
+    "tests/numerics/test_quadratic_modal_prototype.py::test_modal_physical_residual_all_weights_and_boundaries[29-dtype0]",
+    "tests/numerics/test_quadratic_modal_prototype.py::test_modal_physical_residual_all_weights_and_boundaries[29-dtype1]"
+  ],
+  "test_sha256": "32dcc00301dd85bd080469c125c7453ec35ec30e6e79958f7dc7a082001b233d",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
