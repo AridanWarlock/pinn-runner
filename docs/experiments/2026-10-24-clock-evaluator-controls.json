@@ -1,0 +1,54 @@
+{
+  "kind": "analytical_evaluator_controls_not_trained_models",
+  "limits": {
+    "relative_l2": 0.02,
+    "final_relative_l2": 0.03,
+    "worst_time_relative_l2": 0.03,
+    "pde_rmse": 0.02,
+    "coefficient_response_relative_l2": 0.05,
+    "dx_relative_l2": 0.05,
+    "flux_relative_l2": 0.05,
+    "initial_rmse": 1e-06,
+    "boundary_max": 1e-06
+  },
+  "results": {
+    "exact_clock": {
+      "metrics": {
+        "relative_l2": 2.3791499750899953e-07,
+        "final_relative_l2": 4.5552545314958086e-07,
+        "worst_time_relative_l2": 6.639932016310133e-07,
+        "dx_relative_l2": 1.0206268975345651e-06,
+        "flux_relative_l2": 1.6578391117156579e-06,
+        "pde_rmse": 1.516242349453023e-07,
+        "initial_rmse": 1.4136164324935847e-07,
+        "coefficient_response_relative_l2": 1.8378260487200253e-06,
+        "boundary_max": 2.4257616360046086e-07
+      },
+      "failed": [],
+      "unchanged": true
+    },
+    "forgotten_clock": {
+      "metrics": {
+        "relative_l2": 0.5053789990340765,
+        "final_relative_l2": 0.875002580012639,
+        "worst_time_relative_l2": 0.875002580012639,
+        "dx_relative_l2": 0.5226322818535913,
+        "flux_relative_l2": 0.5118691161501346,
+        "pde_rmse": 0.6917266845703125,
+        "initial_rmse": 1.4136164324935847e-07,
+        "coefficient_response_relative_l2": 1.0,
+        "boundary_max": 2.4257616360046086e-07
+      },
+      "failed": [
+        "relative_l2",
+        "final_relative_l2",
+        "worst_time_relative_l2",
+        "pde_rmse",
+        "coefficient_response_relative_l2",
+        "dx_relative_l2",
+        "flux_relative_l2"
+      ],
+      "unchanged": true
+    }
+  }
+}

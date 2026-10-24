@@ -1,0 +1,73 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "6ed08c850a1841de2a8a611c548a06df3f45e7c3",
+    "suite": "tests/integration/test_quadratic_clock_convergence.py",
+    "tests": [
+      "tests/integration/test_quadratic_clock_convergence.py::test_clock_convergence_preserves_physical_evidence"
+    ],
+    "test_sha256": "2d9e634d106438095cd60383145f3ad2d20bbe87cf87edbc5d7bf0d401ba2c15",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "6ed08c850a1841de2a8a611c548a06df3f45e7c3",
+  "test_sha256": "2d9e634d106438095cd60383145f3ad2d20bbe87cf87edbc5d7bf0d401ba2c15",
+  "source_unchanged": true,
+  "test_raw_sha256": "9f3291f0089064db2dd6c1a071b453df8755a0f042d0133f21483a4c33df6baa",
+  "test_raw_sha256_after": "9f3291f0089064db2dd6c1a071b453df8755a0f042d0133f21483a4c33df6baa",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/integration/test_quadratic_clock_convergence.py::test_clock_convergence_preserves_physical_evidence"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/integration/test_quadratic_clock_convergence.py::test_clock_convergence_preserves_physical_evidence",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 3.4404916999628767
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "c8199394d30eadd528952d31cdfeabb31c3bfa86abe11c1900b2ed38f87eaba7",
+    "pytest-results.json": "d93669de8e59a1afed42efc472fce851d0d0e3fef7c51fe7cd6590eeceb1ca8a"
+  },
+  "provenance": {
+    "protocol_commit": "9285aa344a959c4b0124f9850ca8975ac1559e73",
+    "protocol_sha256": "92e1b373d84bdeb3072bf3852b6d42d78bb9a108eca0955a86f1d1fe21ff208f"
+  }
+}

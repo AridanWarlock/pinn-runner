@@ -1,0 +1,2 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_quadratic_clock_convergence.py::test_clock_convergence_preserves_physical_evidence,passed,passed,passed,3.4404916999628767
