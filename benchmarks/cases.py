@@ -10,7 +10,7 @@ from typing import Any, cast
 import numpy as np
 from numpy.typing import NDArray
 
-from .catalog import QUADRATIC_TRAINING_ROWS, SPECS, Family
+from .catalog import QUADRATIC_CLOCK_TRAINING_ROWS, QUADRATIC_TRAINING_ROWS, SPECS, Family
 from .policies import CartesianGrid, FixedQuality, GridPolicy, QualityPolicy, TrainingBudget
 
 Array = NDArray[np.float64]
@@ -347,6 +347,11 @@ class QuadraticShapeCase(ConstantSurrogateCase):
             "b": {"interval": [1, 2], "points": 3},
         }
         config["domain"]["parameter_rows"] = [row.copy() for row in QUADRATIC_TRAINING_ROWS]
+        if self.name == "heat_quadratic_clock":
+            config["network"]["time_scale"] = {"parameter": "a", "reference": 0.15}
+            config["domain"]["parameter_rows"] = [
+                row.copy() for row in QUADRATIC_CLOCK_TRAINING_ROWS
+            ]
         return config
 
     def reference(self, spatial: dict[str, Array], time: Array) -> Array:

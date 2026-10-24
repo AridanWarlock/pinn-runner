@@ -1,0 +1,5 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[11-dtype0],passed,passed,passed,0.5407261999789625
+tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[11-dtype1],passed,passed,passed,0.08964359981473535
+tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[29-dtype0],passed,passed,passed,0.03634240000974387
+tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[29-dtype1],passed,passed,passed,0.07000370020978153

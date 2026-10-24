@@ -1,0 +1,2 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_scaled_time_runner.py::test_scaled_time_public_lifecycle,passed,passed,passed,22.043624999932945

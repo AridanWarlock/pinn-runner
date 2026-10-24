@@ -20,6 +20,7 @@ def test_all_published_case_configs_and_references_are_preserved() -> None:
         rows = list(csv.DictReader(stream))
     assert set(CASES) == {r["name"] for r in rows} | {
         "heat_quadratic_shapes",
+        "heat_quadratic_clock",
         "heat_constant_surrogate",
         "heat_spatial_scale_surrogate",
         "heat_conductivity_beta0",
@@ -51,12 +52,20 @@ def test_light_catalog_faces_and_shapes_match_problem_implementations() -> None:
         for name in CASES
         if name.startswith("heat")
         and name
-        not in ("heat_constant_surrogate", "heat_spatial_scale_surrogate", "heat_quadratic_shapes")
+        not in (
+            "heat_constant_surrogate",
+            "heat_spatial_scale_surrogate",
+            "heat_quadratic_shapes",
+            "heat_quadratic_clock",
+        )
     }
     for name, case in CASES.items():
         spec = CATALOG[name]
         config = case.config("cpu", 2, 19)
-        assert config["network"] == dict(hidden_layers=list(spec.layers))
+        expected = dict(hidden_layers=list(spec.layers))
+        if name == "heat_quadratic_clock":
+            expected["time_scale"] = {"parameter": "a", "reference": 0.15}
+        assert config["network"] == expected
         actual = []
         for boundary in config["boundaries"]:
             for side in [boundary["side"]] if "side" in boundary else ["lower", "upper"]:

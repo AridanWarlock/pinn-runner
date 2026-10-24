@@ -152,6 +152,10 @@ QUADRATIC_EVALUATION_SUITE = "tests/integration/test_quadratic_surrogate_converg
 QUADRATIC_EVALUATION_EXPECTED = [
     QUADRATIC_EVALUATION_SUITE + "::test_quadratic_convergence_collects_each_whole_code"
 ]
+CLOCK_EVALUATION_SUITE = "tests/integration/test_quadratic_clock_convergence.py"
+CLOCK_EVALUATION_EXPECTED = [
+    CLOCK_EVALUATION_SUITE + "::test_clock_convergence_preserves_physical_evidence"
+]
 CLOCK_PROTOTYPE_SUITE = "tests/numerics/test_quadratic_clock_prototype.py"
 CLOCK_PROTOTYPE_EXPECTED = [
     CLOCK_PROTOTYPE_SUITE + f"::test_clock_chain_rule_and_all_weights[{seed}-dtype{dtype}]"
@@ -175,6 +179,7 @@ SUITES = {
     SCALED_TIME_LIFECYCLE_SUITE: SCALED_TIME_LIFECYCLE_EXPECTED,
     CLOCK_PROTOTYPE_SUITE: CLOCK_PROTOTYPE_EXPECTED,
     QUADRATIC_EVALUATION_SUITE: QUADRATIC_EVALUATION_EXPECTED,
+    CLOCK_EVALUATION_SUITE: CLOCK_EVALUATION_EXPECTED,
     QUADRATIC_LIFECYCLE_SUITE: QUADRATIC_LIFECYCLE_EXPECTED,
     QUADRATIC_SHAPE_SUITE: QUADRATIC_SHAPE_EXPECTED,
     FUNCTION_CODE_SUITE: FUNCTION_CODE_EXPECTED,
@@ -305,7 +310,7 @@ def plan(manifest: Json) -> Json:
             performance_measurement=False,
             public_checkpoint_contract=False,
         )
-    if manifest["suite"] == QUADRATIC_EVALUATION_SUITE:
+    if manifest["suite"] in (QUADRATIC_EVALUATION_SUITE, CLOCK_EVALUATION_SUITE):
         return dict(
             contract=1,
             kind="numerical-acceptance-plan",
@@ -571,6 +576,7 @@ def compare(evidence: Json) -> Json:
                 FUNCTION_CODE_LIFECYCLE_SUITE,
                 QUADRATIC_LIFECYCLE_SUITE,
                 QUADRATIC_EVALUATION_SUITE,
+                CLOCK_EVALUATION_SUITE,
             )
             else "Existing numerical tests only; no training or speed claim"
         ),

@@ -18,14 +18,17 @@ pytestmark = pytest.mark.e2e
 
 
 def test_quadratic_convergence_collects_each_whole_code(tmp_path: Path) -> None:
+    audit_quadratic_convergence(tmp_path, quadratic_manifest(), NAME)
+
+
+def audit_quadratic_convergence(tmp_path, manifest, name):
     torch.set_num_threads(1)
-    manifest = quadratic_manifest()
     manifest["report_parameters"].update(points_override=7)
     manifest["expected_trials"] = manifest["expected_trials"][:1]
     device = os.environ.get("PINN_TEST_DEVICE", "cpu")
     assert device in ("cpu", "cuda")
     plan = ConvergencePlan(
-        CASES[NAME], 1, (0, 1), manifest["case_limits"][NAME], "soft", 7, device, 1e-12
+        CASES[name], 1, (0, 1), manifest["case_limits"][name], "soft", 7, device, 1e-12
     )
     trial = convergence_trial(plan, ConvergenceArm(), 11, tmp_path / "trial")
     assert (trial["peak_allocated_bytes"] is not None) == (device == "cuda")
@@ -43,14 +46,14 @@ def test_quadratic_convergence_collects_each_whole_code(tmp_path: Path) -> None:
     report = dict(
         contract=3,
         status="completed",
-        case=NAME,
+        case=name,
         limits=plan.limits,
         environment=environment,
         **manifest["report_parameters"],
         trials=[trial],
     )
-    (tmp_path / NAME).mkdir()
-    (tmp_path / NAME / "report.json").write_text(json.dumps(report))
+    (tmp_path / name).mkdir()
+    (tmp_path / name / "report.json").write_text(json.dumps(report))
     protocol = tmp_path / "protocol.json"
     protocol.write_text(json.dumps(manifest))
     evidence = collect(tmp_path, manifest, protocol)

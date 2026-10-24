@@ -313,3 +313,20 @@ def test_scaled_time_inventory_and_fixed_budget(suite):
         assert planned["changed_reference_rejected"] and planned["changed_normalization_rejected"]
     assert compare(e)["passed"] == len(m["tests"])
     assert compare(e)["comparison_passed"]
+
+
+def test_clock_quality_evaluation_admission_is_one_step_only():
+    m = protocol()
+    m.update(
+        suite=acceptance.CLOCK_EVALUATION_SUITE, tests=acceptance.CLOCK_EVALUATION_EXPECTED.copy()
+    )
+    p = plan(m)
+    assert (
+        p["tests"]
+        == p["regular_fits"]
+        == p["adam_steps_per_regular_fit"]
+        == p["lbfgs_outer_steps_per_regular_fit"]
+        == 1
+    )
+    assert p["hypotheses_per_snapshot"] == 12 and p["response_pairs_per_snapshot"] == 6
+    assert p["snapshots"] == 2 and p["performance_measurement"] is False

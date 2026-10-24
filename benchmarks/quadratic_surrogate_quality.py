@@ -15,21 +15,24 @@ from pinnstorch.api import Equation
 from pinnstorch.models.pinn_module import PINNModule
 from pinnstorch.runner.problem import ProblemAdapter
 
-from .catalog import QUADRATIC_EVALUATION
+from .catalog import SURROGATE_EVALUATIONS
 from .fingerprints import tensor_fingerprint
 from .quadratic_reference import reference_fields
 
 Array = NDArray[np.float64]
 
 
-def evaluation_identity() -> dict[str, Any]:
+def evaluation_identity(case: str = "heat_quadratic_shapes") -> dict[str, Any]:
+    if case not in ("heat_quadratic_shapes", "heat_quadratic_clock"):
+        raise ValueError("Expected registered quadratic evaluation")
+
     def digest(name: str) -> str:
         return hashlib.sha256(
             Path(__file__).with_name(name).read_bytes().replace(b"\r\n", b"\n")
         ).hexdigest()
 
     return {
-        **deepcopy(QUADRATIC_EVALUATION),
+        **deepcopy(SURROGATE_EVALUATIONS[case]),
         "reference_sha256": digest("quadratic_surrogate_quality.py"),
         "analytical_sha256": digest("quadratic_reference.py"),
     }
@@ -43,9 +46,9 @@ def relative(actual: Array, expected: Array) -> float:
 
 
 def evaluate(
-    model: PINNModule, adapter: ProblemAdapter, device: str
+    model: PINNModule, adapter: ProblemAdapter, device: str, case: str = "heat_quadratic_shapes"
 ) -> tuple[dict[str, float], dict[str, Any]]:
-    identity = evaluation_identity()
+    identity = evaluation_identity(case)
     before = tensor_fingerprint(model.state_dict())
     x = np.linspace(0, 1, identity["grid"][0])[:, None]
     t = np.linspace(0, 1, identity["grid"][1])[None, :]

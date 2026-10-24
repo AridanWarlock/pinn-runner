@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Literal
 
@@ -141,9 +142,19 @@ QUADRATIC_EVALUATION = dict(
     aggregation="worst_hypothesis",
 )
 QUADRATIC_METRICS = {"dx_relative_l2", "flux_relative_l2", "coefficient_response_relative_l2"}
+QUADRATIC_CLOCK_TRAINING_ROWS = [
+    [0.15, b] for b in sorted({row[1] for row in QUADRATIC_TRAINING_ROWS})
+]
+QUADRATIC_CLOCK_EVALUATION = {
+    **deepcopy(QUADRATIC_EVALUATION),
+    "training_rows": QUADRATIC_CLOCK_TRAINING_ROWS,
+    "splits": ["unseen"] * 8 + ["corner"] * 4,
+    "training_sampling": "reference_scale_full_time_lhs_complete_code_rows",
+}
 
 
 SURROGATE_EVALUATIONS = {
+    "heat_quadratic_clock": QUADRATIC_CLOCK_EVALUATION,
     "heat_quadratic_shapes": QUADRATIC_EVALUATION,
     "heat_constant_surrogate": CONSTANT_EVALUATION,
     "heat_spatial_scale_surrogate": SPATIAL_SCALE_EVALUATION,
@@ -171,6 +182,14 @@ UNFORCED_METRICS = {
 UNFORCED_VISCOSITIES = {"burgers_unforced_nu010": 0.1, "burgers_unforced_nu001": 0.01}
 
 SPECS = (
+    CaseSpec(
+        "heat_quadratic_clock",
+        "quadratic_shapes",
+        1,
+        (16, 101),
+        time_interval=(0, 1),
+        time_counts=(11, 101),
+    ),
     CaseSpec(
         "heat_quadratic_shapes",
         "quadratic_shapes",

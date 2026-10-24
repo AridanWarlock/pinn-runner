@@ -220,7 +220,7 @@ def validate_manifest(manifest: Json, base: Path) -> Json:
             or not re.fullmatch("[0-9a-f]{64}", evaluation["reference_sha256"])
         ):
             raise ValueError("Registered per-hypothesis evaluation and reference hash required")
-    if "heat_quadratic_shapes" in case_limits:
+    if set(case_limits) & {"heat_quadratic_shapes", "heat_quadratic_clock"}:
         evaluation = manifest["hypothesis_evaluation"]
         if not isinstance(evaluation.get("analytical_sha256"), str) or not re.fullmatch(
             "[0-9a-f]{64}", evaluation["analytical_sha256"]

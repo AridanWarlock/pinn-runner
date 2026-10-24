@@ -200,10 +200,13 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
         )
         for arm in arms:
             validate_arm(arm, parameters["constraints"], spec)
-            if manifest["network"] != {
+            expected_network: Json = {
                 "hidden_layers": list(spec.layers),
                 "spatial_encoding": arm["spatial_encoding"],
-            }:
+            }
+            if name == "heat_quadratic_clock":
+                expected_network["time_scale"] = {"parameter": "a", "reference": 0.15}
+            if manifest["network"] != expected_network:
                 raise ValueError("Network differs from the registered case configuration")
         seeds = sorted({t["seed"] for t in manifest["expected_trials"] if t["case"] == name})
         rows.append(

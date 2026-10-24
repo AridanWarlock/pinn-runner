@@ -1,0 +1,106 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "7ab3005cc373763fa82784958019f3f3ebf616e6",
+    "suite": "tests/numerics/test_scaled_time_network.py",
+    "tests": [
+      "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[11-dtype0]",
+      "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[11-dtype1]",
+      "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[29-dtype0]",
+      "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[29-dtype1]"
+    ],
+    "test_sha256": "fe42cbbbe4c0d58818f18cd5ef4063be52848dcb51fcfe63d55087b1953156bf",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "7ab3005cc373763fa82784958019f3f3ebf616e6",
+  "test_sha256": "fe42cbbbe4c0d58818f18cd5ef4063be52848dcb51fcfe63d55087b1953156bf",
+  "source_unchanged": true,
+  "test_raw_sha256": "06aaa92afbd3b08105f8c7d81f11c6d157d584565948971c7fca746d7eccfe09",
+  "test_raw_sha256_after": "06aaa92afbd3b08105f8c7d81f11c6d157d584565948971c7fca746d7eccfe09",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[11-dtype0]",
+    "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[11-dtype1]",
+    "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[29-dtype0]",
+    "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[29-dtype1]"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[11-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.5407261999789625
+    },
+    {
+      "nodeid": "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[11-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.08964359981473535
+    },
+    {
+      "nodeid": "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[29-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.03634240000974387
+    },
+    {
+      "nodeid": "tests/numerics/test_scaled_time_network.py::test_public_scaled_time_derivatives_and_all_weights[29-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.07000370020978153
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "cc839bd3f43bfe8b3373b28896dcda475eb3ff880ffa138423e37fd16a45f170",
+    "pytest-results.json": "699d99c6e58e11a396545f62377ce271368159b5243ffb207ecfc345f8285fd4"
+  },
+  "provenance": {
+    "protocol_commit": "cd8aaee547cd81546f58ee4febd2fc894f92c217",
+    "protocol_sha256": "a5aa907d198a62db2ee633fc96dbc248dc743892f4008d04b8e53cf3d3f7b6e2"
+  }
+}

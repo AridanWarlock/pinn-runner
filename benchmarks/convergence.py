@@ -211,8 +211,14 @@ class SnapshotEvaluation:
                 or tuple(domain.parameters[parameter].interval) != (0.05, 0.25)
             ):
                 raise ValueError("Surrogate evaluation requires registered x/t/k intervals")
-        if plan.case.name == "heat_quadratic_shapes":
-            from .catalog import QUADRATIC_TRAINING_ROWS
+        if plan.case.name in ("heat_quadratic_shapes", "heat_quadratic_clock"):
+            from .catalog import QUADRATIC_CLOCK_TRAINING_ROWS, QUADRATIC_TRAINING_ROWS
+
+            training_rows = (
+                QUADRATIC_CLOCK_TRAINING_ROWS
+                if plan.case.name == "heat_quadratic_clock"
+                else QUADRATIC_TRAINING_ROWS
+            )
 
             domain = factory.settings.domain
             if (
@@ -222,11 +228,22 @@ class SnapshotEvaluation:
                 or tuple(domain.parameters) != ("a", "b")
                 or tuple(domain.parameters["a"].interval) != (0.05, 0.15)
                 or tuple(domain.parameters["b"].interval) != (1, 2)
-                or domain.parameter_rows != tuple(tuple(row) for row in QUADRATIC_TRAINING_ROWS)
+                or domain.parameter_rows != tuple(tuple(row) for row in training_rows)
             ):
                 raise ValueError(
                     "Whole-code evaluation requires registered domain and training rows"
                 )
+            expected_clock = (
+                {"parameter": "a", "reference": 0.15}
+                if plan.case.name == "heat_quadratic_clock"
+                else None
+            )
+            if (
+                asdict(factory.settings.network.time_scale)
+                if factory.settings.network.time_scale
+                else None
+            ) != expected_clock:
+                raise ValueError("Whole-code evaluation requires registered time scale")
         self.objects = factory.build(predicting=True)
         self.model = self.objects.model.to(plan.device).eval()
         mesh = self.objects.mesh
@@ -257,10 +274,12 @@ class SnapshotEvaluation:
 
     def evaluate(self, checkpoint: Path) -> tuple[dict[str, float], dict[str, Any]]:
         self.model.load_state_dict(load_checkpoint(checkpoint, map_location=self.plan.device))
-        if self.plan.case.name == "heat_quadratic_shapes":
+        if self.plan.case.name in ("heat_quadratic_shapes", "heat_quadratic_clock"):
             from .quadratic_surrogate_quality import evaluate as evaluate_quadratic
 
-            return evaluate_quadratic(self.model, self.factory.adapter, self.plan.device)
+            return evaluate_quadratic(
+                self.model, self.factory.adapter, self.plan.device, self.plan.case.name
+            )
         if self.plan.case.name == "heat_spatial_scale_surrogate":
             from .spatial_surrogate_quality import evaluate as evaluate_spatial
 

@@ -135,7 +135,7 @@ def arguments() -> tuple[argparse.Namespace, ConvergencePlan, list[ConvergenceAr
     ):
         parser.error("Shared surrogate requires coefficient-response limit")
     if (
-        args.case == "heat_quadratic_shapes"
+        args.case in ("heat_quadratic_shapes", "heat_quadratic_clock")
         and not {"dx_relative_l2", "flux_relative_l2", "coefficient_response_relative_l2"}
         <= limits.keys()
     ):
