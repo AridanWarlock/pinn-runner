@@ -51,6 +51,7 @@ class PINNModule(LightningModule):
         backward_mode: str = "all",
         hard_background: str = "general",
         spatial_encoding: str = "identity",
+        input_transform: dict[str, Any] | None = None,
     ) -> None:
         super().__init__()
         if loss_fn not in ("mse", "sse"):

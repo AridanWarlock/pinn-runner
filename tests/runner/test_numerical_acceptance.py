@@ -289,3 +289,27 @@ def test_quadratic_shape_inventory_has_no_optimizer_and_rejects_incomplete_evide
     e["trials"].pop()
     with pytest.raises(ValueError, match="Incomplete"):
         compare(e)
+
+
+@pytest.mark.parametrize(
+    "suite", [acceptance.SCALED_TIME_SUITE, acceptance.SCALED_TIME_LIFECYCLE_SUITE]
+)
+def test_scaled_time_inventory_and_fixed_budget(suite):
+    e = evidence()
+    m = e["manifest"]
+    m.update(suite=suite, tests=acceptance.SUITES[suite].copy())
+    e["collected"] = m["tests"].copy()
+    e["trials"] = e["trials"][: len(m["tests"])]
+    for trial, nodeid in zip(e["trials"], m["tests"]):
+        trial["nodeid"] = nodeid
+    planned = plan(m)
+    assert planned["performance_measurement"] is False
+    if suite == acceptance.SCALED_TIME_SUITE:
+        assert planned["parameters_per_model"] == 2273
+        assert planned["training"] is False and planned["optimizer_updates"] == 0
+    else:
+        assert planned["adam_steps_per_regular_fit"] == 3
+        assert planned["lbfgs_outer_steps_per_regular_fit"] == 2
+        assert planned["changed_reference_rejected"] and planned["changed_normalization_rejected"]
+    assert compare(e)["passed"] == len(m["tests"])
+    assert compare(e)["comparison_passed"]

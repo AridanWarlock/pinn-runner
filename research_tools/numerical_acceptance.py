@@ -158,8 +158,21 @@ CLOCK_PROTOTYPE_EXPECTED = [
     for seed in (11, 29)
     for dtype in (0, 1)
 ]
+SCALED_TIME_SUITE = "tests/numerics/test_scaled_time_network.py"
+SCALED_TIME_EXPECTED = [
+    SCALED_TIME_SUITE
+    + f"::test_public_scaled_time_derivatives_and_all_weights[{seed}-dtype{dtype}]"
+    for seed in (11, 29)
+    for dtype in (0, 1)
+]
+SCALED_TIME_LIFECYCLE_SUITE = "tests/integration/test_scaled_time_runner.py"
+SCALED_TIME_LIFECYCLE_EXPECTED = [
+    SCALED_TIME_LIFECYCLE_SUITE + "::test_scaled_time_public_lifecycle"
+]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    SCALED_TIME_SUITE: SCALED_TIME_EXPECTED,
+    SCALED_TIME_LIFECYCLE_SUITE: SCALED_TIME_LIFECYCLE_EXPECTED,
     CLOCK_PROTOTYPE_SUITE: CLOCK_PROTOTYPE_EXPECTED,
     QUADRATIC_EVALUATION_SUITE: QUADRATIC_EVALUATION_EXPECTED,
     QUADRATIC_LIFECYCLE_SUITE: QUADRATIC_LIFECYCLE_EXPECTED,
@@ -235,6 +248,46 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == SCALED_TIME_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=4,
+            case="public_scaled_time",
+            dtypes=["float32", "float64"],
+            seeds=[11, 29],
+            network_models=4,
+            parameters_per_model=2273,
+            finite_difference_checks=4,
+            optimizer_updates=0,
+            training=False,
+            performance_measurement=False,
+            public_checkpoint_contract=True,
+        )
+    if manifest["suite"] == SCALED_TIME_LIFECYCLE_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=1,
+            training=True,
+            performance_measurement=False,
+            regular_fits=1,
+            adam_steps_per_regular_fit=3,
+            lbfgs_outer_steps_per_regular_fit=2,
+            identity_probe_fits=1,
+            identity_probe_adam_steps=1,
+            identity_probe_learning_rate=1e-300,
+            identity_probe_refinement_steps=0,
+            prediction_rows=[[0.075, 1.4], [0.125, 1.6]],
+            outside_hypothesis_rejected=True,
+            changed_decoder_rejected=True,
+            changed_order_rejected=True,
+            changed_reference_rejected=True,
+            missing_rule_rejected=True,
+            changed_normalization_rejected=True,
+        )
     if manifest["suite"] == CLOCK_PROTOTYPE_SUITE:
         return dict(
             contract=1,

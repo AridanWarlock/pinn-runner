@@ -21,6 +21,7 @@ from pinnstorch.data import (
 )
 from pinnstorch.data.sampler.sampler_base import SamplerBase
 from pinnstorch.models import FCN, PINNModule
+from pinnstorch.models.net.scaled_time import ScaledTimeFCN
 from pinnstorch.models.net.spatial_features import FeatureFCN
 from pinnstorch.training.sampling import ResampledLHS, TimePower
 
@@ -166,8 +167,25 @@ class SolverFactory:
             ),
         )
 
-    def _network(self, mesh: PointCloud) -> FCN | FeatureFCN:
+    def _physical_bounds(self) -> tuple[tuple[float, float], ...]:
+        domain = self.settings.domain
+        return tuple(
+            axis.interval
+            for axis in (*domain.space.values(), *domain.parameters.values(), domain.time)
+        )
+
+    def _network(self, mesh: PointCloud) -> FCN | FeatureFCN | ScaledTimeFCN:
         settings = self.settings
+        clock = settings.network.time_scale
+        if clock is not None:
+            return ScaledTimeFCN(
+                settings.network.hidden_layers,
+                settings.domain.input_names,
+                self._physical_bounds(),
+                self.problem.outputs,
+                clock.parameter,
+                clock.reference,
+            )
         layers = [
             len(settings.domain.input_names),
             *settings.network.hidden_layers,
@@ -218,9 +236,10 @@ class SolverFactory:
                 "version": 1,
             },
             input_names=settings.domain.input_names,
-            input_bounds=tuple(
-                (float(lower), float(upper)) for lower, upper in zip(mesh.lb, mesh.ub)
-            ),
+            input_transform=net.identity() if isinstance(net, ScaledTimeFCN) else None,
+            input_bounds=self._physical_bounds()
+            if isinstance(net, ScaledTimeFCN)
+            else tuple((float(lower), float(upper)) for lower, upper in zip(mesh.lb, mesh.ub)),
         )
 
     def _checkpoint(self) -> ModelCheckpoint:

@@ -11,6 +11,7 @@ import torch
 
 from pinnstorch.checkpoint_contract import InputBounds, validate_checkpoint_domain
 from pinnstorch.contracts import TensorOutputs
+from pinnstorch.models.net.scaled_time import validate_time_scale_checkpoint
 from pinnstorch.training.refinement import FixedObjective, LBFGSRefinement
 from pinnstorch.utils.module_fn import fix_predictions
 
@@ -98,6 +99,7 @@ class SolverExecution:
 
     def _load(self, path: Path, allow_extrapolation: bool) -> InputBounds:
         checkpoint = load_checkpoint(path)
+        validate_time_scale_checkpoint(checkpoint, self.objects.model.net)
         constraint = checkpoint.get("hyper_parameters", {}).get("constraint_kind", "soft")
         saved_signature = checkpoint.get("hyper_parameters", {}).get("constraint_signature", "")
         if saved_signature != self.objects.model.hparams.get("constraint_signature", ""):

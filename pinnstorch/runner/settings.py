@@ -409,13 +409,32 @@ class Training:
 
 
 @dataclass(frozen=True)
+class TimeScale:
+    parameter: str
+    reference: float
+
+    @classmethod
+    def read(cls, reader: Reader) -> TimeScale:
+        reader.only("parameter", "reference")
+        name = reader.values.get("parameter")
+        if not isinstance(name, str):
+            raise ValueError("network.time_scale.parameter must name a physical parameter")
+        identifier(name)
+        reference = reader.number("reference", 0)
+        if reference <= 0:
+            raise ValueError("network.time_scale.reference must be positive")
+        return cls(name, reference)
+
+
+@dataclass(frozen=True)
 class Network:
     hidden_layers: tuple[int, ...]
     spatial_encoding: str = "identity"
+    time_scale: TimeScale | None = None
 
     @classmethod
     def read(cls, reader: Reader) -> Network:
-        reader.only("hidden_layers", "spatial_encoding")
+        reader.only("hidden_layers", "spatial_encoding", "time_scale")
         layers = reader.values.get("hidden_layers", [32, 32])
         if (
             not isinstance(layers, list)
@@ -428,7 +447,12 @@ class Network:
         encoding = reader.choice(
             "spatial_encoding", "identity", ("identity", "neumann_cosine", "neumann_polynomial")
         )
-        return cls(tuple(cast(list[int], layers)), encoding)
+        clock = reader.values.get("time_scale")
+        return cls(
+            tuple(cast(list[int], layers)),
+            encoding,
+            None if clock is None else TimeScale.read(Reader(clock, "network.time_scale")),
+        )
 
 
 @dataclass(frozen=True)
@@ -679,6 +703,24 @@ class TaskSettings:
 
     def _validate_links(self) -> None:
         self.validate_spatial_encoding()
+        clock = self.network.time_scale
+        if clock is not None:
+            axis = self.domain.parameters.get(clock.parameter)
+            if axis is None or axis.interval[0] <= 0 or axis.interval[1] > clock.reference:
+                raise ValueError(
+                    "time_scale requires a positive parameter range no larger than reference"
+                )
+            if (
+                self.domain.time.interval[0] != 0
+                or "s" in self.domain.input_names
+                or self.network.spatial_encoding != "identity"
+                or self.training.constraints != "soft"
+                or self.prediction.allow_extrapolation
+            ):
+                raise ValueError(
+                    "time_scale requires time starting at zero, identity encoding, soft constraints, "
+                    "no 's' input and no extrapolation"
+                )
         if set(self.coefficients) & set(self.domain.input_names):
             raise ValueError("Coefficient names must differ from coordinates and parameters")
         if self.domain.parameter_rows is not None and self.prediction.parameters:

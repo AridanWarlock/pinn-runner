@@ -22,6 +22,10 @@ def test_clock_chain_rule_and_all_weights(dtype, seed, tmp_path: Path):
     assert device in ("cpu", "cuda")
     torch.manual_seed(seed)
     model = QuadraticClockPrototype().to(device=device, dtype=dtype).eval()
+    audit_clock_model(model, dtype, seed, device)
+
+
+def audit_clock_model(model, dtype, seed, device):
     assert sum(p.numel() for p in model.parameters()) == 2273
     before = {key: value.detach().clone() for key, value in model.state_dict().items()}
     fingerprint = tensor_fingerprint(before)
