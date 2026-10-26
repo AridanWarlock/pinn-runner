@@ -21,6 +21,7 @@ def test_all_published_case_configs_and_references_are_preserved() -> None:
     assert set(CASES) == {r["name"] for r in rows} | {
         "heat_quadratic_shapes",
         "heat_quadratic_clock",
+        "heat_quadratic_modal",
         "heat_constant_surrogate",
         "heat_spatial_scale_surrogate",
         "heat_conductivity_beta0",
@@ -57,6 +58,7 @@ def test_light_catalog_faces_and_shapes_match_problem_implementations() -> None:
             "heat_spatial_scale_surrogate",
             "heat_quadratic_shapes",
             "heat_quadratic_clock",
+            "heat_quadratic_modal",
         )
     }
     for name, case in CASES.items():
@@ -65,6 +67,8 @@ def test_light_catalog_faces_and_shapes_match_problem_implementations() -> None:
         expected = dict(hidden_layers=list(spec.layers))
         if name == "heat_quadratic_clock":
             expected["time_scale"] = {"parameter": "a", "reference": 0.15}
+        if name == "heat_quadratic_modal":
+            expected.update(quadratic_modal=True, modal_normalization="mode_gap")
         assert config["network"] == expected
         actual = []
         for boundary in config["boundaries"]:
