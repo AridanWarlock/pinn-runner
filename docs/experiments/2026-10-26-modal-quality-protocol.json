@@ -1,0 +1,324 @@
+{
+  "contract": 2,
+  "registration": "prospective",
+  "revision": "73d326c3b63c813768b5cd2b50d4c97c02b81706",
+  "reports": [
+    "heat_quadratic_modal/report.json"
+  ],
+  "expected_trials": [
+    {
+      "case": "heat_quadratic_modal",
+      "seed": 11,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "heat_quadratic_modal",
+      "seed": 29,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    },
+    {
+      "case": "heat_quadratic_modal",
+      "seed": 83,
+      "backend": "eager",
+      "lifting": "recursive",
+      "backward": "all",
+      "background": "general",
+      "spatial_encoding": "identity"
+    }
+  ],
+  "report_parameters": {
+    "adam_steps": 500,
+    "lbfgs_snapshots": [
+      0,
+      250,
+      500
+    ],
+    "constraints": "soft",
+    "points_override": null,
+    "lbfgs_tolerance_change": 1e-12,
+    "execution_lifecycle": "isolated_trials"
+  },
+  "case_limits": {
+    "heat_quadratic_modal": {
+      "relative_l2": 0.02,
+      "final_relative_l2": 0.03,
+      "worst_time_relative_l2": 0.03,
+      "pde_rmse": 0.02,
+      "coefficient_response_relative_l2": 0.05,
+      "dx_relative_l2": 0.05,
+      "flux_relative_l2": 0.05
+    }
+  },
+  "physical_limits": {
+    "initial_rmse": 1e-06,
+    "boundary_max": 1e-06
+  },
+  "case_faces": {
+    "heat_quadratic_modal": [
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "lower"
+      },
+      {
+        "field": "u",
+        "kind": "dirichlet",
+        "axis": "x",
+        "side": "upper"
+      }
+    ]
+  },
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "network": {
+    "hidden_layers": [
+      32,
+      32,
+      32
+    ],
+    "spatial_encoding": "identity",
+    "quadratic_modal": true,
+    "modal_normalization": "mode_gap"
+  },
+  "absolute_quality": {
+    "backend": "eager",
+    "lifting": "recursive",
+    "backward": "all",
+    "background": "general",
+    "spatial_encoding": "identity"
+  },
+  "problem_sha256": {
+    "heat_quadratic_modal": "60ac59de978dc7d692a1c42094b418ca243774ea7118bc16ffb863acf80ab299"
+  },
+  "hypothesis_evaluation": {
+    "parameters": [
+      "a",
+      "b"
+    ],
+    "training_rows": [
+      [
+        0.15,
+        1.0
+      ],
+      [
+        0.15,
+        1.0625
+      ],
+      [
+        0.15,
+        1.125
+      ],
+      [
+        0.15,
+        1.1875
+      ],
+      [
+        0.15,
+        1.25
+      ],
+      [
+        0.15,
+        1.3125
+      ],
+      [
+        0.15,
+        1.375
+      ],
+      [
+        0.15,
+        1.5
+      ],
+      [
+        0.15,
+        1.5625
+      ],
+      [
+        0.15,
+        1.625
+      ],
+      [
+        0.15,
+        1.75
+      ],
+      [
+        0.15,
+        1.8125
+      ],
+      [
+        0.15,
+        1.875
+      ],
+      [
+        0.15,
+        2.0
+      ]
+    ],
+    "hypotheses": [
+      [
+        0.075,
+        1.2
+      ],
+      [
+        0.075,
+        1.4
+      ],
+      [
+        0.075,
+        1.6
+      ],
+      [
+        0.075,
+        1.8
+      ],
+      [
+        0.125,
+        1.2
+      ],
+      [
+        0.125,
+        1.4
+      ],
+      [
+        0.125,
+        1.6
+      ],
+      [
+        0.125,
+        1.8
+      ],
+      [
+        0.05,
+        1.0
+      ],
+      [
+        0.05,
+        2.0
+      ],
+      [
+        0.15,
+        1.0
+      ],
+      [
+        0.15,
+        2.0
+      ]
+    ],
+    "splits": [
+      "unseen",
+      "unseen",
+      "unseen",
+      "unseen",
+      "unseen",
+      "unseen",
+      "unseen",
+      "unseen",
+      "corner",
+      "corner",
+      "corner",
+      "corner"
+    ],
+    "training_sampling": "continuous_modal_integral_no_xt_sampling",
+    "coefficient_profile": "a*(1+x/b)**2",
+    "initial_field": "sin(pi*x)**3",
+    "grid": [
+      101,
+      101
+    ],
+    "reference_modes": 64,
+    "pde_points": 1024,
+    "pde_seed": 20261021,
+    "ignored_a": 0.1,
+    "ignored_b": 1.5,
+    "response_pairs": [
+      [
+        0,
+        3
+      ],
+      [
+        4,
+        7
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        5
+      ],
+      [
+        2,
+        6
+      ],
+      [
+        3,
+        7
+      ]
+    ],
+    "field_norm": "array_l2_per_hypothesis",
+    "aggregation": "worst_hypothesis",
+    "training_objective": {
+      "kind": "continuous_pde_initial_projections",
+      "quadrature": 256,
+      "scale": 0.15,
+      "time_interval": [
+        0,
+        1
+      ],
+      "modes": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32
+      ],
+      "normalization": "mode_gap",
+      "coefficient_scale": "3/(n^2-1)",
+      "aggregation": "mean_over_14_forms",
+      "positive_time_teacher": false
+    },
+    "reference_sha256": "04994853a2f9e52ccb8622db17b2ec59787ef9b0b4dabb4def5c5464a38b685d",
+    "analytical_sha256": "674071fd2a9ddf808119ccaab45ff020f9eec6037a10718fc8182208e48c1365"
+  }
+}
