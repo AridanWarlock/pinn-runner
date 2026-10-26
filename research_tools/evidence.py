@@ -107,6 +107,30 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
         )
         for s in raw.get("snapshots", [])
     ]
+    if raw["case"] == "heat_quadratic_modal":
+        expected_training = dict(
+            kind="continuous_pde_initial_projections",
+            quadrature=256,
+            forms=14,
+            normalization="mode_gap",
+            xt_sampling=False,
+        )
+        if raw.get("modal_training") != expected_training:
+            raise ValueError("Modal training objective differs from registered integral")
+        for original, snapshot in zip(raw["snapshots"], snapshots):
+            if (
+                original.get("adam_residual_points") != 0
+                or original.get("lbfgs_residual_points") != 0
+                or original.get("modal_forms_per_evaluation") != 14
+                or original.get("modal_form_evaluations")
+                != 14 * (manifest["report_parameters"]["adam_steps"] + snapshot["closures"])
+            ):
+                raise ValueError("Modal integral work counters differ from objective")
+            snapshot.update(
+                modal_forms_per_evaluation=14,
+                modal_form_evaluations=original["modal_form_evaluations"],
+                modal_integral=number(original.get("modal_integral"), "modal_integral"),
+            )
     if "hypothesis_evaluation" in manifest:
         from .surrogate_evidence import validate_snapshots
 
@@ -180,6 +204,8 @@ def compact_trial(raw: Json, manifest: Json) -> Json:
             "control_prediction_background",
         )
     }
+    if raw["case"] == "heat_quadratic_modal":
+        compact["modal_training"] = raw["modal_training"]
     if "absolute_quality" in manifest:
         if manifest["report_parameters"]["constraints"] != "soft" or "constraints" in raw:
             if raw.get("constraints") != manifest["report_parameters"]["constraints"]:
