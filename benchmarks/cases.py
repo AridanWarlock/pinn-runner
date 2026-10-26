@@ -347,8 +347,11 @@ class QuadraticShapeCase(ConstantSurrogateCase):
             "b": {"interval": [1, 2], "points": 3},
         }
         config["domain"]["parameter_rows"] = [row.copy() for row in QUADRATIC_TRAINING_ROWS]
-        if self.name == "heat_quadratic_clock":
-            config["network"]["time_scale"] = {"parameter": "a", "reference": 0.15}
+        if self.name in ("heat_quadratic_clock", "heat_quadratic_modal"):
+            if self.name == "heat_quadratic_clock":
+                config["network"]["time_scale"] = {"parameter": "a", "reference": 0.15}
+            else:
+                config["network"].update(quadratic_modal=True, modal_normalization="mode_gap")
             config["domain"]["parameter_rows"] = [
                 row.copy() for row in QUADRATIC_CLOCK_TRAINING_ROWS
             ]

@@ -23,12 +23,21 @@ def test_quadratic_convergence_collects_each_whole_code(tmp_path: Path) -> None:
 
 def audit_quadratic_convergence(tmp_path, manifest, name):
     torch.set_num_threads(1)
-    manifest["report_parameters"].update(points_override=7)
+    manifest["report_parameters"].update(
+        points_override=None if name == "heat_quadratic_modal" else 7
+    )
     manifest["expected_trials"] = manifest["expected_trials"][:1]
     device = os.environ.get("PINN_TEST_DEVICE", "cpu")
     assert device in ("cpu", "cuda")
     plan = ConvergencePlan(
-        CASES[name], 1, (0, 1), manifest["case_limits"][name], "soft", 7, device, 1e-12
+        CASES[name],
+        1,
+        (0, 1),
+        manifest["case_limits"][name],
+        "soft",
+        None if name == "heat_quadratic_modal" else 7,
+        device,
+        1e-12,
     )
     trial = convergence_trial(plan, ConvergenceArm(), 11, tmp_path / "trial")
     assert (trial["peak_allocated_bytes"] is not None) == (device == "cuda")
@@ -65,3 +74,5 @@ def audit_quadratic_convergence(tmp_path, manifest, name):
     damaged["trials"][0]["snapshots"][-1]["hypotheses"].pop()
     with pytest.raises(ValueError, match="hypotheses"):
         compare(damaged)
+
+    return trial

@@ -23,7 +23,7 @@ Array = NDArray[np.float64]
 
 
 def evaluation_identity(case: str = "heat_quadratic_shapes") -> dict[str, Any]:
-    if case not in ("heat_quadratic_shapes", "heat_quadratic_clock"):
+    if case not in ("heat_quadratic_shapes", "heat_quadratic_clock", "heat_quadratic_modal"):
         raise ValueError("Expected registered quadratic evaluation")
 
     def digest(name: str) -> str:

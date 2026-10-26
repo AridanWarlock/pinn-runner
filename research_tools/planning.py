@@ -206,6 +206,8 @@ def plan(manifest: Json, *, details: bool = False) -> Json:
             }
             if name == "heat_quadratic_clock":
                 expected_network["time_scale"] = {"parameter": "a", "reference": 0.15}
+            if name == "heat_quadratic_modal":
+                expected_network.update(quadratic_modal=True, modal_normalization="mode_gap")
             if manifest["network"] != expected_network:
                 raise ValueError("Network differs from the registered case configuration")
         seeds = sorted({t["seed"] for t in manifest["expected_trials"] if t["case"] == name})

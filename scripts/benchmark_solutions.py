@@ -144,6 +144,7 @@ def arguments() -> tuple[argparse.Namespace, int]:
                 "heat_spatial_scale_surrogate",
                 "heat_quadratic_shapes",
                 "heat_quadratic_clock",
+                "heat_quadratic_modal",
             )
         ),
         default=["heat2d", "advection", "burgers"],

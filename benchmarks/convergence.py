@@ -211,12 +211,16 @@ class SnapshotEvaluation:
                 or tuple(domain.parameters[parameter].interval) != (0.05, 0.25)
             ):
                 raise ValueError("Surrogate evaluation requires registered x/t/k intervals")
-        if plan.case.name in ("heat_quadratic_shapes", "heat_quadratic_clock"):
+        if plan.case.name in (
+            "heat_quadratic_shapes",
+            "heat_quadratic_clock",
+            "heat_quadratic_modal",
+        ):
             from .catalog import QUADRATIC_CLOCK_TRAINING_ROWS, QUADRATIC_TRAINING_ROWS
 
             training_rows = (
                 QUADRATIC_CLOCK_TRAINING_ROWS
-                if plan.case.name == "heat_quadratic_clock"
+                if plan.case.name in ("heat_quadratic_clock", "heat_quadratic_modal")
                 else QUADRATIC_TRAINING_ROWS
             )
 
@@ -244,6 +248,11 @@ class SnapshotEvaluation:
                 else None
             ) != expected_clock:
                 raise ValueError("Whole-code evaluation requires registered time scale")
+        if plan.case.name == "heat_quadratic_modal" and (
+            not factory.settings.network.quadratic_modal
+            or factory.settings.network.modal_normalization != "mode_gap"
+        ):
+            raise ValueError("Whole-code evaluation requires registered modal representation")
         self.objects = factory.build(predicting=True)
         self.model = self.objects.model.to(plan.device).eval()
         mesh = self.objects.mesh
@@ -274,7 +283,11 @@ class SnapshotEvaluation:
 
     def evaluate(self, checkpoint: Path) -> tuple[dict[str, float], dict[str, Any]]:
         self.model.load_state_dict(load_checkpoint(checkpoint, map_location=self.plan.device))
-        if self.plan.case.name in ("heat_quadratic_shapes", "heat_quadratic_clock"):
+        if self.plan.case.name in (
+            "heat_quadratic_shapes",
+            "heat_quadratic_clock",
+            "heat_quadratic_modal",
+        ):
             from .quadratic_surrogate_quality import evaluate as evaluate_quadratic
 
             return evaluate_quadratic(
@@ -365,9 +378,13 @@ def convergence_trial(
     source = plan.case.prepare_source(directory, arm.coefficient_representation)
     problem = load_problem(source)
     factory = SolverFactory(TaskSettings.read(config), problem, directory, source.parent)
-    objects = factory.build(predicting=False)
+    objects = factory.build(predicting=plan.case.name == "heat_quadratic_modal")
     setup_seconds = time.perf_counter() - started
-    if plan.density is None:
+    if plan.case.name == "heat_quadratic_modal":
+        from .quadratic_modal_training import modal_training
+
+        rows, performance = modal_training(plan, objects, factory.adapter, directory)
+    elif plan.density is None:
         rows, performance = SnapshotTraining(plan, objects, directory).run()
     else:
         from .density import density_training

@@ -152,8 +152,25 @@ QUADRATIC_CLOCK_EVALUATION = {
     "training_sampling": "reference_scale_full_time_lhs_complete_code_rows",
 }
 
+QUADRATIC_MODAL_EVALUATION = {
+    **deepcopy(QUADRATIC_CLOCK_EVALUATION),
+    "training_sampling": "continuous_modal_integral_no_xt_sampling",
+    "training_objective": {
+        "kind": "continuous_pde_initial_projections",
+        "quadrature": 256,
+        "scale": 0.15,
+        "time_interval": [0, 1],
+        "modes": list(range(2, 33)),
+        "normalization": "mode_gap",
+        "coefficient_scale": "3/(n^2-1)",
+        "aggregation": "mean_over_14_forms",
+        "positive_time_teacher": False,
+    },
+}
+
 
 SURROGATE_EVALUATIONS = {
+    "heat_quadratic_modal": QUADRATIC_MODAL_EVALUATION,
     "heat_quadratic_clock": QUADRATIC_CLOCK_EVALUATION,
     "heat_quadratic_shapes": QUADRATIC_EVALUATION,
     "heat_constant_surrogate": CONSTANT_EVALUATION,
@@ -182,6 +199,14 @@ UNFORCED_METRICS = {
 UNFORCED_VISCOSITIES = {"burgers_unforced_nu010": 0.1, "burgers_unforced_nu001": 0.01}
 
 SPECS = (
+    CaseSpec(
+        "heat_quadratic_modal",
+        "quadratic_shapes",
+        1,
+        (16, 101),
+        time_interval=(0, 1),
+        time_counts=(11, 101),
+    ),
     CaseSpec(
         "heat_quadratic_clock",
         "quadratic_shapes",

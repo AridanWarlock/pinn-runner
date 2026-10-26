@@ -197,8 +197,13 @@ MODAL_OBJECTIVE_EXPECTED = [
     for seed in (11, 29)
     for normalization in ("identity", "mode_gap")
 ]
+MODAL_EVALUATION_SUITE = "tests/integration/test_quadratic_modal_convergence.py"
+MODAL_EVALUATION_EXPECTED = [
+    MODAL_EVALUATION_SUITE + "::test_modal_integral_training_preserves_physical_evidence"
+]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    MODAL_EVALUATION_SUITE: MODAL_EVALUATION_EXPECTED,
     MODAL_OBJECTIVE_SUITE: MODAL_OBJECTIVE_EXPECTED,
     MODAL_NETWORK_SUITE: MODAL_NETWORK_EXPECTED,
     MODAL_LIFECYCLE_SUITE: MODAL_LIFECYCLE_EXPECTED,
@@ -414,7 +419,11 @@ def plan(manifest: Json) -> Json:
             performance_measurement=False,
             public_checkpoint_contract=False,
         )
-    if manifest["suite"] in (QUADRATIC_EVALUATION_SUITE, CLOCK_EVALUATION_SUITE):
+    if manifest["suite"] in (
+        QUADRATIC_EVALUATION_SUITE,
+        CLOCK_EVALUATION_SUITE,
+        MODAL_EVALUATION_SUITE,
+    ):
         return dict(
             contract=1,
             kind="numerical-acceptance-plan",
