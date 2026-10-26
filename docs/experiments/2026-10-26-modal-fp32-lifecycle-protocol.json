@@ -1,0 +1,20 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "b7bd41543f1a2d70670cf684c0a1a7eb2d6c3c94",
+  "suite": "tests/integration/test_quadratic_modal_runner.py",
+  "tests": [
+    "tests/integration/test_quadratic_modal_runner.py::test_modal_public_lifecycle"
+  ],
+  "test_sha256": "d8bfe4868cb7a4e27509cb5659243067a7602954535eb835b284c356b0793ac5",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
