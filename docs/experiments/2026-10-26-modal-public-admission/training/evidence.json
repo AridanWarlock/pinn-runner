@@ -1,0 +1,73 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "73d326c3b63c813768b5cd2b50d4c97c02b81706",
+    "suite": "tests/integration/test_quadratic_modal_convergence.py",
+    "tests": [
+      "tests/integration/test_quadratic_modal_convergence.py::test_modal_integral_training_preserves_physical_evidence"
+    ],
+    "test_sha256": "c6786fe4220b4e8872498103e4407a8743f9063f515ddbf5c7f008412f6387a7",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "73d326c3b63c813768b5cd2b50d4c97c02b81706",
+  "test_sha256": "c6786fe4220b4e8872498103e4407a8743f9063f515ddbf5c7f008412f6387a7",
+  "source_unchanged": true,
+  "test_raw_sha256": "ab6c7bb6f0122030175a159b346d1f51e027b13e4fda253b2bb70710a1744a32",
+  "test_raw_sha256_after": "ab6c7bb6f0122030175a159b346d1f51e027b13e4fda253b2bb70710a1744a32",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/integration/test_quadratic_modal_convergence.py::test_modal_integral_training_preserves_physical_evidence"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/integration/test_quadratic_modal_convergence.py::test_modal_integral_training_preserves_physical_evidence",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 4.398701500147581
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "b4fbcd005d22f92fa6fb781e6e5ce684ce202c82229cffada49d31ba3913e05d",
+    "pytest-results.json": "e03ff69a89dce525a5b9bac054edb1bea57f7791f4f15ca8d1d2a6f30c8f84ae"
+  },
+  "provenance": {
+    "protocol_commit": "e60bf9c5ee720e0a1323831d79916d68215e943d",
+    "protocol_sha256": "e77d01cb5ec6c59dd3b64017cad02f83d28fc7cc567a87a8cf331c7da09ce6e9"
+  }
+}

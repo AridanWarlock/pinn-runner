@@ -1,0 +1,2 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_quadratic_modal_convergence.py::test_modal_integral_training_preserves_physical_evidence,passed,passed,passed,4.398701500147581

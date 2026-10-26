@@ -1,0 +1,9 @@
+{
+  "cases": 30,
+  "bounds_satisfied": true,
+  "incorrect_initial_counterexamples": 30,
+  "quadrature": 512,
+  "reference_modes": 64,
+  "interval_certificate": false,
+  "trained": false
+}

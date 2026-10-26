@@ -1,0 +1,150 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "f693f2a57e06c47dc1c8a1338c6191148df07409",
+    "suite": "tests/numerics/test_quadratic_modal_objective.py",
+    "tests": [
+      "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-11-identity]",
+      "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-11-mode_gap]",
+      "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-29-identity]",
+      "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-29-mode_gap]",
+      "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-11-identity]",
+      "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-11-mode_gap]",
+      "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-29-identity]",
+      "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-29-mode_gap]"
+    ],
+    "test_sha256": "f16b8b1f36e639ae81d42cd2e1f69462d093bb6dc9c196185914834143767dce",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "f693f2a57e06c47dc1c8a1338c6191148df07409",
+  "test_sha256": "f16b8b1f36e639ae81d42cd2e1f69462d093bb6dc9c196185914834143767dce",
+  "source_unchanged": true,
+  "test_raw_sha256": "e5852f1aad442b1218d758a7385430578ce6fc51da2bb3d828ea7a8dda106216",
+  "test_raw_sha256_after": "e5852f1aad442b1218d758a7385430578ce6fc51da2bb3d828ea7a8dda106216",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-11-identity]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-11-mode_gap]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-29-identity]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-29-mode_gap]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-11-identity]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-11-mode_gap]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-29-identity]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-29-mode_gap]"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-11-identity]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.3453338001854718
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-11-mode_gap]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.1051096998853609
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-29-identity]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.10213360004127026
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-29-mode_gap]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.09961719997227192
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-11-identity]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.12539710011333227
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-11-mode_gap]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.11039890011306852
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-29-identity]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.10914560011588037
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-29-mode_gap]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.10707289981655777
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "9dc152be6a49310c8292d6ec04981201ec0b1bf196dd0bffcdd992f6c741f172",
+    "pytest-results.json": "548c356881b3c95fb8ae67d31bc6a6a63123767860dcccc68fa055d023279a05"
+  },
+  "provenance": {
+    "protocol_commit": "a2e403a90dd1688c1cbfa3a70364e31468929e92",
+    "protocol_sha256": "55878bce9e9eaf83185dbd1f1b18249d8cfd71eb030fc31884b18ac3b7d7be58"
+  }
+}
