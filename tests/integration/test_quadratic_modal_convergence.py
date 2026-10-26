@@ -6,7 +6,6 @@ import pytest
 
 from research_tools.comparison import compare
 from research_tools.evidence import read_bundle
-
 from tests.integration.test_quadratic_surrogate_convergence import audit_quadratic_convergence
 from tests.numerics.test_quadratic_modal_quality import NAME, modal_manifest
 
