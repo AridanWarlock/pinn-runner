@@ -1,0 +1,9 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-11-identity],passed,passed,passed,0.3144294999074191
+tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-11-mode_gap],passed,passed,passed,0.11303219990804791
+tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-29-identity],passed,passed,passed,0.1026597002055496
+tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-29-mode_gap],passed,passed,passed,0.1028545000590384
+tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-11-identity],passed,passed,passed,0.12146830023266375
+tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-11-mode_gap],passed,passed,passed,0.10942670004442334
+tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-29-identity],passed,passed,passed,0.10837039980106056
+tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-29-mode_gap],passed,passed,passed,0.11348770000040531
