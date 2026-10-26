@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 def modal_training(
     plan: ConvergencePlan, objects: ExecutionObjects, adapter: ProblemAdapter, directory: Path
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    model = objects.model.to(plan.device).train()
+    model = objects.model.to(device=torch.device(plan.device), dtype=torch.float32).train()
     net = model.net
     if not isinstance(net, QuadraticModalFCN) or net.normalization != "mode_gap":
         raise ValueError("Registered modal training requires mode_gap normalization")

@@ -56,6 +56,8 @@ def test_modal_public_lifecycle(tmp_path: Path) -> None:
     assert identity["network_names"] == ["b"]
     assert saved["hyper_parameters"]["input_bounds"][1] == (0.05, 0.15)
     assert saved["global_step"] == 3
+    assert saved["state_dict"]["net.mode_numbers"].dtype == torch.float32
+    assert saved["state_dict"]["net.coefficient_scale"].dtype == torch.float32
     config["domain"]["space"]["x"]["points"] = 5
     config["domain"]["time"]["points"] = 6
     config["prediction"] = {"parameter_rows": [[0.075, 1.4], [0.125, 1.6]]}

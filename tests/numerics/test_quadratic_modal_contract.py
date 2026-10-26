@@ -156,3 +156,12 @@ def test_modal_normalization_requires_modal_field():
     config["network"].update(quadratic_modal=False, modal_normalization="mode_gap")
     with pytest.raises(ValueError, match="modal_normalization requires"):
         TaskSettings.read(config)
+
+
+def test_default_public_modal_field_uses_float32_buffers_and_output(tmp_path):
+    _, _, model = make_model(tmp_path)
+    assert all(value.dtype == torch.float32 for value in model.net.state_dict().values())
+    x = torch.full((3, 1), 0.5)
+    assert (
+        model([x, torch.full_like(x, 0.1), torch.full_like(x, 1.5)], x)["u"].dtype == torch.float32
+    )

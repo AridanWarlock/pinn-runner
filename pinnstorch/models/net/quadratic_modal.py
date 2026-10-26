@@ -33,8 +33,8 @@ class QuadraticModalFCN(nn.Module):
         self.source_sha256 = source_sha256
         self.names = tuple(f"d{n}" for n in range(2, 33))
         self.net = FCN([1, *hidden_layers, 31], [bounds[2][0]], [bounds[2][1]], self.names)
-        self.register_buffer("mode_numbers", torch.arange(2, 33, dtype=torch.float64)[None, :])
-        self.register_buffer("coefficient_scale", coefficient_scale(normalization))
+        self.register_buffer("mode_numbers", torch.arange(2, 33, dtype=torch.float32)[None, :])
+        self.register_buffer("coefficient_scale", coefficient_scale(normalization).float())
 
     def identity(self) -> dict[str, Any]:
         return {
@@ -115,7 +115,7 @@ def validate_modal_checkpoint(checkpoint: dict[str, Any], net: nn.Module) -> Non
         state = checkpoint.get("state_dict", {})
         for key, expected_tensor in (
             ("net.mode_numbers", torch.arange(2, 33, dtype=torch.float64)[None, :]),
-            ("net.coefficient_scale", coefficient_scale(net.normalization)),
+            ("net.coefficient_scale", coefficient_scale(net.normalization).float()),
             ("net.net.lb", torch.tensor([net.physical_bounds[2][0]], dtype=torch.float32)),
             ("net.net.ub", torch.tensor([net.physical_bounds[2][1]], dtype=torch.float32)),
         ):
