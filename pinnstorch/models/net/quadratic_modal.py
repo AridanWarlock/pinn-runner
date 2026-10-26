@@ -22,14 +22,19 @@ class QuadraticModalFCN(nn.Module):
         bounds: tuple[tuple[float, float], ...],
         initial: InitialField,
         source_sha256: str,
+        normalization: str = "identity",
     ) -> None:
         super().__init__()
+        if normalization not in ("identity", "mode_gap"):
+            raise ValueError("Unknown modal coefficient normalization")
+        self.normalization = normalization
         self.physical_bounds = bounds
         self.initial = initial
         self.source_sha256 = source_sha256
         self.names = tuple(f"d{n}" for n in range(2, 33))
         self.net = FCN([1, *hidden_layers, 31], [bounds[2][0]], [bounds[2][1]], self.names)
         self.register_buffer("mode_numbers", torch.arange(2, 33, dtype=torch.float64)[None, :])
+        self.register_buffer("coefficient_scale", coefficient_scale(normalization))
 
     def identity(self) -> dict[str, Any]:
         return {
@@ -42,14 +47,18 @@ class QuadraticModalFCN(nn.Module):
             "network_names": ["b"],
             "network_bounds": [list(self.physical_bounds[2])],
             "modes": list(range(2, 33)),
-            "coefficient_normalization": "identity",
+            "coefficient_normalization": self.normalization,
+            "coefficient_scale_rule": "3/(n^2-1)" if self.normalization == "mode_gap" else "1",
             "initial_rule": "Problem.initial at t=0",
             "source_sha256": self.source_sha256,
         }
 
     def coefficients(self, b: torch.Tensor) -> torch.Tensor:
         output = self.net([], b)
-        return torch.cat([output[name] for name in self.names], dim=1)
+        return cast(
+            torch.Tensor,
+            torch.cat([output[name] for name in self.names], dim=1) * self.coefficient_scale,
+        )
 
     def mode_data(
         self, x: torch.Tensor, a: torch.Tensor, b: torch.Tensor
@@ -92,6 +101,11 @@ class QuadraticModalFCN(nn.Module):
         return {"u": cast(torch.Tensor, initial * envelope + corrections.sum(dim=1, keepdim=True))}
 
 
+def coefficient_scale(normalization: str) -> torch.Tensor:
+    modes = torch.arange(2, 33, dtype=torch.float64)[None, :]
+    return 3 / (modes.square() - 1) if normalization == "mode_gap" else torch.ones_like(modes)
+
+
 def validate_modal_checkpoint(checkpoint: dict[str, Any], net: nn.Module) -> None:
     expected = net.identity() if isinstance(net, QuadraticModalFCN) else None
     saved = checkpoint.get("hyper_parameters", {}).get("field_representation")
@@ -101,6 +115,7 @@ def validate_modal_checkpoint(checkpoint: dict[str, Any], net: nn.Module) -> Non
         state = checkpoint.get("state_dict", {})
         for key, expected_tensor in (
             ("net.mode_numbers", torch.arange(2, 33, dtype=torch.float64)[None, :]),
+            ("net.coefficient_scale", coefficient_scale(net.normalization)),
             ("net.net.lb", torch.tensor([net.physical_bounds[2][0]], dtype=torch.float32)),
             ("net.net.ub", torch.tensor([net.physical_bounds[2][1]], dtype=torch.float32)),
         ):

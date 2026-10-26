@@ -1,0 +1,2 @@
+nodeid,setup,call,teardown,seconds
+tests/integration/test_quadratic_modal_runner.py::test_modal_public_lifecycle,passed,failed,passed,5.804622999858111

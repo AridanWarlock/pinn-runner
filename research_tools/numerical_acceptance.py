@@ -189,8 +189,17 @@ MODAL_NETWORK_EXPECTED = [
 ]
 MODAL_LIFECYCLE_SUITE = "tests/integration/test_quadratic_modal_runner.py"
 MODAL_LIFECYCLE_EXPECTED = [MODAL_LIFECYCLE_SUITE + "::test_modal_public_lifecycle"]
+MODAL_OBJECTIVE_SUITE = "tests/numerics/test_quadratic_modal_objective.py"
+MODAL_OBJECTIVE_EXPECTED = [
+    MODAL_OBJECTIVE_SUITE
+    + f"::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype{dtype}-{seed}-{normalization}]"
+    for dtype in (0, 1)
+    for seed in (11, 29)
+    for normalization in ("identity", "mode_gap")
+]
 HELPER_SUITES = (NONHEAT_SUITE, BURGERS_HARD_SUITE, UNFORCED_SUITE)
 SUITES = {
+    MODAL_OBJECTIVE_SUITE: MODAL_OBJECTIVE_EXPECTED,
     MODAL_NETWORK_SUITE: MODAL_NETWORK_EXPECTED,
     MODAL_LIFECYCLE_SUITE: MODAL_LIFECYCLE_EXPECTED,
     MODAL_PROTOTYPE_SUITE: MODAL_PROTOTYPE_EXPECTED,
@@ -272,6 +281,26 @@ def canonical_test_digest(path: Path) -> str:
 
 def plan(manifest: Json) -> Json:
     validate(manifest)
+    if manifest["suite"] == MODAL_OBJECTIVE_SUITE:
+        return dict(
+            contract=1,
+            kind="numerical-acceptance-plan",
+            revision=manifest["revision"],
+            tests=8,
+            case="quadratic_modal_integral",
+            normalizations=["identity", "mode_gap"],
+            dtypes=["float32", "float64"],
+            seeds=[11, 29],
+            network_models=8,
+            parameters_per_model=3199,
+            optimizer_updates=0,
+            training=False,
+            performance_measurement=False,
+            forms=[1.0, 1.37, 2.0],
+            projection_orders=[256, 512],
+            independent_physical_quadrature=[128, 16],
+            finite_difference_checks=8,
+        )
     if manifest["suite"] == MODAL_NETWORK_SUITE:
         return dict(
             contract=1,

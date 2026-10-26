@@ -192,6 +192,7 @@ class SolverFactory:
                 self._physical_bounds(),
                 self.adapter.initial_tensors,
                 hashlib.sha256((directory / "functions.py").read_bytes()).hexdigest(),
+                settings.network.modal_normalization,
             )
         clock = settings.network.time_scale
         if clock is not None:

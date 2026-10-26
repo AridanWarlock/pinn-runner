@@ -369,3 +369,16 @@ def test_public_modal_registered_inventory_preserves_admission_budget(suite):
     e["trials"].pop()
     with pytest.raises(ValueError, match="Incomplete"):
         compare(e)
+
+
+def test_modal_integral_admission_preserves_both_normalizations_and_no_training():
+    m = protocol()
+    m.update(
+        suite=acceptance.MODAL_OBJECTIVE_SUITE, tests=acceptance.MODAL_OBJECTIVE_EXPECTED.copy()
+    )
+    p = plan(m)
+    assert p["tests"] == 8 and p["finite_difference_checks"] == 8
+    assert p["normalizations"] == ["identity", "mode_gap"]
+    assert p["training"] is False and p["optimizer_updates"] == 0
+    assert p["independent_physical_quadrature"] == [128, 16]
+    assert p["projection_orders"] == [256, 512]

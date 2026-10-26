@@ -432,10 +432,17 @@ class Network:
     spatial_encoding: str = "identity"
     time_scale: TimeScale | None = None
     quadratic_modal: bool = False
+    modal_normalization: str = "identity"
 
     @classmethod
     def read(cls, reader: Reader) -> Network:
-        reader.only("hidden_layers", "spatial_encoding", "time_scale", "quadratic_modal")
+        reader.only(
+            "hidden_layers",
+            "spatial_encoding",
+            "time_scale",
+            "quadratic_modal",
+            "modal_normalization",
+        )
         layers = reader.values.get("hidden_layers", [32, 32])
         if (
             not isinstance(layers, list)
@@ -454,6 +461,7 @@ class Network:
             encoding,
             None if clock is None else TimeScale.read(Reader(clock, "network.time_scale")),
             reader.boolean("quadratic_modal", False),
+            reader.choice("modal_normalization", "identity", ("identity", "mode_gap")),
         )
 
 
@@ -705,6 +713,8 @@ class TaskSettings:
 
     def _validate_links(self) -> None:
         self.validate_spatial_encoding()
+        if not self.network.quadratic_modal and self.network.modal_normalization != "identity":
+            raise ValueError("modal_normalization requires quadratic_modal")
         if self.network.quadratic_modal:
             if (
                 self.domain.input_names != ("x", "a", "b", "t")

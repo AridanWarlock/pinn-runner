@@ -1,0 +1,5 @@
+nodeid,setup,call,teardown,seconds
+tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[11-dtype0],passed,passed,passed,0.5030267999973148
+tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[11-dtype1],passed,passed,passed,0.03993950004223734
+tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[29-dtype0],passed,passed,passed,0.030812399927526712
+tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[29-dtype1],passed,passed,passed,0.030451699858531356

@@ -1,0 +1,106 @@
+{
+  "contract": 1,
+  "kind": "numerical-acceptance-evidence",
+  "manifest": {
+    "contract": 6,
+    "kind": "numerical-acceptance",
+    "registration": "prospective",
+    "revision": "8b41ea8c0408cd10e86d9c1949684b9a8615b979",
+    "suite": "tests/numerics/test_quadratic_modal_network.py",
+    "tests": [
+      "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[11-dtype0]",
+      "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[11-dtype1]",
+      "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[29-dtype0]",
+      "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[29-dtype1]"
+    ],
+    "test_sha256": "70f15f1d780add8b7b98f271192ad047faaf6565bcb273cbbe24dae290c19ebc",
+    "test_hash_mode": "lf-normalized",
+    "environment_requirements": {
+      "torch": "2.1.0+cu118",
+      "cuda_runtime": "11.8",
+      "default_dtype": "torch.float32",
+      "float32_matmul_precision": "highest",
+      "cuda_matmul_allow_tf32": false,
+      "cudnn_allow_tf32": false
+    }
+  },
+  "revision": "8b41ea8c0408cd10e86d9c1949684b9a8615b979",
+  "test_sha256": "70f15f1d780add8b7b98f271192ad047faaf6565bcb273cbbe24dae290c19ebc",
+  "source_unchanged": true,
+  "test_raw_sha256": "1cb6e2d89a0589a7b84a12a075d9f939a24b553b944e6af65f40e72d72ea158f",
+  "test_raw_sha256_after": "1cb6e2d89a0589a7b84a12a075d9f939a24b553b944e6af65f40e72d72ea158f",
+  "environment": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "environment_after": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  },
+  "test_device": "cuda",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4070 Ti",
+  "python_version": "3.10.11",
+  "pytest_version": "9.1.1",
+  "collected": [
+    "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[11-dtype0]",
+    "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[11-dtype1]",
+    "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[29-dtype0]",
+    "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[29-dtype1]"
+  ],
+  "trials": [
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[11-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.5030267999973148
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[11-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.03993950004223734
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[29-dtype0]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.030812399927526712
+    },
+    {
+      "nodeid": "tests/numerics/test_quadratic_modal_network.py::test_public_modal_matches_audited_prototype_and_all_gradients[29-dtype1]",
+      "phases": {
+        "setup": "passed",
+        "call": "passed",
+        "teardown": "passed"
+      },
+      "seconds": 0.030451699858531356
+    }
+  ],
+  "pytest_exit_code": 0,
+  "artifact_sha256": {
+    "pytest.log": "16da62b3ae8674dc3724f2d0096926d4e2116ee79d804c978fbd558d62128e14",
+    "pytest-results.json": "df086de73e139b1205eea056f0f87f2687ae1aedeaed513bf9d648df14e12df8"
+  },
+  "provenance": {
+    "protocol_commit": "5aced1707d2d457d8637ad32acea310111990a2d",
+    "protocol_sha256": "de6832ec8a47756173ca23c2de4a6f790f9877b91a922da3a331247dcfdc8749"
+  }
+}

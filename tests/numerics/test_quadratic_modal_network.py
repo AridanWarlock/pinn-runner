@@ -30,7 +30,14 @@ def test_public_modal_matches_audited_prototype_and_all_gradients(tmp_path: Path
     device = os.environ.get("PINN_TEST_DEVICE", "cpu")
     model.to(device=device, dtype=dtype)
     prototype = QuadraticModalPrototype().to(device=device, dtype=dtype)
-    prototype.load_state_dict(model.net.state_dict(), strict=True)
+    prototype.load_state_dict(
+        {
+            key: value
+            for key, value in model.net.state_dict().items()
+            if key != "coefficient_scale"
+        },
+        strict=True,
+    )
     assert sum(p.numel() for p in model.parameters()) == 3199
     x = torch.linspace(0, 1, 29, dtype=dtype, device=device)[:, None].requires_grad_()
     a = torch.linspace(0.05, 0.15, 29, dtype=dtype, device=device)[:, None]

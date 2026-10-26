@@ -36,6 +36,7 @@ def make_model(tmp_path):
         "lb",
         "ub",
         "mode_numbers",
+        "coefficient_scale",
     ],
 )
 def test_modal_checkpoint_rejects_changed_meaning_before_weights(tmp_path, damage):
@@ -48,8 +49,12 @@ def test_modal_checkpoint_rejects_changed_meaning_before_weights(tmp_path, damag
     before = deepcopy(model.state_dict())
     if damage == "missing":
         saved["hyper_parameters"].clear()
-    elif damage in ("lb", "ub", "mode_numbers"):
-        key = f"net.{damage}" if damage == "mode_numbers" else f"net.net.{damage}"
+    elif damage in ("lb", "ub", "mode_numbers", "coefficient_scale"):
+        key = (
+            f"net.{damage}"
+            if damage in ("mode_numbers", "coefficient_scale")
+            else f"net.net.{damage}"
+        )
         saved["state_dict"][key].reshape(-1)[0] += 1
     else:
         saved["hyper_parameters"]["field_representation"][damage] = "wrong"
@@ -144,3 +149,10 @@ def test_public_initial_field_is_used_with_physical_derivatives(tmp_path):
     torch.testing.assert_close(derivative, 1 - 2 * x, rtol=0, atol=2e-15)
     second = torch.autograd.grad(derivative.sum(), x)[0]
     torch.testing.assert_close(second, torch.full_like(x, -2), rtol=0, atol=0)
+
+
+def test_modal_normalization_requires_modal_field():
+    config = modal_config("cpu", 1, 11)
+    config["network"].update(quadratic_modal=False, modal_normalization="mode_gap")
+    with pytest.raises(ValueError, match="modal_normalization requires"):
+        TaskSettings.read(config)

@@ -28,6 +28,7 @@ def test_modal_public_lifecycle(tmp_path: Path) -> None:
     original = source.read_bytes()
     (task / "functions.py").write_bytes(original)
     config = modal_config(device, 3, 11)
+    config["network"]["modal_normalization"] = "mode_gap"
     config["domain"]["space"]["x"]["points"] = 4
     config["domain"]["time"]["points"] = 3
     config["training"].update(
@@ -51,6 +52,7 @@ def test_modal_public_lifecycle(tmp_path: Path) -> None:
     assert saved["hyper_parameters"]["input_names"] == ("x", "a", "b", "t")
     identity = saved["hyper_parameters"]["field_representation"]
     assert identity["modes"] == list(range(2, 33))
+    assert identity["coefficient_normalization"] == "mode_gap"
     assert identity["network_names"] == ["b"]
     assert saved["hyper_parameters"]["input_bounds"][1] == (0.05, 0.15)
     assert saved["global_step"] == 3
@@ -77,12 +79,26 @@ def test_modal_public_lifecycle(tmp_path: Path) -> None:
     objects = factory.build(predicting=True)
     assert sum(p.numel() for p in objects.model.parameters()) == 3199
     objects.model.load_state_dict(saved["state_dict"], strict=True)
+    objects.model.to(device).eval()
     spatial, clock = objects.mesh.collection_points(None, use_lhs=False)
     with torch.no_grad():
-        direct = objects.model(
-            [torch.tensor(spatial[:, i : i + 1], dtype=torch.float32) for i in range(3)],
-            torch.tensor(clock, dtype=torch.float32),
-        )["u"].numpy()
+        direct_batches = []
+        for start in range(0, len(clock), config["training"]["batch_size"]):
+            stop = start + config["training"]["batch_size"]
+            direct_batches.append(
+                objects.model(
+                    [
+                        torch.tensor(
+                            spatial[start:stop, i : i + 1], dtype=torch.float32, device=device
+                        )
+                        for i in range(3)
+                    ],
+                    torch.tensor(clock[start:stop], dtype=torch.float32, device=device),
+                )["u"]
+                .cpu()
+                .numpy()
+            )
+        direct = np.concatenate(direct_batches)
     np.testing.assert_allclose(values["u"].reshape(-1, 1), direct, atol=1e-6, rtol=1e-5)
     probe = deepcopy(config)
     probe["training"].update(steps=1, epochs=1, refinement={"steps": 0})
