@@ -1,0 +1,27 @@
+{
+  "contract": 6,
+  "kind": "numerical-acceptance",
+  "registration": "prospective",
+  "revision": "f693f2a57e06c47dc1c8a1338c6191148df07409",
+  "suite": "tests/numerics/test_quadratic_modal_objective.py",
+  "tests": [
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-11-identity]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-11-mode_gap]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-29-identity]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype0-29-mode_gap]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-11-identity]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-11-mode_gap]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-29-identity]",
+    "tests/numerics/test_quadratic_modal_objective.py::test_integral_modal_loss_matches_physical_pde_all_gradients[dtype1-29-mode_gap]"
+  ],
+  "test_sha256": "f16b8b1f36e639ae81d42cd2e1f69462d093bb6dc9c196185914834143767dce",
+  "test_hash_mode": "lf-normalized",
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
