@@ -431,10 +431,11 @@ class Network:
     hidden_layers: tuple[int, ...]
     spatial_encoding: str = "identity"
     time_scale: TimeScale | None = None
+    quadratic_modal: bool = False
 
     @classmethod
     def read(cls, reader: Reader) -> Network:
-        reader.only("hidden_layers", "spatial_encoding", "time_scale")
+        reader.only("hidden_layers", "spatial_encoding", "time_scale", "quadratic_modal")
         layers = reader.values.get("hidden_layers", [32, 32])
         if (
             not isinstance(layers, list)
@@ -452,6 +453,7 @@ class Network:
             tuple(cast(list[int], layers)),
             encoding,
             None if clock is None else TimeScale.read(Reader(clock, "network.time_scale")),
+            reader.boolean("quadratic_modal", False),
         )
 
 
@@ -703,6 +705,32 @@ class TaskSettings:
 
     def _validate_links(self) -> None:
         self.validate_spatial_encoding()
+        if self.network.quadratic_modal:
+            if (
+                self.domain.input_names != ("x", "a", "b", "t")
+                or self.domain.space["x"].interval != (0, 1)
+                or self.domain.parameters["a"].interval[0] <= 0
+                or self.domain.parameters["b"].interval[0] <= 0
+                or self.domain.time.interval[0] != 0
+                or self.network.time_scale is not None
+                or self.network.spatial_encoding != "identity"
+                or self.training.constraints != "soft"
+                or self.prediction.allow_extrapolation
+                or self.coefficients
+            ):
+                raise ValueError(
+                    "quadratic_modal requires x in [0,1], positive a,b, time from zero, "
+                    "physical inputs x,a,b,t, identity encoding, soft constraints, "
+                    "no time_scale, tables or extrapolation"
+                )
+            if any(
+                face.kind != "dirichlet"
+                or face.field != "u"
+                or face.value != 0
+                or face.value_function is not None
+                for face in self.boundaries
+            ):
+                raise ValueError("quadratic_modal supports only homogeneous Dirichlet boundaries")
         clock = self.network.time_scale
         if clock is not None:
             axis = self.domain.parameters.get(clock.parameter)

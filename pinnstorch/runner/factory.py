@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import asdict, dataclass
 from functools import partial
 from pathlib import Path
@@ -21,6 +22,7 @@ from pinnstorch.data import (
 )
 from pinnstorch.data.sampler.sampler_base import SamplerBase
 from pinnstorch.models import FCN, PINNModule
+from pinnstorch.models.net.quadratic_modal import QuadraticModalFCN
 from pinnstorch.models.net.scaled_time import ScaledTimeFCN
 from pinnstorch.models.net.spatial_features import FeatureFCN
 from pinnstorch.training.sampling import ResampledLHS, TimePower
@@ -53,6 +55,7 @@ class SolverFactory:
     ) -> None:
         self.settings, self.problem, self.output = settings, problem, output
         directory = input_directory if input_directory is not None else output
+        self.input_directory = directory
         bank = CoefficientBank.build(
             problem.coefficients, settings.coefficients, directory, settings.domain
         )
@@ -174,8 +177,22 @@ class SolverFactory:
             for axis in (*domain.space.values(), *domain.parameters.values(), domain.time)
         )
 
-    def _network(self, mesh: PointCloud) -> FCN | FeatureFCN | ScaledTimeFCN:
+    def _network(self, mesh: PointCloud) -> FCN | FeatureFCN | ScaledTimeFCN | QuadraticModalFCN:
         settings = self.settings
+        if settings.network.quadratic_modal:
+            if (
+                tuple(self.problem.fields) != ("u",)
+                or self.problem.outputs != ("u",)
+                or self.problem.transform
+            ):
+                raise ValueError("quadratic_modal requires only field u and no Problem.transform")
+            directory = self.input_directory
+            return QuadraticModalFCN(
+                settings.network.hidden_layers,
+                self._physical_bounds(),
+                self.adapter.initial_tensors,
+                hashlib.sha256((directory / "functions.py").read_bytes()).hexdigest(),
+            )
         clock = settings.network.time_scale
         if clock is not None:
             return ScaledTimeFCN(
@@ -237,8 +254,9 @@ class SolverFactory:
             },
             input_names=settings.domain.input_names,
             input_transform=net.identity() if isinstance(net, ScaledTimeFCN) else None,
+            field_representation=net.identity() if isinstance(net, QuadraticModalFCN) else None,
             input_bounds=self._physical_bounds()
-            if isinstance(net, ScaledTimeFCN)
+            if isinstance(net, (ScaledTimeFCN, QuadraticModalFCN))
             else tuple((float(lower), float(upper)) for lower, upper in zip(mesh.lb, mesh.ub)),
         )
 

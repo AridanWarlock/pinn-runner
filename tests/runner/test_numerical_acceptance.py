@@ -341,3 +341,31 @@ def test_modal_prototype_admission_has_no_training_or_public_contract():
     assert p["parameters_per_model"] == 3199 and p["correction_modes"] == 32
     assert p["tests"] == 4 and p["optimizer_updates"] == 0
     assert p["training"] is False and p["public_checkpoint_contract"] is False
+
+
+@pytest.mark.parametrize(
+    "suite", [acceptance.MODAL_NETWORK_SUITE, acceptance.MODAL_LIFECYCLE_SUITE]
+)
+def test_public_modal_registered_inventory_preserves_admission_budget(suite):
+    e = evidence()
+    m = e["manifest"]
+    m.update(suite=suite, tests=acceptance.SUITES[suite].copy())
+    e["collected"] = m["tests"].copy()
+    e["trials"] = e["trials"][: len(m["tests"])]
+    for trial, nodeid in zip(e["trials"], m["tests"]):
+        trial["nodeid"] = nodeid
+    p = plan(m)
+    if suite == acceptance.MODAL_NETWORK_SUITE:
+        assert p["parameters_per_model"] == 3199
+        assert p["all_weight_pde_gradients"] is True
+        assert p["training"] is False and p["optimizer_updates"] == 0
+    else:
+        assert p["adam_steps_per_regular_fit"] == 3
+        assert p["lbfgs_outer_steps_per_regular_fit"] == 2
+        assert p["identity_probe_learning_rate"] == 1e-300
+        assert p["changed_initial_rejected"] and p["changed_modes_rejected"]
+    assert compare(e)["comparison_passed"]
+    assert compare(e)["passed"] == len(m["tests"])
+    e["trials"].pop()
+    with pytest.raises(ValueError, match="Incomplete"):
+        compare(e)
