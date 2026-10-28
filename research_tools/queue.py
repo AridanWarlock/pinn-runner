@@ -71,7 +71,7 @@ def prepare(root: Path, request: Json) -> Json:
         raise ValueError("Published protocol differs from request")
     manifest = validate_manifest(object_value(json.loads(source), "manifest"), root)
     if (
-        manifest["contract"] not in (2, 3, 4, 5, 6, 7, 8)
+        manifest["contract"] not in (2, 3, 4, 5, 6, 7, 8, 9)
         or manifest["registration"] != "prospective"
     ):
         raise ValueError("Only prospective protocols may be submitted")
@@ -306,6 +306,7 @@ def execute(root: Path, directory: Path) -> None:
                 6: "checkout/scripts/research_acceptance.py",
                 7: "checkout/scripts/research_profile.py",
                 8: "checkout/scripts/research_profile.py",
+                9: "checkout/scripts/research_soft_hard.py",
             }[manifest["contract"]]
         )
         command = [

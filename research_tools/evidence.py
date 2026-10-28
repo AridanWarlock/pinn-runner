@@ -397,6 +397,37 @@ def write_bundle(output: Path, evidence: Json) -> None:
     rows: list[Json] = []
     snapshots: list[Json] = []
     for trial in evidence["trials"]:
+        if evidence.get("kind") == "soft-hard-talk-evidence":
+            rows.append(
+                {
+                    k: trial[k]
+                    for k in (
+                        "seed",
+                        "method",
+                        "seconds",
+                        "adam_updates",
+                        "lbfgs_steps",
+                        "closures",
+                        "overshoot_seconds",
+                    )
+                }
+                | {
+                    k: v
+                    for k, v in trial["snapshots"][-1]["metrics"].items()
+                    if not isinstance(v, (list, dict))
+                }
+            )
+            snapshots.extend(
+                dict(
+                    seed=trial["seed"],
+                    method=trial["method"],
+                    seconds=s["seconds"],
+                    stage=s["stage"],
+                    **{k: v for k, v in s["metrics"].items() if not isinstance(v, (list, dict))},
+                )
+                for s in trial["snapshots"]
+            )
+            continue
         if evidence.get("kind") == "public-prediction-evidence":
             rows.append(trial)
             continue

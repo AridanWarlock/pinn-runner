@@ -10,6 +10,10 @@ from .schema import Json, arm_fields, identity, number, object_value, validate_m
 
 
 def compare(evidence: Json) -> Json:
+    if evidence.get("kind") == "soft-hard-talk-evidence":
+        from .soft_hard_talk import compare as talk_compare
+
+        return talk_compare(evidence)
     if evidence.get("kind") == "public-prediction-evidence":
         from .public_prediction import compare as compare_public
 

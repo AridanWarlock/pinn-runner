@@ -54,7 +54,11 @@ def main() -> None:
                 raise ValueError("Transport probes do not produce scientific evidence")
             path = directory / "manifest.json"
             manifest = queue.registered_manifest(directory)
-            if manifest["contract"] == 8:
+            if manifest["contract"] == 9:
+                from research_tools.soft_hard_talk import collect as collect_talk
+
+                output = collect_talk(directory / "r", manifest)
+            elif manifest["contract"] == 8:
                 from research_tools.public_prediction import collect as collect_public
 
                 output = collect_public(directory / "r", manifest)

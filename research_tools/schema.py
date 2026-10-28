@@ -86,6 +86,10 @@ def load_manifest(path: Path) -> Json:
 
 
 def validate_manifest(manifest: Json, base: Path) -> Json:
+    if manifest.get("contract") == 9:
+        from .soft_hard_talk import validate as talk_validate
+
+        return talk_validate(manifest)
     if manifest.get("contract") == 8:
         from .public_prediction import validate as public_validate
 

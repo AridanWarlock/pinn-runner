@@ -61,6 +61,10 @@ def validate_arm(arm: Json, constraints: str, spec: CaseSpec) -> None:
 
 
 def plan(manifest: Json, *, details: bool = False) -> Json:
+    if manifest.get("contract") == 9:
+        from .soft_hard_talk import plan as talk_plan
+
+        return talk_plan(manifest)
     if manifest.get("contract") == 8:
         from .public_prediction import plan as public_plan
 
