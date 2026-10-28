@@ -1,0 +1,73 @@
+version: 1
+domain:
+  space:
+    x:
+      interval:
+      - 0
+      - 1
+      points: 9
+    y:
+      interval:
+      - 0
+      - 1
+      points: 9
+  time:
+    interval:
+    - 0
+    - 0.5
+    points: 5
+network:
+  hidden_layers:
+  - 32
+  - 32
+  - 32
+training:
+  steps: 1
+  epochs: 1
+  seed: 19
+  batch_size: 1024
+  initial_points: 256
+  optimizer:
+    name: adam
+    learning_rate: 0.001
+  collocation:
+    sampling: lhs
+    points: 1024
+  constraints: soft
+  hard_execution: eager
+  hard_lifting: recursive
+  hard_background: general
+  backward: all
+boundaries:
+- kind: neumann
+  field: u
+  axis: x
+  side: lower
+  value: 0
+  weight: 0.25
+- kind: robin
+  field: u
+  axis: x
+  side: upper
+  alpha: 1
+  beta: 1
+  value_function: right
+  weight: 0.25
+- kind: neumann
+  field: u
+  axis: y
+  side: lower
+  value: 0
+  weight: 0.25
+- kind: neumann
+  field: u
+  axis: y
+  side: upper
+  value: 0
+  weight: 0.25
+validation: false
+runtime:
+  device: cpu
+  precision: 32-true
+  progress: false
+  metrics: false

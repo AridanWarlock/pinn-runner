@@ -1,0 +1,26 @@
+{
+  "kind": "cpu_preflight_no_training",
+  "seed": 19,
+  "reference_boundary_max": {
+    "x_lower": 0.0,
+    "x_upper": 3.3306690738754696e-16,
+    "y_lower": 0.0,
+    "y_upper": 3.6101062139755107e-16
+  },
+  "initial_parameters_sha256": "756705b4e8d66a970f45f3113a1fffc9ee6831bcba50d5a6a5406f4b92b0cebf",
+  "pde_max": 2.220446049250313e-16,
+  "hard_ic_max": 0.0,
+  "hard_boundary_max": {
+    "x_lower": 1.7694179454963432e-16,
+    "x_upper": 5.551115123125783e-16,
+    "y_lower": 2.7755575615628914e-16,
+    "y_upper": 6.38378239159465e-16
+  },
+  "corner_compatibility_max": 3.7216978744367714e-16,
+  "parameters": 2273,
+  "directional_ad": 0.1599490934215579,
+  "directional_fd": 0.1599490934034442,
+  "same_trainable_initial_parameters": true,
+  "optimizer_updates": 0,
+  "source_sha256": "c2406b4a88b0393f21c7a5150f2be8dca84310f3a96aede5e4f66a8e407c25a9"
+}
