@@ -1,0 +1,112 @@
+{
+  "contract": 9,
+  "kind": "soft-hard-talk",
+  "registration": "prospective",
+  "revision": "a71e0c20ea64a85bdc82f81a496ef4c4664da800",
+  "settings": {
+    "study_wall_cap_seconds": 840,
+    "pair_reserve_seconds": 420,
+    "adam_seconds": 60,
+    "total_seconds": 180,
+    "snapshot_seconds": [
+      0,
+      30,
+      60,
+      90,
+      120,
+      150,
+      180
+    ],
+    "layers": [
+      3,
+      32,
+      32,
+      32,
+      1
+    ],
+    "pde_points": 1024,
+    "ic_points": 256,
+    "face_points": 128,
+    "grid": [
+      81,
+      81,
+      41
+    ],
+    "pde_holdout": 4096,
+    "boundary_grid": [
+      161,
+      81
+    ],
+    "evaluation_seed": 20261028,
+    "adam_lr": 0.001,
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "idle_samples": 3,
+    "idle_utilization_max": 5,
+    "idle_wait_seconds_max": 60,
+    "lbfgs_lr": 1.0,
+    "history_size": 50,
+    "max_iter": 1,
+    "max_eval": 1,
+    "tolerance_grad": 1e-07,
+    "tolerance_change": 1e-09,
+    "line_search": "strong_wolfe",
+    "max_ls": 25,
+    "soft_weights": [
+      1,
+      1,
+      1
+    ],
+    "face_weight": 0.25,
+    "backend": "eager",
+    "lifting": "recursive",
+    "background": "general",
+    "rng_offsets": {
+      "weights": 0,
+      "pde": 10000,
+      "ic": 20000,
+      "bc": 30000
+    },
+    "cost_warmups": 3,
+    "cost_blocks": 7,
+    "cost_repeats": 10,
+    "significant_overshoot_seconds": 1.8
+  },
+  "order": [
+    [
+      19,
+      "soft"
+    ],
+    [
+      19,
+      "hard"
+    ],
+    [
+      73,
+      "hard"
+    ],
+    [
+      73,
+      "soft"
+    ],
+    [
+      1234,
+      "soft"
+    ],
+    [
+      1234,
+      "hard"
+    ]
+  ],
+  "environment_requirements": {
+    "torch": "2.1.0+cu118",
+    "cuda_runtime": "11.8",
+    "default_dtype": "torch.float32",
+    "float32_matmul_precision": "highest",
+    "cuda_matmul_allow_tf32": false,
+    "cudnn_allow_tf32": false
+  }
+}
